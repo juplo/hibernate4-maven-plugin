@@ -15,6 +15,12 @@
     <maven>2.0.6</maven>
   </prerequisites>
 
+  <scm>
+    <connection>scm:git:http://juplo.de/git/hibernate4-maven-plugin</connection>
+    <developerConnection>scm:git:ssh://juplo.de:/var/cache/git/juplo/hibernate4-maven-plugin</developerConnection>
+    <url>http://juplo.de/gitweb/?p=hibernate4-maven-plugin;a=summary</url>
+  </scm>
+
   <developers>
     <developer>
       <id>kai</id>
@@ -127,6 +133,13 @@
             </goals>
           </execution>
         </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-scm-plugin</artifactId>
+        <configuration>
+          <goals>install</goals>
+        </configuration>
       </plugin>
     </plugins>
   </build>
