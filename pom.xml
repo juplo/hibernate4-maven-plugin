@@ -3,6 +3,12 @@
 
   <modelVersion>4.0.0</modelVersion>
 
+  <parent>
+    <groupId>org.sonatype.oss</groupId>
+    <artifactId>oss-parent</artifactId>
+    <version>7</version>
+  </parent>
+
   <groupId>de.juplo</groupId>
   <artifactId>hibernate4-maven-plugin</artifactId>
   <name>Hibernate 4 Maven Plugin</name>
@@ -82,19 +88,6 @@
       </exclusions>
     </dependency>
   </dependencies>
-
-  <distributionManagement>
-    <repository>
-      <id>juplo.internal</id>
-      <name>Internal Release Repository</name>
-      <url>http://juplo.de/archiva/repository/internal/</url>
-    </repository>
-    <snapshotRepository>
-      <id>juplo.snapshots</id>
-      <name>Internal Snapshot Repository</name>
-      <url>http://juplo.de/archiva/repository/snapshots/</url>
-    </snapshotRepository>
-  </distributionManagement>
 
   <build>
     <plugins>
