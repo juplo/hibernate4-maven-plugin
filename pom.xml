@@ -44,6 +44,24 @@
     </developer>
   </developers>
 
+  <distributionManagement>
+    <site>
+      <id>www.juplo.de</id>
+      <url>scp://juplo.de/var/www/juplo/hibernate4-maven-plugin</url>
+    </site>
+  </distributionManagement>
+
+  <ciManagement>
+    <system>Continuum</system>
+    <url>http://juplo.de/continuum/</url>
+    <notifiers>
+      <notifier>
+        <type>mail</type>
+        <address>kai@juplo.de</address>
+      </notifier>
+    </notifiers>
+  </ciManagement>
+
   <properties>
     <!-- Zeichensatz -->
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -145,5 +163,29 @@
       </plugin>
     </plugins>
   </build>
+
+  <reporting>
+    <plugins>
+      <plugin>
+        <artifactId>maven-changes-plugin</artifactId>
+      </plugin>
+      <plugin>
+        <artifactId>maven-javadoc-plugin</artifactId>
+      </plugin>
+      <plugin>
+        <artifactId>maven-jxr-plugin</artifactId>
+      </plugin>
+      <plugin>
+        <artifactId>maven-pmd-plugin</artifactId>
+        <configuration>
+          <linkXref>true</linkXref>
+          <targetJdk>1.5</targetJdk>
+        </configuration>
+      </plugin>
+      <plugin>
+        <artifactId>maven-plugin-plugin</artifactId>
+      </plugin>
+    </plugins>
+  </reporting>
 
 </project>

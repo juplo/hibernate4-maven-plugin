@@ -1,0 +1,26 @@
+A simple plugin for generating a database-schema from Hibernate 4 mapping-annotations.
+
+  Hibernate comes with the buildin functionality, to automatically create or
+  update the database schema.
+  This functionality is configured in the session-configuraton via the
+  parameter <hbm2ddl.auto>
+  (see {{{http://docs.jboss.org/hibernate/orm/4.1/manual/en-US/html_single/#configuration-optional} Hibernate Reference Documentation - Chapter 3.4. Optional configuration properties}}).
+  But doing so
+  {{{http://stackoverflow.com/questions/221379/hibernate-hbm2ddl-auto-update-in-production} is not very wise}}, because you can easily corrupt or erase your
+  production database, if this configuration parameter slips through to your
+  production environment.
+  Alternatively, you can
+  {{{http://stackoverflow.com/questions/835961/how-to-creata-database-schema-using-hibernate} run the tools SchemaExport or SchemaUpdate by hand}}.
+  But that is not very comfortable and being used to maven you will quickly
+  long for a plugin, that does that job automatically for you, when you fire
+  up your test cases.
+
+  In the good old times, there was the
+  {{{http://mojo.codehaus.org/maven-hibernate3/hibernate3-maven-plugin/} Maven Hibernate3 Plugin}}, that does this for you.
+  But unfortunatly, this plugin is not compatible with Hibernate 4.x.
+
+  Since there does not seem to be any successor for the Maven Hibernate3 Plugin
+  and {{{http://www.google.de/search?q=hibernate4+maven+plugin} googeling}}
+  does not help, I decided to write up this simple plugin (inspired by these
+  two articles I found: {{{http://www.tikalk.com/alm/blog/schema-export-hibernate-4-and-maven} Schema Export with Hibernate 4 and Maven}} and
+  {{{http://doingenterprise.blogspot.de/2012/05/schema-generation-with-hibernate-4-jpa.html} Schema generation with Hibernate 4, JPA and Maven}}).
