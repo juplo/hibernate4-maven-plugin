@@ -77,7 +77,7 @@ public class Hbm2DdlMojo extends AbstractMojo
   /**
    * Skip execution
    *
-   * @parameter default-value="false"
+   * @parameter expression="${maven.test.skip}"
    */
   private boolean skip;
 
