@@ -33,8 +33,8 @@ import java.util.List;
 import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.Set;
-import javax.persistence.Entity;
 import javax.persistence.Embeddable;
+import javax.persistence.Entity;
 import javax.persistence.MappedSuperclass;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -171,9 +171,9 @@ public class Hbm2DdlMojo extends AbstractMojo
 
   @Override
   public void execute()
-      throws
-        MojoFailureException,
-        MojoExecutionException
+    throws
+      MojoFailureException,
+      MojoExecutionException
   {
     if (skip)
       return;
@@ -184,11 +184,11 @@ public class Hbm2DdlMojo extends AbstractMojo
 
 
     Set<String> classes = new HashSet<String>();
-    URL dirUrl = null;
-    try {
+    try
+    {
       AnnotationDB db = new AnnotationDB();
       getLog().info("Scanning directory " + outputDirectory + " for annotated classes...");
-      dirUrl = dir.toURI().toURL();
+      URL dirUrl = dir.toURI().toURL();
       db.scanArchives(dirUrl);
       if (db.getAnnotationIndex().containsKey(Entity.class.getName()))
         classes.addAll(db.getAnnotationIndex().get(Entity.class.getName()));
@@ -197,7 +197,8 @@ public class Hbm2DdlMojo extends AbstractMojo
       if (db.getAnnotationIndex().containsKey(Embeddable.class.getName()))
         classes.addAll(db.getAnnotationIndex().get(Embeddable.class.getName()));
     }
-    catch (IOException e) {
+    catch (IOException e)
+    {
       getLog().error("Error while scanning!", e);
       throw new MojoFailureException(e.getMessage());
     }
@@ -207,16 +208,19 @@ public class Hbm2DdlMojo extends AbstractMojo
     Properties properties = new Properties();
 
     /** Try to read configuration from properties-file */
-    try {
+    try
+    {
       File file = new File(hibernateProperties);
-      if (file.exists()) {
+      if (file.exists())
+      {
         getLog().info("Reading properties from file " + hibernateProperties + "...");
         properties.load(new FileInputStream(file));
       }
       else
         getLog().info("Ignoring nonexistent properties-file " + hibernateProperties + "!");
     }
-    catch (IOException e) {
+    catch (IOException e)
+    {
       getLog().error("Error while reading properties!", e);
       throw new MojoExecutionException(e.getMessage());
     }
@@ -239,65 +243,78 @@ public class Hbm2DdlMojo extends AbstractMojo
       getLog().debug(entry.getKey() + " = " + entry.getValue());
 
     ClassLoader classLoader = null;
-    try {
+    try
+    {
       getLog().debug("Creating ClassLoader for project-dependencies...");
       List<String> classpathFiles = project.getCompileClasspathElements();
       URL[] urls = new URL[classpathFiles.size()];
-      for (int i = 0; i < classpathFiles.size(); ++i) {
+      for (int i = 0; i < classpathFiles.size(); ++i)
+      {
         getLog().debug("Dependency: " + classpathFiles.get(i));
         urls[i] = new File(classpathFiles.get(i)).toURI().toURL();
       }
       classLoader = new URLClassLoader(urls, getClass().getClassLoader());
     }
-    catch (Exception e) {
+    catch (Exception e)
+    {
       getLog().error("Error while creating ClassLoader!", e);
       throw new MojoExecutionException(e.getMessage());
     }
 
     Configuration config = new Configuration();
     config.setProperties(properties);
-    try {
+    try
+    {
       getLog().debug("Adding annotated classes to hibernate-mapping-configuration...");
-      for (String annotatedClass : classes) {
+      for (String annotatedClass : classes)
+      {
         getLog().debug("Class " + annotatedClass);
         config.addAnnotatedClass(classLoader.loadClass(annotatedClass));
       }
     }
-    catch (ClassNotFoundException e) {
+    catch (ClassNotFoundException e)
+    {
       getLog().error("Error while adding annotated classes!", e);
       throw new MojoExecutionException(e.getMessage());
     }
 
     Target target = null;
-    try {
+    try
+    {
       target = Target.valueOf(this.target);
     }
-    catch (IllegalArgumentException e) {
+    catch (IllegalArgumentException e)
+    {
       getLog().error("Invalid value for configuration-option \"target\": " + this.target);
       getLog().error("Valid values are: NONE, SCRIPT, EXPORT, BOTH");
       throw new MojoExecutionException("Invalid value for configuration-option \"target\"");
     }
     Type type = null;
-    try {
+    try
+    {
       type = Type.valueOf(this.type);
     }
-    catch (IllegalArgumentException e) {
+    catch (IllegalArgumentException e)
+    {
       getLog().error("Invalid value for configuration-option \"type\": " + this.type);
       getLog().error("Valid values are: NONE, CREATE, DROP, BOTH");
       throw new MojoExecutionException("Invalid value for configuration-option \"type\"");
     }
 
     Connection connection = null;
-    try {
+    try
+    {
       /**
        * The connection must be established outside of hibernate, because
        * hibernate does not use the context-classloader of the current
        * thread and, hence, would not be able to resolve the driver-class!
        */
-      switch (target) {
+      switch (target)
+      {
         case EXPORT:
         case BOTH:
-          switch (type) {
+          switch (type)
+          {
             case CREATE:
             case DROP:
             case BOTH:
@@ -309,11 +326,13 @@ public class Hbm2DdlMojo extends AbstractMojo
           }
       }
     }
-    catch (ClassNotFoundException e) {
+    catch (ClassNotFoundException e)
+    {
       getLog().error("Dependency for driver-class " + driverClassName + " is missing!");
       throw new MojoExecutionException(e.getMessage());
     }
-    catch (Exception e) {
+    catch (Exception e)
+    {
       getLog().error("Cannot establish connection to database!");
       Enumeration<Driver> drivers = DriverManager.getDrivers();
       if (!drivers.hasMoreElements())
@@ -325,7 +344,8 @@ public class Hbm2DdlMojo extends AbstractMojo
 
     ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
     MavenLogAppender.startPluginLog(this);
-    try {
+    try
+    {
       /**
        * Change class-loader of current thread, so that hibernate can
        * see all dependencies!
@@ -341,7 +361,8 @@ public class Hbm2DdlMojo extends AbstractMojo
       for (Object exception : export.getExceptions())
         getLog().debug(exception.toString());
     }
-    finally {
+    finally
+    {
       /** Stop Log-Capturing */
       MavenLogAppender.endPluginLog(this);
 
@@ -349,10 +370,12 @@ public class Hbm2DdlMojo extends AbstractMojo
       Thread.currentThread().setContextClassLoader(contextClassLoader);
 
       /** Close the connection */
-      try {
+      try
+      {
         connection.close();
       }
-      catch (SQLException e) {
+      catch (SQLException e)
+      {
         getLog().error("Error while closing connection: " + e.getMessage());
       }
     }
@@ -364,70 +387,87 @@ public class Hbm2DdlMojo extends AbstractMojo
    * See:
    * http://stackoverflow.com/questions/288828/how-to-use-a-jdbc-driver-from-an-arbitrary-location
    */
-  static final class DriverProxy implements Driver {
-
+  static final class DriverProxy implements Driver
+  {
     private final Driver target;
 
-    DriverProxy(Driver target) {
-      if (target == null) {
+    DriverProxy(Driver target)
+    {
+      if (target == null)
         throw new NullPointerException();
-      }
       this.target = target;
     }
 
-    public java.sql.Driver getTarget() {
+    public java.sql.Driver getTarget()
+    {
       return target;
     }
 
     @Override
-    public boolean acceptsURL(String url) throws SQLException {
+    public boolean acceptsURL(String url) throws SQLException
+    {
       return target.acceptsURL(url);
     }
 
     @Override
     public java.sql.Connection connect(
-        String url, java.util.Properties info) throws SQLException {
+        String url,
+        java.util.Properties info
+      )
+      throws
+        SQLException
+    {
       return target.connect(url, info);
     }
 
     @Override
-    public int getMajorVersion() {
+    public int getMajorVersion()
+    {
       return target.getMajorVersion();
     }
 
     @Override
-    public int getMinorVersion() {
+    public int getMinorVersion()
+    {
       return target.getMinorVersion();
     }
 
     @Override
     public DriverPropertyInfo[] getPropertyInfo(
-        String url, Properties info) throws SQLException {
+        String url,
+        Properties info
+      )
+      throws
+        SQLException
+    {
       return target.getPropertyInfo(url, info);
     }
 
     @Override
-    public boolean jdbcCompliant() {
+    public boolean jdbcCompliant()
+    {
       return target.jdbcCompliant();
     }
 
     @Override
-    public String toString() {
+    public String toString()
+    {
       return "Proxy: " + target;
     }
 
     @Override
-    public int hashCode() {
+    public int hashCode()
+    {
       return target.hashCode();
     }
 
     @Override
-    public boolean equals(Object obj) {
-      if (!(obj instanceof DriverProxy)) {
+    public boolean equals(Object obj)
+    {
+      if (!(obj instanceof DriverProxy))
         return false;
-      }
       DriverProxy other = (DriverProxy) obj;
       return this.target.equals(other.target);
     }
-}
+  }
 }
