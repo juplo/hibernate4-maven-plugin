@@ -58,6 +58,13 @@ import org.scannotation.AnnotationDB;
  */
 public class Hbm2DdlMojo extends AbstractMojo
 {
+  public final static String DRIVER_CLASS = "hibernate.connection.driver_class";
+  public final static String URL = "hibernate.connection.url";
+  public final static String USERNAME = "hibernate.connection.username";
+  public final static String PASSWORD = "hibernate.connection.password";
+  public final static String DIALECT = "hibernate.dialect";
+
+
   /**
    * The project whose project files to create.
    *
@@ -217,7 +224,7 @@ public class Hbm2DdlMojo extends AbstractMojo
         properties.load(new FileInputStream(file));
       }
       else
-        getLog().info("Ignoring nonexistent properties-file " + hibernateProperties + "!");
+        getLog().info("No hibernate-properties-file found! Checked path: " + hibernateProperties);
     }
     catch (IOException e)
     {
@@ -225,22 +232,96 @@ public class Hbm2DdlMojo extends AbstractMojo
       throw new MojoExecutionException(e.getMessage());
     }
 
-    /** Overwrite values from propertie-file or set  if given */
+    /** Overwrite values from propertie-file or set, if given */
     if (driverClassName != null)
-      properties.setProperty("hibernate.connection.driver_class", driverClassName);
+    {
+      if (properties.containsKey(DRIVER_CLASS))
+        getLog().debug(
+            "Overwriting property " +
+            DRIVER_CLASS + "=" + properties.getProperty(DRIVER_CLASS) +
+            " with the value " + driverClassName +
+            " from the plugin-configuration-parameter driverClassName!"
+          );
+      else
+        getLog().debug(
+            "Using the value " + driverClassName +
+            " from the plugin-configuration-parameter driverClassName!"
+          );
+      properties.setProperty(DRIVER_CLASS, driverClassName);
+    }
     if (url != null)
-      properties.setProperty("hibernate.connection.url", url);
+    {
+      if (properties.containsKey(URL))
+        getLog().debug(
+            "Overwriting property " +
+            URL + "=" + properties.getProperty(URL) +
+            " with the value " + url +
+            " from the plugin-configuration-parameter url!"
+          );
+      else
+        getLog().debug(
+            "Using the value " + url +
+            " from the plugin-configuration-parameter url!"
+          );
+      properties.setProperty(URL, url);
+    }
     if (username != null)
-      properties.setProperty("hibernate.connection.username", username);
+    {
+      if (properties.containsKey(USERNAME))
+        getLog().debug(
+            "Overwriting property " +
+            USERNAME + "=" + properties.getProperty(USERNAME) +
+            " with the value " + username +
+            " from the plugin-configuration-parameter username!"
+          );
+      else
+        getLog().debug(
+            "Using the value " + username +
+            " from the plugin-configuration-parameter username!"
+          );
+      properties.setProperty(USERNAME, username);
+    }
     if (password != null)
-      properties.setProperty("hibernate.connection.password", password);
+    {
+      if (properties.containsKey(PASSWORD))
+        getLog().debug(
+            "Overwriting property " +
+            PASSWORD + "=" + properties.getProperty(PASSWORD) +
+            " with the value " + password +
+            " from the plugin-configuration-parameter password!"
+          );
+      else
+        getLog().debug(
+            "Using the value " + password +
+            " from the plugin-configuration-parameter password!"
+          );
+      properties.setProperty(PASSWORD, password);
+    }
     if (hibernateDialect != null)
-      properties.setProperty("hibernate.dialect", hibernateDialect);
+    {
+      if (properties.containsKey(DIALECT))
+        getLog().debug(
+            "Overwriting property " +
+            DIALECT + "=" + properties.getProperty(DIALECT) +
+            " with the value " + hibernateDialect +
+            " from the plugin-configuration-parameter hibernateDialect!"
+          );
+      else
+        getLog().debug(
+            "Using the value " + hibernateDialect +
+            " from the plugin-configuration-parameter hibernateDialect!"
+          );
+      properties.setProperty(DIALECT, hibernateDialect);
+    }
 
+    getLog().info("Gathered hibernate-configuration (turn on debugging for details):");
     if (properties.isEmpty())
-      getLog().warn("No properties set!");
+    {
+      getLog().error("No properties set!");
+      throw new MojoFailureException("Hibernate-Configuration is missing!");
+    }
     for (Entry<Object,Object> entry : properties.entrySet())
-      getLog().debug(entry.getKey() + " = " + entry.getValue());
+      getLog().info("  " + entry.getKey() + " = " + entry.getValue());
 
     ClassLoader classLoader = null;
     try
