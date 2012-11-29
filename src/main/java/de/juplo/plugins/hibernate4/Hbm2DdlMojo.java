@@ -29,11 +29,11 @@ import java.sql.DriverPropertyInfo;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
 import java.util.Enumeration;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.logging.Logger;
 import javax.persistence.Embeddable;
 import javax.persistence.Entity;
@@ -195,7 +195,7 @@ public class Hbm2DdlMojo extends AbstractMojo
       throw new MojoExecutionException("Cannot scan for annotated classes in " + outputDirectory + ": directory does not exist!");
 
 
-    Set<String> classes = new HashSet<String>();
+    Set<String> classes = new TreeSet<String>();
     try
     {
       AnnotationDB db = new AnnotationDB();
@@ -216,6 +216,10 @@ public class Hbm2DdlMojo extends AbstractMojo
     }
     if (classes.isEmpty())
       throw new MojoFailureException("No annotated classes found in directory " + outputDirectory);
+
+    getLog().info("Detected classes with mapping-annotations:");
+    for (String classname : classes)
+      getLog().info("  " + classname);
 
     Properties properties = new Properties();
 
