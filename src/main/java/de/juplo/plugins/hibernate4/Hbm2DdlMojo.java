@@ -185,7 +185,10 @@ public class Hbm2DdlMojo extends AbstractMojo
       MojoExecutionException
   {
     if (skip)
+    {
+      getLog().info("Exectuion of hibernate4-maven-plugin:export was skipped!");
       return;
+    }
 
     File dir = new File(outputDirectory);
     if (!dir.exists())
