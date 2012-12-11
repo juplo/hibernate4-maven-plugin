@@ -21,10 +21,13 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.math.BigInteger;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.security.MessageDigest;
 import java.sql.Connection;
 import java.sql.Driver;
 import java.sql.DriverManager;
@@ -73,7 +76,7 @@ public class Hbm2DdlMojo extends AbstractMojo
   public final static String PASSWORD = "hibernate.connection.password";
   public final static String DIALECT = "hibernate.dialect";
 
-  private final static String TIMESTAMPS = "schema.timestamp";
+  private final static String MD5S = "schema.md5s";
 
   /**
    * The project whose project files to create.
@@ -202,9 +205,9 @@ public class Hbm2DdlMojo extends AbstractMojo
     if (!dir.exists())
       throw new MojoExecutionException("Cannot scan for annotated classes in " + outputDirectory + ": directory does not exist!");
 
-    Map<String,Long> timestamps;
+    Map<String,String> md5s;
     boolean modified = false;
-    File saved = new File(outputDirectory + File.separator + TIMESTAMPS);
+    File saved = new File(outputDirectory + File.separator + MD5S);
 
     if (saved.exists())
     {
@@ -212,18 +215,18 @@ public class Hbm2DdlMojo extends AbstractMojo
       {
         FileInputStream fis = new FileInputStream(saved);
         ObjectInputStream ois = new ObjectInputStream(fis);
-        timestamps = (HashMap<String,Long>)ois.readObject();
+        md5s = (HashMap<String,String>)ois.readObject();
         ois.close();
       }
       catch (Exception e)
       {
-        timestamps = new HashMap<String,Long>();
+        md5s = new HashMap<String,String>();
         getLog().warn("Cannot read timestamps from saved: " + e);
       }
     }
     else
     {
-      timestamps = new HashMap<String,Long>();
+      md5s = new HashMap<String,String>();
       try
       {
         saved.createNewFile();
@@ -279,19 +282,32 @@ public class Hbm2DdlMojo extends AbstractMojo
       if (db.getAnnotationIndex().containsKey(Embeddable.class.getName()))
         classNames.addAll(db.getAnnotationIndex().get(Embeddable.class.getName()));
 
+      MessageDigest digest = java.security.MessageDigest.getInstance("MD5");
       for (String name : classNames)
       {
         Class<?> annotatedClass = classLoader.loadClass(name);
         classes.add(annotatedClass);
-        URL classUrl = annotatedClass.getResource(annotatedClass.getSimpleName() + ".class");
-        File classFile = new File(classUrl.toURI());
-        long lastModified = classFile.lastModified();
-        long timestamp = !timestamps.containsKey(name) ? 0 : timestamps.get(name);
-        if (lastModified > timestamp)
+        InputStream is =
+            annotatedClass
+                .getResourceAsStream(annotatedClass.getSimpleName() + ".class");
+        byte[] buffer = new byte[1024*4]; // copy data in 4MB-chunks
+        int i;
+        while((i = is.read(buffer)) > -1)
+          digest.update(buffer, 0, i);
+        is.close();
+        byte[] bytes = digest.digest();
+        BigInteger bi = new BigInteger(1, bytes);
+        String newMd5 = String.format("%0" + (bytes.length << 1) + "x", bi);
+        String oldMd5 = !md5s.containsKey(name) ? "" : md5s.get(name);
+        if (!newMd5.equals(oldMd5))
         {
           getLog().debug("Found new or modified annotated class: " + name);
           modified = true;
-          timestamps.put(name, lastModified);
+          md5s.put(name, newMd5);
+        }
+        else
+        {
+          getLog().debug(oldMd5 + " -> class unchanged: " + name);
         }
       }
     }
@@ -549,7 +565,7 @@ public class Hbm2DdlMojo extends AbstractMojo
     {
       FileOutputStream fos = new FileOutputStream(saved);
       ObjectOutputStream oos = new ObjectOutputStream(fos);
-      oos.writeObject(timestamps);
+      oos.writeObject(md5s);
       oos.close();
       fos.close();
     }
