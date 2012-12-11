@@ -19,7 +19,10 @@ package de.juplo.plugins.hibernate4;
 import com.pyx4j.log4j.MavenLogAppender;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.sql.Connection;
@@ -28,8 +31,12 @@ import java.sql.DriverManager;
 import java.sql.DriverPropertyInfo;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
+import java.util.Comparator;
 import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.Set;
@@ -66,6 +73,7 @@ public class Hbm2DdlMojo extends AbstractMojo
   public final static String PASSWORD = "hibernate.connection.password";
   public final static String DIALECT = "hibernate.dialect";
 
+  private final static String TIMESTAMPS = "schema.timestamp";
 
   /**
    * The project whose project files to create.
@@ -194,32 +202,125 @@ public class Hbm2DdlMojo extends AbstractMojo
     if (!dir.exists())
       throw new MojoExecutionException("Cannot scan for annotated classes in " + outputDirectory + ": directory does not exist!");
 
+    Map<String,Long> timestamps;
+    boolean modified = false;
+    File saved = new File(outputDirectory + File.separator + TIMESTAMPS);
 
-    Set<String> classes = new TreeSet<String>();
+    if (saved.exists())
+    {
+      try
+      {
+        FileInputStream fis = new FileInputStream(saved);
+        ObjectInputStream ois = new ObjectInputStream(fis);
+        timestamps = (HashMap<String,Long>)ois.readObject();
+        ois.close();
+      }
+      catch (Exception e)
+      {
+        timestamps = new HashMap<String,Long>();
+        getLog().warn("Cannot read timestamps from saved: " + e);
+      }
+    }
+    else
+    {
+      timestamps = new HashMap<String,Long>();
+      try
+      {
+        saved.createNewFile();
+      }
+      catch (IOException e)
+      {
+        getLog().warn("Cannot create saved for timestamps: " + e);
+      }
+    }
+
+    ClassLoader classLoader = null;
+    try
+    {
+      getLog().debug("Creating ClassLoader for project-dependencies...");
+      List<String> classpathFiles = project.getCompileClasspathElements();
+      URL[] urls = new URL[classpathFiles.size()];
+      for (int i = 0; i < classpathFiles.size(); ++i)
+      {
+        getLog().debug("Dependency: " + classpathFiles.get(i));
+        urls[i] = new File(classpathFiles.get(i)).toURI().toURL();
+      }
+      classLoader = new URLClassLoader(urls, getClass().getClassLoader());
+    }
+    catch (Exception e)
+    {
+      getLog().error("Error while creating ClassLoader!", e);
+      throw new MojoExecutionException(e.getMessage());
+    }
+
+    Set<Class<?>> classes =
+        new TreeSet<Class<?>>(
+            new Comparator<Class<?>>() {
+              @Override
+              public int compare(Class<?> a, Class<?> b)
+              {
+                return a.getName().compareTo(b.getName());
+              }
+            }
+          );
+
     try
     {
       AnnotationDB db = new AnnotationDB();
       getLog().info("Scanning directory " + outputDirectory + " for annotated classes...");
       URL dirUrl = dir.toURI().toURL();
       db.scanArchives(dirUrl);
+
+      Set<String> classNames = new HashSet<String>();
       if (db.getAnnotationIndex().containsKey(Entity.class.getName()))
-        classes.addAll(db.getAnnotationIndex().get(Entity.class.getName()));
+        classNames.addAll(db.getAnnotationIndex().get(Entity.class.getName()));
       if (db.getAnnotationIndex().containsKey(MappedSuperclass.class.getName()))
-        classes.addAll(db.getAnnotationIndex().get(MappedSuperclass.class.getName()));
+        classNames.addAll(db.getAnnotationIndex().get(MappedSuperclass.class.getName()));
       if (db.getAnnotationIndex().containsKey(Embeddable.class.getName()))
-        classes.addAll(db.getAnnotationIndex().get(Embeddable.class.getName()));
+        classNames.addAll(db.getAnnotationIndex().get(Embeddable.class.getName()));
+
+      for (String name : classNames)
+      {
+        Class<?> annotatedClass = classLoader.loadClass(name);
+        classes.add(annotatedClass);
+        URL classUrl = annotatedClass.getResource(annotatedClass.getSimpleName() + ".class");
+        File classFile = new File(classUrl.toURI());
+        long lastModified = classFile.lastModified();
+        long timestamp = !timestamps.containsKey(name) ? 0 : timestamps.get(name);
+        if (lastModified > timestamp)
+        {
+          getLog().debug("Found new or modified annotated class: " + name);
+          modified = true;
+          timestamps.put(name, lastModified);
+        }
+      }
     }
-    catch (IOException e)
+    catch (ClassNotFoundException e)
+    {
+      getLog().error("Error while adding annotated classes!", e);
+      throw new MojoExecutionException(e.getMessage());
+    }
+    catch (Exception e)
     {
       getLog().error("Error while scanning!", e);
       throw new MojoFailureException(e.getMessage());
     }
+
     if (classes.isEmpty())
       throw new MojoFailureException("No annotated classes found in directory " + outputDirectory);
 
-    getLog().info("Detected classes with mapping-annotations:");
-    for (String classname : classes)
-      getLog().info("  " + classname);
+    if (!modified)
+    {
+      getLog().info("No modified annotated classes found.");
+      getLog().info("Skipping schema generation!");
+      project.getProperties().setProperty("hibernate4.skipped", "true");
+      return;
+    }
+
+    getLog().debug("Detected classes with mapping-annotations:");
+    for (Class<?> annotatedClass : classes)
+      getLog().debug("  " + annotatedClass.getName());
+
 
     Properties properties = new Properties();
 
@@ -332,40 +433,13 @@ public class Hbm2DdlMojo extends AbstractMojo
     for (Entry<Object,Object> entry : properties.entrySet())
       getLog().info("  " + entry.getKey() + " = " + entry.getValue());
 
-    ClassLoader classLoader = null;
-    try
-    {
-      getLog().debug("Creating ClassLoader for project-dependencies...");
-      List<String> classpathFiles = project.getCompileClasspathElements();
-      URL[] urls = new URL[classpathFiles.size()];
-      for (int i = 0; i < classpathFiles.size(); ++i)
-      {
-        getLog().debug("Dependency: " + classpathFiles.get(i));
-        urls[i] = new File(classpathFiles.get(i)).toURI().toURL();
-      }
-      classLoader = new URLClassLoader(urls, getClass().getClassLoader());
-    }
-    catch (Exception e)
-    {
-      getLog().error("Error while creating ClassLoader!", e);
-      throw new MojoExecutionException(e.getMessage());
-    }
-
     Configuration config = new Configuration();
     config.setProperties(properties);
-    try
+    getLog().debug("Adding annotated classes to hibernate-mapping-configuration...");
+    for (Class<?> annotatedClass : classes)
     {
-      getLog().debug("Adding annotated classes to hibernate-mapping-configuration...");
-      for (String annotatedClass : classes)
-      {
-        getLog().debug("Class " + annotatedClass);
-        config.addAnnotatedClass(classLoader.loadClass(annotatedClass));
-      }
-    }
-    catch (ClassNotFoundException e)
-    {
-      getLog().error("Error while adding annotated classes!", e);
-      throw new MojoExecutionException(e.getMessage());
+      getLog().debug("Class " + annotatedClass);
+      config.addAnnotatedClass(annotatedClass);
     }
 
     Target target = null;
@@ -468,6 +542,20 @@ public class Hbm2DdlMojo extends AbstractMojo
       {
         getLog().error("Error while closing connection: " + e.getMessage());
       }
+    }
+
+    /** Write timestamps for annotated classes to file */
+    try
+    {
+      FileOutputStream fos = new FileOutputStream(saved);
+      ObjectOutputStream oos = new ObjectOutputStream(fos);
+      oos.writeObject(timestamps);
+      oos.close();
+      fos.close();
+    }
+    catch (Exception e)
+    {
+      getLog().error("Cannot write timestamps to file: " + e);
     }
   }
 
