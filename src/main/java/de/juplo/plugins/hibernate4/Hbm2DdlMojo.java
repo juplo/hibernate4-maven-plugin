@@ -325,14 +325,6 @@ public class Hbm2DdlMojo extends AbstractMojo
     if (classes.isEmpty())
       throw new MojoFailureException("No annotated classes found in directory " + outputDirectory);
 
-    if (!modified)
-    {
-      getLog().info("No modified annotated classes found.");
-      getLog().info("Skipping schema generation!");
-      project.getProperties().setProperty("hibernate4.skipped", "true");
-      return;
-    }
-
     getLog().debug("Detected classes with mapping-annotations:");
     for (Class<?> annotatedClass : classes)
       getLog().debug("  " + annotatedClass.getName());
@@ -438,6 +430,33 @@ public class Hbm2DdlMojo extends AbstractMojo
             " from the plugin-configuration-parameter hibernateDialect!"
           );
       properties.setProperty(DIALECT, hibernateDialect);
+    }
+
+    /** The generated SQL varies with the dialect! */
+    if (md5s.containsKey(DIALECT))
+    {
+      String dialect = properties.getProperty(DIALECT);
+      if (md5s.get(DIALECT).equals(dialect))
+        getLog().debug("SQL-dialect unchanged.");
+      else
+      {
+        getLog().debug("SQL-dialect changed: " + dialect);
+        modified = true;
+        md5s.put(DIALECT, dialect);
+      }
+    }
+    else
+    {
+      modified = true;
+      md5s.put(DIALECT, properties.getProperty(DIALECT));
+    }
+
+    if (!modified)
+    {
+      getLog().info("No modified annotated classes found and dialect unchanged.");
+      getLog().info("Skipping schema generation!");
+      project.getProperties().setProperty("hibernate4.skipped", "true");
+      return;
     }
 
     getLog().info("Gathered hibernate-configuration (turn on debugging for details):");
