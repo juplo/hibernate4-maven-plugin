@@ -70,6 +70,8 @@ import org.scannotation.AnnotationDB;
  */
 public class Hbm2DdlMojo extends AbstractMojo
 {
+  public final static String EXPORT_SKIPPED_PROPERTY = "hibernate.export.skipped";
+
   public final static String DRIVER_CLASS = "hibernate.connection.driver_class";
   public final static String URL = "hibernate.connection.url";
   public final static String USERNAME = "hibernate.connection.username";
@@ -205,6 +207,7 @@ public class Hbm2DdlMojo extends AbstractMojo
     if (skip)
     {
       getLog().info("Exectuion of hibernate4-maven-plugin:export was skipped!");
+      project.getProperties().setProperty(EXPORT_SKIPPED_PROPERTY, "true");
       return;
     }
 
@@ -458,22 +461,11 @@ public class Hbm2DdlMojo extends AbstractMojo
       md5s.put(DIALECT, properties.getProperty(DIALECT));
     }
 
-    if (!modified)
-    {
-      getLog().info("No modified annotated classes found and dialect unchanged.");
-      getLog().info("Skipping schema generation!");
-      project.getProperties().setProperty("hibernate.export.skipped", "true");
-      return;
-    }
-
-    getLog().info("Gathered hibernate-configuration (turn on debugging for details):");
     if (properties.isEmpty())
     {
       getLog().error("No properties set!");
       throw new MojoFailureException("Hibernate-Configuration is missing!");
     }
-    for (Entry<Object,Object> entry : properties.entrySet())
-      getLog().info("  " + entry.getKey() + " = " + entry.getValue());
 
     Configuration config = new Configuration();
     config.setProperties(properties);
@@ -506,6 +498,26 @@ public class Hbm2DdlMojo extends AbstractMojo
       getLog().error("Valid values are: NONE, CREATE, DROP, BOTH");
       throw new MojoExecutionException("Invalid value for configuration-option \"type\"");
     }
+
+    if (target.equals(Target.SCRIPT) || target.equals(Target.NONE))
+    {
+      project.getProperties().setProperty(EXPORT_SKIPPED_PROPERTY, "true");
+    }
+    if (
+        !modified
+        && !target.equals(Target.SCRIPT)
+        && !target.equals(Target.NONE)
+      )
+    {
+      getLog().info("No modified annotated classes found and dialect unchanged.");
+      getLog().info("Skipping schema generation!");
+      project.getProperties().setProperty(EXPORT_SKIPPED_PROPERTY, "true");
+      return;
+    }
+
+    getLog().info("Gathered hibernate-configuration (turn on debugging for details):");
+    for (Entry<Object,Object> entry : properties.entrySet())
+      getLog().info("  " + entry.getKey() + " = " + entry.getValue());
 
     Connection connection = null;
     try
