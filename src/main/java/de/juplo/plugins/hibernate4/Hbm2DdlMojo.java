@@ -79,7 +79,7 @@ public class Hbm2DdlMojo extends AbstractMojo
   private final static String MD5S = "schema.md5s";
 
   /**
-   * The project whose project files to create.
+   * The maven project.
    *
    * @parameter expression="${project}"
    * @required
@@ -88,7 +88,14 @@ public class Hbm2DdlMojo extends AbstractMojo
   private MavenProject project;
 
   /**
-   * Directories to scan.
+   * Build-directory.
+   *
+   * @parameter expression="${project.build.directory}"
+   */
+  private String buildDirectory;
+
+  /**
+   * Class-directory to scan.
    *
    * @parameter expression="${project.build.outputDirectory}"
    */
@@ -97,7 +104,7 @@ public class Hbm2DdlMojo extends AbstractMojo
   /**
    * Skip execution
    *
-   * @parameter expression="${maven.test.skip}"
+   * @parameter expression="${maven.test.skip}" default-value="false"
    */
   private boolean skip;
 
@@ -137,7 +144,7 @@ public class Hbm2DdlMojo extends AbstractMojo
   private String hibernateDialect;
 
   /**
-   * Hibernate configuration file.
+   * Path to Hibernate configuration file.
    *
    * @parameter default-value="${project.build.outputDirectory}/hibernate.properties"
    */
@@ -151,7 +158,7 @@ public class Hbm2DdlMojo extends AbstractMojo
    *   <li><strong>SCRIPT</strong> export schema to SQL-script</li>
    *   <li><strong>BOTH</strong></li>
    * </ul>
-   * @parameter default-value="EXPORT"
+   * @parameter expression="${hibernate.export.target}" default-value="EXPORT"
    */
   private String target;
 
@@ -163,28 +170,28 @@ public class Hbm2DdlMojo extends AbstractMojo
    *   <li><strong>DROP</strong> drop database-schema</li>
    *   <li><strong>BOTH</strong> <strong>(DEFAULT!)</strong></li>
    * </ul>
-   * @parameter default-value="BOTH"
+   * @parameter expression="${hibernate.export.type}" default-value="BOTH"
    */
   private String type;
 
   /**
    * Output file.
    *
-   * @parameter default-value="${project.build.outputDirectory}/schema.sql"
+   * @parameter expression="${hibernate.export.schema.filename}" default-value="${project.build.directory}/schema.sql"
    */
   private String outputFile;
 
   /**
    * Delimiter in output-file.
    *
-   * @parameter default-value=";"
+   * @parameter expression="${hibernate.export.schema.delimiter}" default-value=";"
    */
   private String delimiter;
 
   /**
    * Format output-file.
    *
-   * @parameter default-value="true"
+   * @parameter expression="${hibernate.export.schema.format}" default-value="true"
    */
   private boolean format;
 
@@ -207,7 +214,7 @@ public class Hbm2DdlMojo extends AbstractMojo
 
     Map<String,String> md5s;
     boolean modified = false;
-    File saved = new File(outputDirectory + File.separator + MD5S);
+    File saved = new File(buildDirectory + File.separator + MD5S);
 
     if (saved.exists())
     {
@@ -455,7 +462,7 @@ public class Hbm2DdlMojo extends AbstractMojo
     {
       getLog().info("No modified annotated classes found and dialect unchanged.");
       getLog().info("Skipping schema generation!");
-      project.getProperties().setProperty("hibernate4.skipped", "true");
+      project.getProperties().setProperty("hibernate.export.skipped", "true");
       return;
     }
 
@@ -579,7 +586,7 @@ public class Hbm2DdlMojo extends AbstractMojo
       }
     }
 
-    /** Write timestamps for annotated classes to file */
+    /** Write md5-sums for annotated classes to file */
     try
     {
       FileOutputStream fos = new FileOutputStream(saved);
@@ -590,7 +597,7 @@ public class Hbm2DdlMojo extends AbstractMojo
     }
     catch (Exception e)
     {
-      getLog().error("Cannot write timestamps to file: " + e);
+      getLog().error("Cannot write md5-sums to file: " + e);
     }
   }
 
@@ -598,7 +605,7 @@ public class Hbm2DdlMojo extends AbstractMojo
    * Needed, because DriverManager won't pick up drivers, that were not
    * loaded by the system-classloader!
    * See:
-   * http://stackoverflow.com/questions/288828/how-to-use-a-jdbc-driver-from-an-arbitrary-location
+   * http://stackoverflow.com/questions/288828/how-to-use-a-jdbc-driver-fromodifiedm-an-arbitrary-location
    */
   static final class DriverProxy implements Driver
   {
