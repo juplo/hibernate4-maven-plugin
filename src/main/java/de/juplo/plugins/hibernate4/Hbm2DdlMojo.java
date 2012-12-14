@@ -479,7 +479,7 @@ public class Hbm2DdlMojo extends AbstractMojo
     Target target = null;
     try
     {
-      target = Target.valueOf(this.target);
+      target = Target.valueOf(this.target.toUpperCase());
     }
     catch (IllegalArgumentException e)
     {
@@ -490,7 +490,7 @@ public class Hbm2DdlMojo extends AbstractMojo
     Type type = null;
     try
     {
-      type = Type.valueOf(this.type);
+      type = Type.valueOf(this.type.toUpperCase());
     }
     catch (IllegalArgumentException e)
     {
