@@ -111,6 +111,16 @@ public class Hbm2DdlMojo extends AbstractMojo
   private boolean skip;
 
   /**
+   * Force execution
+   * <p>
+   * Force execution, even if no modified or newly added annotated classes
+   * where found. <code>skip</code> takes precedence over <code>force</code>.
+   *
+   * @parameter expression="${hibernate.export.force}" default-value="false"
+   */
+  private boolean force;
+
+  /**
    * SQL-Driver name.
    *
    * @parameter expression="${hibernate.connection.driver_class}
@@ -507,6 +517,7 @@ public class Hbm2DdlMojo extends AbstractMojo
         !modified
         && !target.equals(Target.SCRIPT)
         && !target.equals(Target.NONE)
+        && !force
       )
     {
       getLog().info("No modified annotated classes found and dialect unchanged.");
