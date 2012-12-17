@@ -7,12 +7,12 @@ A simple Plugin for generating a Database-Schema from Hibernate 4 Mapping-Annota
   The plugin was designed to be easy and safe to use, because it must not 
   never, never happen, that you blow away your production database when
   firering a maven-build of your webapp on your production-machine!
-  For more information about the insiration to write this tiny plugin,
+  For more information about the inspiration to write this tiny plugin,
   {{{/hibernate4-maven-plugin-a-simple-plugin-for-generating-a-database-schema-from-hibernate-4-mapping-annotations/} read our blog-article about the hibernate4-maven-plugin}}.
 
 Documentation and Examples
 
- * See {{{./examples.html} Examples}} for Usage-Eplanations and simple
+ * See {{{./examples.html} Examples}} for Usage-Explanations and simple
    examples of how to use this plugin.
 
  * See {{{./plugin-info.html} Plugin Documentation}} for the full

@@ -82,6 +82,8 @@ public class Hbm2DdlMojo extends AbstractMojo
 
   /**
    * The maven project.
+   * <p>
+   * Only needed internally.
    *
    * @parameter expression="${project}"
    * @required
@@ -91,8 +93,12 @@ public class Hbm2DdlMojo extends AbstractMojo
 
   /**
    * Build-directory.
+   * <p>
+   * Only needed internally.
    *
    * @parameter expression="${project.build.directory}"
+   * @required
+   * @readonly
    */
   private String buildDirectory;
 
@@ -131,6 +137,14 @@ public class Hbm2DdlMojo extends AbstractMojo
 
   /**
    * Skip execution
+   * <p>
+   * If set to <code>true</code>, the execution is skipped.
+   * <p>
+   * A skipped excecution is signaled via the maven-property
+   * <code>${hibernate.export.skipped}</code>.
+   * <p>
+   * The excecution is skipped automatically, if no modified or newly added
+   * annotated classes are found and the dialect was not changed.
    *
    * @parameter expression="${maven.test.skip}" default-value="false"
    */
@@ -140,7 +154,9 @@ public class Hbm2DdlMojo extends AbstractMojo
    * Force execution
    * <p>
    * Force execution, even if no modified or newly added annotated classes
-   * where found. <code>skip</code> takes precedence over <code>force</code>.
+   * where found and the dialect was not changed.
+   * <p>
+   * <code>skip</code> takes precedence over <code>force</code>.
    *
    * @parameter expression="${hibernate.export.force}" default-value="false"
    */
@@ -191,8 +207,8 @@ public class Hbm2DdlMojo extends AbstractMojo
   /**
    * Target of execution:
    * <ul>
-   *   <li><strong>NONE</strong> do nothing - just validate the configuration</li>
-   *   <li><strong>EXPORT</strong> create database <strong>(DEFAULT!)</strong></li>
+   *   <li><strong>NONE</strong> do nothing - just validate the configuration (forces excecution, signals skip)</li>
+   *   <li><strong>EXPORT</strong> create database (<strong>DEFAULT!</strong>. forces excecution, signals skip)</li>
    *   <li><strong>SCRIPT</strong> export schema to SQL-script</li>
    *   <li><strong>BOTH</strong></li>
    * </ul>
@@ -201,12 +217,12 @@ public class Hbm2DdlMojo extends AbstractMojo
   private String target;
 
   /**
-   * Type of export.
+   * Type of execution.
    * <ul>
    *   <li><strong>NONE</strong> do nothing - just validate the configuration</li>
    *   <li><strong>CREATE</strong> create database-schema</li>
    *   <li><strong>DROP</strong> drop database-schema</li>
-   *   <li><strong>BOTH</strong> <strong>(DEFAULT!)</strong></li>
+   *   <li><strong>BOTH</strong> (<strong>DEFAULT!</strong>)</li>
    * </ul>
    * @parameter expression="${hibernate.export.type}" default-value="BOTH"
    */

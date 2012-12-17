@@ -1,11 +1,13 @@
 Configuration Examples
 
-  The plugin was designed with two main goals in mind:
+  The plugin was designed with three main goals in mind:
 
     * It should be easy to use.
 
     * It should be maximal unlikely, to erase a producation-database by
       accident.
+
+    * It should not slow down the development cycle.
 
   To achieve the first goal, the convention-over-configuration paradigma
   was applied and the plugin was stuffed with usefull logging-messages.
@@ -14,6 +16,10 @@ Configuration Examples
   To achieve the second goal, the precedence in which the configuration
   locations are consulted was layouted in a way that makes it possible, to
   prevent overwrites of the wrong database by accident.
+
+  Last but not least, in order to not slow down the development cycle, the
+  hibernate4-maven-plugin only executes the schema-export, if the mapping
+  or the dialect changes (or if you force it to do so).
 
 Configuration through a hibernate.properties-File
 
@@ -258,7 +264,41 @@ mvn -X compile hibernate4:export
 
   <<But be warned:>> <<<hibernate4-maven-plugin>>> tends to be very chatty ;)
 
+{Force execution}
+
+  The hibernate4-maven-plugin computes MD5-sums for all found annotated
+  classes and stores them together with the generated schema.
+  If no classes were changed or added and the dialect wasn't changed too, it
+  automatically skips the configured schema-export, to speed up the development
+  cycle.
+
+  The plugin signals, that the execution was skipped by setting the maven
+  property <<<${hibernate.export.skipped}>>> to <<<true>>>.
+  This may be helpful, because other plugins like
+  {{{http://mojo.codehaus.org/dbunit-maven-plugin/}dbunit-plugin}}
+  {{{DBUnit fails}may fail}}, when the execution is skipped.
+
+  If you need the hibernate4-maven-plugin to <never skip automatically>
+  execution, you can force it to do so, if you set the parameter <<<force>>> to
+  <<<true>>>:
+
+----------------
+<plugin>
+  <groupId>de.juplo</groupId>
+  <artifactId>hibernate4-maven-plugin</artifactId>
+  <version>${project.version}</version>
+  <configuration>
+    <force>true</force>
+  </configuration>
+</plugin>
+----------------
+
+  Or you may specify <<<-Dhibernate.export.force=true>>> at the command line,
+  if you want to force hibernate4-maven-plugin only once.
+
 Known Pitfalls
+
+* Dependency for driver-class XYZ is missing
 
   One regular problem is the scope of the jdbc-driver-dependency.
   It is very unlikely, that this dependency is needed at compile-time.
@@ -321,3 +361,35 @@ Known Pitfalls
   testing, than in production.
   Because otherwise, this dependency will unnecessarily bloat the
   runtime-dependencies of your project.
+
+* {DBUnit fails} after execution of hibernate4 was skipped because nothing has changed
+
+  If hibernate4-maven-plugin skips its excecution, this may lead to errors in
+  other plugins.
+  For example, when importing sample-data in the automatically created database
+  with the help of the {{{http://mojo.codehaus.org/dbunit-maven-plugin/}dbunit-plugin}},
+  the <<<CLEAN_INSERT>>>-operation may fail because of foreign-key-constraints,
+  if the database was not recreated, because the hibernate4-maven-plugin has
+  skipped its excecution.
+
+  A quick fix to this problem is, to {{{Force execution}force}}
+  hibernate4-maven-plugin to export the schema every time it is running.
+  But to recreate the database on every testrun may noticeable slow down your
+  development cycle, if you have to wait for slow IO.
+
+  To circumvent this problem, hibernate4-maven-plugin signals a skipped
+  excecution by setting the  maven property <<<${hibernate.export.skipped}>>> to
+  <<<true>>>.
+  You can configure other plugins to react on this signal.
+  For example, the dbunit-plugin can be configured to skip its excecution, if
+  hibernate4-maven-plugin was skipped like this:
+
+------------
+<plugin>
+  <groupId>org.codehaus.mojo</groupId>
+  <artifactId>dbunit-maven-plugin</artifactId>
+  <configuration>
+    <skip>${hibernate.export.skipped}</skip>
+  </configuration>
+</plugin>
+------------
