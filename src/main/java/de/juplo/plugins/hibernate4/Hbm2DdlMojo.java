@@ -601,7 +601,8 @@ public class Hbm2DdlMojo extends AbstractMojo
       /** Close the connection */
       try
       {
-        connection.close();
+        if (connection != null)
+          connection.close();
       }
       catch (SQLException e)
       {
