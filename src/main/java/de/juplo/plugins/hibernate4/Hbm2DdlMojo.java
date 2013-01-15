@@ -527,17 +527,28 @@ public class Hbm2DdlMojo extends AbstractMojo
             case CREATE:
             case DROP:
             case BOTH:
-              Class driverClass = classLoader.loadClass(driverClassName);
+              Class driverClass = classLoader.loadClass(properties.getProperty(DRIVER_CLASS));
               getLog().debug("Registering JDBC-driver " + driverClass.getName());
               DriverManager.registerDriver(new DriverProxy((Driver)driverClass.newInstance()));
-              getLog().debug("Opening JDBC-connection to " + url + " as " + username + " with password " + password);
-              connection = DriverManager.getConnection(url, username, password);
+              getLog().debug(
+                  "Opening JDBC-connection to "
+                  + properties.getProperty(URL)
+                  + " as "
+                  + properties.getProperty(USERNAME)
+                  + " with password "
+                  + properties.getProperty(PASSWORD)
+                  );
+              connection = DriverManager.getConnection(
+                  properties.getProperty(URL),
+                  properties.getProperty(USERNAME),
+                  properties.getProperty(PASSWORD)
+                  );
           }
       }
     }
     catch (ClassNotFoundException e)
     {
-      getLog().error("Dependency for driver-class " + driverClassName + " is missing!");
+      getLog().error("Dependency for driver-class " + properties.getProperty(DRIVER_CLASS) + " is missing!");
       throw new MojoExecutionException(e.getMessage());
     }
     catch (Exception e)
