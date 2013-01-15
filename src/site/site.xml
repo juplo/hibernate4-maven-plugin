@@ -18,8 +18,11 @@
     </head>
     <menu name="Overview">
       <item name="Introduction" href="index.html"/>
-      <item name="Examples" href="examples.html"/>
-      <item name="Documentation" href="plugin-info.html"/>
+      <item name="Configuration Examples" href="configuration.html"/>
+      <item name="Parameter Documentation" href="export-mojo.html"/>
+      <item name="Enable Debug-Output" href="debugging.html"/>
+      <item name="Force Exceution" href="force.html"/>
+      <item name="Known Pitfalls" href="pitfalls.html"/>
     </menu>
     <menu ref="reports"/>
     <breadcrumbs>

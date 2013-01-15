@@ -1,0 +1,21 @@
+Enabling Debug-Output
+
+  If you are new to <<<hibernate4-maven-plugin>>>, in many cases, the
+  {Configuration-Method-Precedence} may be the source of configuration
+  errors.
+  To solve this problem, you should run maven with the debugging output
+  enabled.
+  For example, by executing:
+
+-------------
+mvn -X compile hibernate4:export 
+-------------
+
+  (The <<<compile>>> might be necessary, because <<<hibernate4-maven-plugin>>>
+  has to scan the compiled classes for annotations!)
+
+  Unlike the majority of the maven-plugins, <<<hibernate4-maven-plugin>>> was
+  designed to give a good many hints, when debugging is enabled.
+  Because, if you do not know, what went wrong, you can't fix it!
+
+  <<But be warned:>> <<<hibernate4-maven-plugin>>> tends to be very chatty ;)

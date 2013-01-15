@@ -1,0 +1,31 @@
+Force execution
+
+  The hibernate4-maven-plugin computes MD5-sums for all found annotated
+  classes and stores them together with the generated schema.
+  If no classes were changed or added and the dialect wasn't changed too, it
+  automatically skips the configured schema-export, to speed up the development
+  cycle.
+
+  The plugin signals, that the execution was skipped by setting the maven
+  property <<<${hibernate.export.skipped}>>> to <<<true>>>.
+  This may be helpful, because other plugins like
+  {{{http://mojo.codehaus.org/dbunit-maven-plugin/}dbunit-plugin}}
+  {{{./pitfalls.html#fails}may fail}}, when the execution is skipped.
+
+  If you need the hibernate4-maven-plugin to <never skip automatically>
+  execution, you can force it to do so, if you set the parameter <<<force>>> to
+  <<<true>>>:
+
+----------------
+<plugin>
+  <groupId>de.juplo</groupId>
+  <artifactId>hibernate4-maven-plugin</artifactId>
+  <version>${project.version}</version>
+  <configuration>
+    <force>true</force>
+  </configuration>
+</plugin>
+----------------
+
+  Or you may specify <<<-Dhibernate.export.force=true>>> at the command line,
+  if you want to force hibernate4-maven-plugin only once.

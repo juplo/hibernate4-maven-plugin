@@ -1,0 +1,97 @@
+Known Pitfalls
+
+* Dependency for driver-class XYZ is missing
+
+  One regular problem is the scope of the jdbc-driver-dependency.
+  It is very unlikely, that this dependency is needed at compile-time.
+  So a tidy maven-developer would usually scope it for <<<runtime>>>.
+
+  But this will break the execution of the <<<hibernate4-maven-plugin>>>.
+  Since it will not be able to see the needed dependency, it will fail with
+  an error-message like:
+
+---------------
+[INFO] Gathered hibernate-configuration (turn on debugging for details):
+[INFO]   hibernate.connection.username = sa
+[INFO]   hibernate.connection.password = 
+[INFO]   hibernate.dialect = org.hibernate.dialect.HSQLDialect
+[INFO]   hibernate.connection.url = jdbc:hsqldb:/home/kai/mmf/target/mmf;shutdown=true
+[INFO]   hibernate.connection.driver_class = org.hsqldb.jdbcDriver
+[ERROR] Dependency for driver-class org.hsqldb.jdbcDriver is missing!
+[INFO] ------------------------------------------------------------------------
+[ERROR] BUILD ERROR
+[INFO] ------------------------------------------------------------------------
+[INFO] org.hsqldb.jdbcDriver
+[INFO] ------------------------------------------------------------------------
+[INFO] For more information, run Maven with the -e switch
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time: 2 seconds
+[INFO] Finished at: Thu Nov 29 11:31:14 CET 2012
+[INFO] Final Memory: 32M/342M
+[INFO] ------------------------------------------------------------------------
+---------------
+
+  A quick workaround for this error would be, to delete the runtime-constraint
+  for the jdbc-driver-dependency.
+
+  A much cleaner way is, to (additionally) ad the dependency, to the
+  plugin-definition:
+
+---------------
+<plugin>
+  <groupId>de.juplo</groupId>
+  <artifactId>hibernate4-maven-plugin</artifactId>
+  <version>${project.version}</version>
+  <executions>
+    <execution>
+      <goals>
+        <goal>export</goal>
+      </goals>
+    </execution>
+  </executions>
+  <dependencies>
+  <dependency>
+    <groupId>org.hsqldb</groupId>
+    <artifactId>hsqldb</artifactId>
+    <version>2.2.8</version>
+  </dependency>
+  </dependencies>
+</plugin>
+---------------
+
+  This is also the best way, if you use a different jdbc-driver for
+  testing, than in production.
+  Because otherwise, this dependency will unnecessarily bloat the
+  runtime-dependencies of your project.
+
+* DBUnit {fails} after execution of hibernate4 was skipped because nothing has changed
+
+  If hibernate4-maven-plugin skips its excecution, this may lead to errors in
+  other plugins.
+  For example, when importing sample-data in the automatically created database
+  with the help of the {{{http://mojo.codehaus.org/dbunit-maven-plugin/}dbunit-plugin}},
+  the <<<CLEAN_INSERT>>>-operation may fail because of foreign-key-constraints,
+  if the database was not recreated, because the hibernate4-maven-plugin has
+  skipped its excecution.
+
+  A quick fix to this problem is, to {{{./force.html}force}}
+  hibernate4-maven-plugin to export the schema every time it is running.
+  But to recreate the database on every testrun may noticeable slow down your
+  development cycle, if you have to wait for slow IO.
+
+  To circumvent this problem, hibernate4-maven-plugin signals a skipped
+  excecution by setting the  maven property <<<${hibernate.export.skipped}>>> to
+  <<<true>>>.
+  You can configure other plugins to react on this signal.
+  For example, the dbunit-plugin can be configured to skip its excecution, if
+  hibernate4-maven-plugin was skipped like this:
+
+------------
+<plugin>
+  <groupId>org.codehaus.mojo</groupId>
+  <artifactId>dbunit-maven-plugin</artifactId>
+  <configuration>
+    <skip>${hibernate.export.skipped}</skip>
+  </configuration>
+</plugin>
+------------
