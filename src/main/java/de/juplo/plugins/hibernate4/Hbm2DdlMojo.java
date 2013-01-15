@@ -362,7 +362,7 @@ public class Hbm2DdlMojo extends AbstractMojo
         properties.load(new FileInputStream(file));
       }
       else
-        getLog().info("No hibernate-properties-file found! Checked path: " + hibernateProperties);
+        getLog().info("No hibernate-properties-file found! (Checked path: " + hibernateProperties + ")");
     }
     catch (IOException e)
     {
@@ -377,14 +377,10 @@ public class Hbm2DdlMojo extends AbstractMojo
         getLog().debug(
             "Overwriting property " +
             DRIVER_CLASS + "=" + properties.getProperty(DRIVER_CLASS) +
-            " with the value " + driverClassName +
-            " from the plugin-configuration-parameter driverClassName!"
+            " with the value " + driverClassName
           );
       else
-        getLog().debug(
-            "Using the value " + driverClassName +
-            " from the plugin-configuration-parameter driverClassName!"
-          );
+        getLog().debug("Using the value " + driverClassName);
       properties.setProperty(DRIVER_CLASS, driverClassName);
     }
     if (url != null)
@@ -393,14 +389,10 @@ public class Hbm2DdlMojo extends AbstractMojo
         getLog().debug(
             "Overwriting property " +
             URL + "=" + properties.getProperty(URL) +
-            " with the value " + url +
-            " from the plugin-configuration-parameter url!"
+            " with the value " + url
           );
       else
-        getLog().debug(
-            "Using the value " + url +
-            " from the plugin-configuration-parameter url!"
-          );
+        getLog().debug("Using the value " + url);
       properties.setProperty(URL, url);
     }
     if (username != null)
@@ -409,14 +401,10 @@ public class Hbm2DdlMojo extends AbstractMojo
         getLog().debug(
             "Overwriting property " +
             USERNAME + "=" + properties.getProperty(USERNAME) +
-            " with the value " + username +
-            " from the plugin-configuration-parameter username!"
+            " with the value " + username
           );
       else
-        getLog().debug(
-            "Using the value " + username +
-            " from the plugin-configuration-parameter username!"
-          );
+        getLog().debug("Using the value " + username);
       properties.setProperty(USERNAME, username);
     }
     if (password != null)
@@ -425,14 +413,10 @@ public class Hbm2DdlMojo extends AbstractMojo
         getLog().debug(
             "Overwriting property " +
             PASSWORD + "=" + properties.getProperty(PASSWORD) +
-            " with the value " + password +
-            " from the plugin-configuration-parameter password!"
+            " with the value " + password 
           );
       else
-        getLog().debug(
-            "Using the value " + password +
-            " from the plugin-configuration-parameter password!"
-          );
+        getLog().debug("Using the value " + password);
       properties.setProperty(PASSWORD, password);
     }
     if (hibernateDialect != null)
@@ -441,14 +425,10 @@ public class Hbm2DdlMojo extends AbstractMojo
         getLog().debug(
             "Overwriting property " +
             DIALECT + "=" + properties.getProperty(DIALECT) +
-            " with the value " + hibernateDialect +
-            " from the plugin-configuration-parameter hibernateDialect!"
+            " with the value " + hibernateDialect
           );
       else
-        getLog().debug(
-            "Using the value " + hibernateDialect +
-            " from the plugin-configuration-parameter hibernateDialect!"
-          );
+        getLog().debug("Using the value " + hibernateDialect);
       properties.setProperty(DIALECT, hibernateDialect);
     }
 
