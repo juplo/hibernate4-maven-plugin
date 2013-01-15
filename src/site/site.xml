@@ -22,6 +22,9 @@
       <item name="Documentation" href="plugin-info.html"/>
     </menu>
     <menu ref="reports"/>
+    <breadcrumbs>
+      <item name="juplo" href="http://juplo.de"/>
+    </breadcrumbs>
   </body>
 </project>
 
