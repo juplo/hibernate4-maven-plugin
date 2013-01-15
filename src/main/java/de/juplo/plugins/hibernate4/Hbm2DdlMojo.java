@@ -97,11 +97,37 @@ public class Hbm2DdlMojo extends AbstractMojo
   private String buildDirectory;
 
   /**
-   * Class-directory to scan.
+   * Classes-Directory to scan.
+   * <p>
+   * This parameter defaults to the maven build-output-directory for classes.
+   * Additonally, all dependencies are scanned for annotated classes.
    *
    * @parameter expression="${project.build.outputDirectory}"
    */
   private String outputDirectory;
+
+  /**
+   * Wether to scan test-classes too, or not.
+   * <p>
+   * If this parameter is set to <code>true</code> the test-classes of the
+   * artifact will be scanned for hibernate-annotated classes additionally.
+   *
+   * @parameter expression="${hibernate.export.scann_testclasses}" default-value="false"
+   */
+  private boolean scanTestClasses;
+
+  /**
+   * Test-Classes-Directory to scan.
+   * <p>
+   * This parameter defaults to the maven build-output-directory for
+   * test-classes.
+   * <p>
+   * This parameter is only used, when <code>scanTestClasses</code> is set
+   * to <code>true</code>!
+   *
+   * @parameter expression="${project.build.testOutputDirectory}"
+   */
+  private String testOutputDirectory;
 
   /**
    * Skip execution
@@ -262,6 +288,8 @@ public class Hbm2DdlMojo extends AbstractMojo
     {
       getLog().debug("Creating ClassLoader for project-dependencies...");
       List<String> classpathFiles = project.getCompileClasspathElements();
+      if (scanTestClasses)
+        classpathFiles.addAll(project.getTestClasspathElements());
       URL[] urls = new URL[classpathFiles.size()];
       for (int i = 0; i < classpathFiles.size(); ++i)
       {
@@ -293,6 +321,15 @@ public class Hbm2DdlMojo extends AbstractMojo
       getLog().info("Scanning directory " + outputDirectory + " for annotated classes...");
       URL dirUrl = dir.toURI().toURL();
       db.scanArchives(dirUrl);
+      if (scanTestClasses)
+      {
+        dir = new File(testOutputDirectory);
+        if (!dir.exists())
+          throw new MojoExecutionException("Cannot scan for annotated test-classes in " + testOutputDirectory + ": directory does not exist!");
+        getLog().info("Scanning directory " + testOutputDirectory + " for annotated classes...");
+        dirUrl = dir.toURI().toURL();
+        db.scanArchives(dirUrl);
+      }
 
       Set<String> classNames = new HashSet<String>();
       if (db.getAnnotationIndex().containsKey(Entity.class.getName()))
