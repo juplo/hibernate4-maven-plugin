@@ -85,7 +85,7 @@ public class Hbm2DdlMojo extends AbstractMojo
    * <p>
    * Only needed internally.
    *
-   * @parameter expression="${project}"
+   * @parameter property="project"
    * @required
    * @readonly
    */
@@ -96,7 +96,7 @@ public class Hbm2DdlMojo extends AbstractMojo
    * <p>
    * Only needed internally.
    *
-   * @parameter expression="${project.build.directory}"
+   * @parameter property="project.build.directory"
    * @required
    * @readonly
    */
@@ -108,7 +108,7 @@ public class Hbm2DdlMojo extends AbstractMojo
    * This parameter defaults to the maven build-output-directory for classes.
    * Additonally, all dependencies are scanned for annotated classes.
    *
-   * @parameter expression="${project.build.outputDirectory}"
+   * @parameter property="project.build.outputDirectory"
    */
   private String outputDirectory;
 
@@ -118,7 +118,7 @@ public class Hbm2DdlMojo extends AbstractMojo
    * If this parameter is set to <code>true</code> the test-classes of the
    * artifact will be scanned for hibernate-annotated classes additionally.
    *
-   * @parameter expression="${hibernate.export.scann_testclasses}" default-value="false"
+   * @parameter property="hibernate.export.scan_testclasses" default-value="false"
    */
   private boolean scanTestClasses;
 
@@ -131,7 +131,7 @@ public class Hbm2DdlMojo extends AbstractMojo
    * This parameter is only used, when <code>scanTestClasses</code> is set
    * to <code>true</code>!
    *
-   * @parameter expression="${project.build.testOutputDirectory}"
+   * @parameter property="project.build.testOutputDirectory"
    */
   private String testOutputDirectory;
 
@@ -146,7 +146,7 @@ public class Hbm2DdlMojo extends AbstractMojo
    * The excecution is skipped automatically, if no modified or newly added
    * annotated classes are found and the dialect was not changed.
    *
-   * @parameter expression="${maven.test.skip}" default-value="false"
+   * @parameter property="maven.test.skip" default-value="false"
    */
   private boolean skip;
 
@@ -158,42 +158,42 @@ public class Hbm2DdlMojo extends AbstractMojo
    * <p>
    * <code>skip</code> takes precedence over <code>force</code>.
    *
-   * @parameter expression="${hibernate.export.force}" default-value="false"
+   * @parameter property="hibernate.export.force" default-value="false"
    */
   private boolean force;
 
   /**
    * SQL-Driver name.
    *
-   * @parameter expression="${hibernate.connection.driver_class}
+   * @parameter property="hibernate.connection.driver_class"
    */
   private String driverClassName;
 
   /**
    * Database URL.
    *
-   * @parameter expression="${hibernate.connection.url}"
+   * @parameter property="hibernate.connection.url"
    */
   private String url;
 
   /**
    * Database username
    *
-   * @parameter expression="${hibernate.connection.username}"
+   * @parameter property="hibernate.connection.username"
    */
   private String username;
 
   /**
    * Database password
    *
-   * @parameter expression="${hibernate.connection.password}"
+   * @parameter property="hibernate.connection.password"
    */
   private String password;
 
   /**
    * Hibernate dialect.
    *
-   * @parameter expression="${hibernate.dialect}"
+   * @parameter property="hibernate.dialect"
    */
   private String hibernateDialect;
 
@@ -212,7 +212,8 @@ public class Hbm2DdlMojo extends AbstractMojo
    *   <li><strong>SCRIPT</strong> export schema to SQL-script</li>
    *   <li><strong>BOTH</strong></li>
    * </ul>
-   * @parameter expression="${hibernate.export.target}" default-value="EXPORT"
+   *
+   * @parameter property="hibernate.export.target" default-value="EXPORT"
    */
   private String target;
 
@@ -224,28 +225,29 @@ public class Hbm2DdlMojo extends AbstractMojo
    *   <li><strong>DROP</strong> drop database-schema</li>
    *   <li><strong>BOTH</strong> (<strong>DEFAULT!</strong>)</li>
    * </ul>
-   * @parameter expression="${hibernate.export.type}" default-value="BOTH"
+   *
+   * @parameter property="hibernate.export.type" default-value="BOTH"
    */
   private String type;
 
   /**
    * Output file.
    *
-   * @parameter expression="${hibernate.export.schema.filename}" default-value="${project.build.directory}/schema.sql"
+   * @parameter property="hibernate.export.schema.filename" default-value="${project.build.directory}/schema.sql"
    */
   private String outputFile;
 
   /**
    * Delimiter in output-file.
    *
-   * @parameter expression="${hibernate.export.schema.delimiter}" default-value=";"
+   * @parameter property="hibernate.export.schema.delimiter" default-value=";"
    */
   private String delimiter;
 
   /**
    * Format output-file.
    *
-   * @parameter expression="${hibernate.export.schema.format}" default-value="true"
+   * @parameter property="hibernate.export.schema.format" default-value="true"
    */
   private boolean format;
 

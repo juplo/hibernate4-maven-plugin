@@ -44,6 +44,13 @@
     </developer>
   </developers>
 
+  <contributors>
+    <contributor>
+      <name>Adriano Machado</name>
+      <email>adriano.m.machado@hotmail.com</email>
+    </contributor>
+  </contributors>
+
   <distributionManagement>
     <site>
       <id>www.juplo.de</id>
@@ -185,6 +192,19 @@
                 </resource>
               </resources>
             </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-plugin-plugin</artifactId>
+        <version>3.2</version>
+        <executions>
+          <execution>
+            <id>generated-helpmojo</id>
+              <goals>
+                <goal>helpmojo</goal>
+              </goals>
           </execution>
         </executions>
       </plugin>
