@@ -57,6 +57,7 @@ import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.project.MavenProject;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.NamingStrategy;
+import org.hibernate.envers.configuration.AuditConfiguration;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.hbm2ddl.SchemaExport.Type;
 import org.hibernate.tool.hbm2ddl.Target;
@@ -82,6 +83,7 @@ public class Hbm2DdlMojo extends AbstractMojo
   public final static String PASSWORD = "hibernate.connection.password";
   public final static String DIALECT = "hibernate.dialect";
   public final static String NAMING_STRATEGY="hibernate.ejb.naming_strategy";
+  public final static String ENVERS = "hibernate.envers";
 
   private final static String MD5S = "schema.md5s";
 
@@ -275,6 +277,12 @@ public class Hbm2DdlMojo extends AbstractMojo
    */
   private boolean format;
 
+  /**
+   * Generate envers schema for auditing tables.
+   *
+   * @parameter expression="${hibernate.envers}" default-value="false"
+   */
+  private boolean envers;
 
   @Override
   public void execute()
@@ -530,6 +538,18 @@ public class Hbm2DdlMojo extends AbstractMojo
         getLog().debug("Using the value " + hibernateNamingStrategy);
       properties.setProperty(NAMING_STRATEGY, hibernateNamingStrategy);
     }
+    if (envers)
+    {
+      if (properties.containsKey(ENVERS))
+        getLog().debug(
+            "Overwriting property " +
+            ENVERS + "=" + properties.getProperty(ENVERS) +
+            " with the value " + envers
+          );
+      else
+        getLog().debug("Using the value " + envers);
+      properties.setProperty(ENVERS, Boolean.toString(envers));
+    }
 
     /** The generated SQL varies with the dialect! */
     if (md5s.containsKey(DIALECT))
@@ -548,6 +568,25 @@ public class Hbm2DdlMojo extends AbstractMojo
     {
       modified = true;
       md5s.put(DIALECT, properties.getProperty(DIALECT));
+    }
+
+    /** The generated SQL varies with the envers-configuration */
+    if (md5s.containsKey(ENVERS))
+    {
+      String envers = properties.getProperty(ENVERS);
+      if (md5s.get(ENVERS).equals(envers))
+        getLog().debug("Envers unchanged.");
+      else
+      {
+        getLog().debug("Envers changed: " + envers);
+        modified = true;
+        md5s.put(ENVERS, envers);
+      }
+    }
+    else
+    {
+      modified = true;
+      md5s.put(ENVERS, properties.getProperty(ENVERS));
     }
 
     if (properties.isEmpty())
@@ -751,6 +790,14 @@ public class Hbm2DdlMojo extends AbstractMojo
        * see all dependencies!
        */
       Thread.currentThread().setContextClassLoader(classLoader);
+
+      config.buildMappings();
+
+      if ("true".equals(properties.getProperty(ENVERS)))
+      {
+        getLog().debug("Using envers");
+        AuditConfiguration.getFor(config);
+      }
 
       SchemaExport export = new SchemaExport(config, connection);
       export.setOutputFile(outputFile);
