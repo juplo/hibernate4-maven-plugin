@@ -53,6 +53,7 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.project.MavenProject;
 import org.hibernate.cfg.Configuration;
+import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.hbm2ddl.SchemaExport.Type;
 import org.hibernate.tool.hbm2ddl.Target;
@@ -77,6 +78,7 @@ public class Hbm2DdlMojo extends AbstractMojo
   public final static String USERNAME = "hibernate.connection.username";
   public final static String PASSWORD = "hibernate.connection.password";
   public final static String DIALECT = "hibernate.dialect";
+  public final static String NAMING_STRATEGY="hibernate.ejb.naming_strategy";
 
   private final static String MD5S = "schema.md5s";
 
@@ -196,6 +198,13 @@ public class Hbm2DdlMojo extends AbstractMojo
    * @parameter property="hibernate.dialect"
    */
   private String hibernateDialect;
+
+  /**
+   * Hibernate Naming Strategy
+   * @parameter property="hibernate.ejb.naming_strategy"
+   * @author nicus
+   */
+  private String hibernateNamingStrategy;
 
   /**
    * Path to Hibernate configuration file.
@@ -468,7 +477,7 @@ public class Hbm2DdlMojo extends AbstractMojo
         getLog().debug(
             "Overwriting property " +
             PASSWORD + "=" + properties.getProperty(PASSWORD) +
-            " with the value " + password 
+            " with the value " + password
           );
       else
         getLog().debug("Using the value " + password);
@@ -485,6 +494,18 @@ public class Hbm2DdlMojo extends AbstractMojo
       else
         getLog().debug("Using the value " + hibernateDialect);
       properties.setProperty(DIALECT, hibernateDialect);
+    }
+    if ( hibernateNamingStrategy != null )
+    {
+      if ( properties.contains(NAMING_STRATEGY))
+        getLog().debug(
+            "Overwriting property " +
+            NAMING_STRATEGY + "=" + properties.getProperty(NAMING_STRATEGY) +
+            " with the value " + hibernateNamingStrategy
+           );
+      else
+        getLog().debug("Using the value " + hibernateNamingStrategy);
+      properties.setProperty(NAMING_STRATEGY, hibernateNamingStrategy);
     }
 
     /** The generated SQL varies with the dialect! */
@@ -514,6 +535,24 @@ public class Hbm2DdlMojo extends AbstractMojo
 
     Configuration config = new Configuration();
     config.setProperties(properties);
+
+    if ( properties.containsKey(NAMING_STRATEGY))
+    {
+      String namingStrategy = properties.getProperty(NAMING_STRATEGY);
+      getLog().debug("Explicitly set NamingStrategy: " + namingStrategy);
+      try
+      {
+        @SuppressWarnings("unchecked")
+        Class<NamingStrategy> namingStrategyClass = (Class<NamingStrategy>) Class.forName(namingStrategy);
+        config.setNamingStrategy(namingStrategyClass.newInstance());
+      }
+      catch (Exception e)
+      {
+        getLog().error("Error setting NamingStrategy", e);
+        throw new MojoExecutionException(e.getMessage());
+      }
+    }
+
     getLog().debug("Adding annotated classes to hibernate-mapping-configuration...");
     for (Class<?> annotatedClass : classes)
     {
