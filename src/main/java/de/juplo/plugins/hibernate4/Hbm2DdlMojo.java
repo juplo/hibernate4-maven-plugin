@@ -19,6 +19,7 @@ package de.juplo.plugins.hibernate4;
 import com.pyx4j.log4j.MavenLogAppender;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -28,6 +29,7 @@ import java.math.BigInteger;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.sql.Connection;
 import java.sql.Driver;
 import java.sql.DriverManager;
@@ -48,6 +50,7 @@ import java.util.logging.Logger;
 import javax.persistence.Embeddable;
 import javax.persistence.Entity;
 import javax.persistence.MappedSuperclass;
+import org.apache.maven.model.Resource;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
@@ -202,7 +205,6 @@ public class Hbm2DdlMojo extends AbstractMojo
   /**
    * Hibernate Naming Strategy
    * @parameter property="hibernate.ejb.naming_strategy"
-   * @author nicus
    */
   private String hibernateNamingStrategy;
 
@@ -212,6 +214,14 @@ public class Hbm2DdlMojo extends AbstractMojo
    * @parameter default-value="${project.build.outputDirectory}/hibernate.properties"
    */
   private String hibernateProperties;
+
+  /**
+   * List of Hibernate-Mapping-Files (XML).
+   * Multiple files can be separated with white-spaces and/or commas.
+   *
+   * @parameter property="hibernate.mapping"
+   */
+  private String hibernateMapping;
 
   /**
    * Target of execution:
@@ -407,11 +417,16 @@ public class Hbm2DdlMojo extends AbstractMojo
     }
 
     if (classes.isEmpty())
-      throw new MojoFailureException("No annotated classes found in directory " + outputDirectory);
-
-    getLog().debug("Detected classes with mapping-annotations:");
-    for (Class<?> annotatedClass : classes)
-      getLog().debug("  " + annotatedClass.getName());
+    {
+      if (hibernateMapping == null || hibernateMapping.isEmpty())
+        throw new MojoFailureException("No annotated classes found in directory " + outputDirectory);
+    }
+    else
+    {
+      getLog().debug("Detected classes with mapping-annotations:");
+      for (Class<?> annotatedClass : classes)
+        getLog().debug("  " + annotatedClass.getName());
+    }
 
 
     Properties properties = new Properties();
@@ -560,6 +575,63 @@ public class Hbm2DdlMojo extends AbstractMojo
       config.addAnnotatedClass(annotatedClass);
     }
 
+    if (hibernateMapping != null)
+    {
+      try
+      {
+        MessageDigest digest = java.security.MessageDigest.getInstance("MD5");
+        for (String filename : hibernateMapping.split("[\\s,]+"))
+        {
+          File file = null;
+          for (Resource resource : project.getResources())
+          {
+            file = new File(resource.getDirectory() + File.separator + filename);
+            if (file.exists())
+              break;
+          }
+          if (file != null && file.exists())
+          {
+            InputStream is = new FileInputStream(file);
+            byte[] buffer = new byte[1024*4]; // copy data in 4MB-chunks
+            int i;
+            while((i = is.read(buffer)) > -1)
+              digest.update(buffer, 0, i);
+            is.close();
+            byte[] bytes = digest.digest();
+            BigInteger bi = new BigInteger(1, bytes);
+            String newMd5 = String.format("%0" + (bytes.length << 1) + "x", bi);
+            String oldMd5 = !md5s.containsKey(filename) ? "" : md5s.get(filename);
+            if (!newMd5.equals(oldMd5))
+            {
+              getLog().debug("Found new or modified mapping-file: " + filename);
+              modified = true;
+              md5s.put(filename, newMd5);
+            }
+            else
+            {
+              getLog().debug(oldMd5 + " -> mapping-file unchanged: " + filename);
+            }
+            getLog().debug("Adding mappings from XML-configurationfile: " + file);
+            config.addFile(file);
+          }
+          else
+            throw new MojoFailureException("File " + filename + " could not be found in any of the configured resource-directories!");
+        }
+      }
+      catch (NoSuchAlgorithmException e)
+      {
+        throw new MojoFailureException("Cannot calculate MD5-summs!", e);
+      }
+      catch (FileNotFoundException e)
+      {
+        throw new MojoFailureException("Cannot calculate MD5-summs!", e);
+      }
+      catch (IOException e)
+      {
+        throw new MojoFailureException("Cannot calculate MD5-summs!", e);
+      }
+    }
+
     Target target = null;
     try
     {
@@ -594,7 +666,7 @@ public class Hbm2DdlMojo extends AbstractMojo
         && !force
       )
     {
-      getLog().info("No modified annotated classes found and dialect unchanged.");
+      getLog().info("No modified annotated classes or mapping-files found and dialect unchanged.");
       getLog().info("Skipping schema generation!");
       project.getProperties().setProperty(EXPORT_SKIPPED_PROPERTY, "true");
       return;
