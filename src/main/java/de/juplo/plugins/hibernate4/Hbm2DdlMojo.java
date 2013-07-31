@@ -226,11 +226,14 @@ public class Hbm2DdlMojo extends AbstractMojo
   /**
    * Target of execution:
    * <ul>
-   *   <li><strong>NONE</strong> do nothing - just validate the configuration (forces excecution, signals skip)</li>
-   *   <li><strong>EXPORT</strong> create database (<strong>DEFAULT!</strong>. forces excecution, signals skip)</li>
-   *   <li><strong>SCRIPT</strong> export schema to SQL-script</li>
+   *   <li><strong>NONE</strong> only export schema to SQL-script (forces excecution, signals skip)</li>
+   *   <li><strong>EXPORT</strong> create database (<strong>DEFAULT!</strong>). forces excecution, signals skip)</li>
+   *   <li><strong>SCRIPT</strong> export schema to SQL-script and print it to STDOUT</li>
    *   <li><strong>BOTH</strong></li>
    * </ul>
+   *
+   * A databaseconnection is only needed for EXPORT and BOTH, but a
+   * Hibernate-Dialect must always be choosen.
    *
    * @parameter property="hibernate.export.target" default-value="EXPORT"
    */
@@ -244,6 +247,8 @@ public class Hbm2DdlMojo extends AbstractMojo
    *   <li><strong>DROP</strong> drop database-schema</li>
    *   <li><strong>BOTH</strong> (<strong>DEFAULT!</strong>)</li>
    * </ul>
+   *
+   * If NONE is choosen, no databaseconnection is needed.
    *
    * @parameter property="hibernate.export.type" default-value="BOTH"
    */
@@ -684,6 +689,7 @@ public class Hbm2DdlMojo extends AbstractMojo
        * hibernate does not use the context-classloader of the current
        * thread and, hence, would not be able to resolve the driver-class!
        */
+      getLog().debug("Target: " + target + ", Type: " + type);
       switch (target)
       {
         case EXPORT:

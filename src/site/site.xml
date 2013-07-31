@@ -22,7 +22,7 @@
       <item name="Parameter Documentation" href="export-mojo.html"/>
       <item name="Enable Debug-Output" href="debugging.html"/>
       <item name="Force Exceution" href="force.html"/>
-      <item name="Known Pitfalls" href="pitfalls.html"/>
+      <item name="Known Pitfalls (FAQ)" href="pitfalls.html"/>
     </menu>
     <menu ref="reports"/>
     <breadcrumbs>

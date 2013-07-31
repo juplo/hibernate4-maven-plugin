@@ -1,5 +1,22 @@
 Known Pitfalls
 
+* hibernate4-maven-plugin always needs a database-connection
+
+  The default-configuration uses the EXPORT-target of the SchemaExport-Tool.
+  If you do not need to create a database with the evaluated schema, you can
+  use the NONE- or the SCRIPT-target.
+  This can be achieved with the commandline-parameter
+  <<<-Dhibernate.export.target=SCRIPT>>> or with the following configuration:
+
+------------
+<configuration>
+  <target>SCRIPT</target>
+</configuration>
+------------
+
+  But even when no database is to be created, hibernate always needs to know
+  the dialect. Hence, the plugin will fail if this parameter is missing!
+
 * Dependency for driver-class XYZ is missing
 
   One regular problem is the scope of the jdbc-driver-dependency.
@@ -95,3 +112,24 @@ Known Pitfalls
   </configuration>
 </plugin>
 ------------
+
+* The database will not be recreated after a manual drop/clean
+
+  If one manually drops the database or removes the hsqldb-files, it will not
+  be recreated by the hibernate4-maven-plugin, because it cannot detect, that
+  the database needs to be recreated.
+  This happens, because the plugin will not recreate the database if neither
+  the configuration nor the annotated classes have changed, because an
+  unnecessary drop-create-cycle might take a long time. The plugin will
+  report that like this:
+-------------
+[INFO] No modified annotated classes found and dialect unchanged.
+[INFO] Skipping schema generation!
+[------------
+
+  If one always uses <<<mvn clen>>> for cleanup, this will not happen.
+  Otherwise the recreation must be forced:
+
+-------------
+mvn hibernate4:export -Dhibernate.export.force=true
+-------------
