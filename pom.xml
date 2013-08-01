@@ -32,7 +32,7 @@
 
   <scm>
     <connection>scm:git:http://juplo.de/git/hibernate4-maven-plugin</connection>
-    <developerConnection>scm:git:ssh://juplo.de:/var/cache/git/juplo/hibernate4-maven-plugin</developerConnection>
+    <developerConnection>scm:git:ssh://juplo.de:/var/lib/git/juplo/hibernate4-maven-plugin</developerConnection>
     <url>http://juplo.de/gitweb/?p=hibernate4-maven-plugin;a=summary</url>
   </scm>
 

@@ -45,4 +45,6 @@ A simple Plugin for generating a Database-Schema from Hibernate 4 Mapping-Annota
 
  * ${project.version} (this version)
 
+ * {{{http://juplo.de/hibernate4-maven-plugin-1.0.1} 1.0.1}}
+
  * {{{http://juplo.de/hibernate4-maven-plugin-1.0} 1.0}}
