@@ -128,7 +128,7 @@ Known Pitfalls
 [------------
 
   If one always uses <<<mvn clen>>> for cleanup, this will not happen.
-  Otherwise the recreation must be forced:
+  Otherwise the recreation must be {{{./force.html}forced}}:
 
 -------------
 mvn hibernate4:export -Dhibernate.export.force=true

@@ -587,12 +587,17 @@ public class Hbm2DdlMojo extends AbstractMojo
         MessageDigest digest = java.security.MessageDigest.getInstance("MD5");
         for (String filename : hibernateMapping.split("[\\s,]+"))
         {
-          File file = null;
-          for (Resource resource : project.getResources())
+          // First try the filename as absolute/relative path
+          File file = new File(filename);
+          if (!file.exists())
           {
-            file = new File(resource.getDirectory() + File.separator + filename);
-            if (file.exists())
-              break;
+            // If the file was not found, search for it in the resource-directories
+            for (Resource resource : project.getResources())
+            {
+              file = new File(resource.getDirectory() + File.separator + filename);
+              if (file.exists())
+                break;
+            }
           }
           if (file != null && file.exists())
           {
