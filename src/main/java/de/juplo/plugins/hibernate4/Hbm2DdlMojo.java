@@ -386,9 +386,11 @@ public class Hbm2DdlMojo extends AbstractMojo
       {
         Class<?> annotatedClass = classLoader.loadClass(name);
         classes.add(annotatedClass);
+        String resourceName = annotatedClass.getName();
+        resourceName = resourceName.substring(resourceName.lastIndexOf(".") + 1, resourceName.length()) + ".class";
         InputStream is =
             annotatedClass
-                .getResourceAsStream(annotatedClass.getSimpleName() + ".class");
+                .getResourceAsStream(resourceName);
         byte[] buffer = new byte[1024*4]; // copy data in 4MB-chunks
         int i;
         while((i = is.read(buffer)) > -1)
