@@ -321,7 +321,7 @@ public class Hbm2DdlMojo extends AbstractMojo
       }
       catch (IOException e)
       {
-        getLog().warn("Cannot create saved for timestamps: " + e);
+        getLog().debug("Cannot create file \"" + saved.getPath() + "\" for timestamps: " + e);
       }
     }
 
