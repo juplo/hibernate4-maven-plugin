@@ -57,6 +57,10 @@
       <name>Eduard Szente</name>
       <email>eduard.szente@gmail.com</email>
     </contributor>
+    <contributor>
+      <name>Stephen Johnson</name>
+      <email>stejohns@redhat.com</email>
+    </contributor>
   </contributors>
 
   <distributionManagement>

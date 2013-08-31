@@ -289,10 +289,6 @@ public class Hbm2DdlMojo extends AbstractMojo
       return;
     }
 
-    File dir = new File(outputDirectory);
-    if (!dir.exists())
-      throw new MojoExecutionException("Cannot scan for annotated classes in " + outputDirectory + ": directory does not exist!");
-
     Map<String,String> md5s;
     boolean modified = false;
     File saved = new File(buildDirectory + File.separator + MD5S);
@@ -360,17 +356,22 @@ public class Hbm2DdlMojo extends AbstractMojo
     try
     {
       AnnotationDB db = new AnnotationDB();
-      getLog().info("Scanning directory " + outputDirectory + " for annotated classes...");
-      URL dirUrl = dir.toURI().toURL();
-      db.scanArchives(dirUrl);
+      File dir = new File(outputDirectory);
+      if (dir.exists())
+      {
+        getLog().info("Scanning directory " + outputDirectory + " for annotated classes...");
+        URL dirUrl = dir.toURI().toURL();
+        db.scanArchives(dirUrl);
+      }
       if (scanTestClasses)
       {
         dir = new File(testOutputDirectory);
-        if (!dir.exists())
-          throw new MojoExecutionException("Cannot scan for annotated test-classes in " + testOutputDirectory + ": directory does not exist!");
-        getLog().info("Scanning directory " + testOutputDirectory + " for annotated classes...");
-        dirUrl = dir.toURI().toURL();
-        db.scanArchives(dirUrl);
+        if (dir.exists())
+        {
+          getLog().info("Scanning directory " + testOutputDirectory + " for annotated classes...");
+          URL dirUrl = dir.toURI().toURL();
+          db.scanArchives(dirUrl);
+        }
       }
 
       Set<String> classNames = new HashSet<String>();
