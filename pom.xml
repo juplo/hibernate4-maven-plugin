@@ -85,7 +85,7 @@
     <!-- Zeichensatz -->
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <!-- Verwendete Versionen -->
-    <hibernate-core.version>4.2.3.Final</hibernate-core.version>
+    <hibernate-core.version>4.2.5.Final</hibernate-core.version>
     <maven.version>3.0.4</maven.version>
     <maven-plugin-log4j.version>1.0.1</maven-plugin-log4j.version>
     <scannotation.version>1.0.2</scannotation.version>
