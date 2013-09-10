@@ -122,10 +122,11 @@ Known Pitfalls
   the configuration nor the annotated classes have changed, because an
   unnecessary drop-create-cycle might take a long time. The plugin will
   report that like this:
+
 -------------
 [INFO] No modified annotated classes found and dialect unchanged.
 [INFO] Skipping schema generation!
-[------------
+-------------
 
   If one always uses <<<mvn clen>>> for cleanup, this will not happen.
   Otherwise the recreation must be {{{./force.html}forced}}:
@@ -133,3 +134,29 @@ Known Pitfalls
 -------------
 mvn hibernate4:export -Dhibernate.export.force=true
 -------------
+
+* The hibernate4:export goal is executed, even if <<<maven.test.skip>>> is
+  <<<true>>>
+
+  Up to version 1.0.2 the hibernate4-maven-plugin automatically skipped
+  its execution, when <<<maven.test.skip>>> was set to <<<true>>>. Starting
+  with version 1.0.3 this behaviour was changed. The plugin now only skips
+  its execution, when explicitliy told so via the configuration-parameter
+  <<<skip>>> or via the property <<<hibernate.export.skip>>>.
+
+  This change was made, because in some use-cases it is necessary, that the
+  database-schema is always build and/or exported, even if the tests are
+  skipped, which was not possible with the old behaviour.
+
+  If you need/like the old behaviour, you can turn it on in your configuration:
+
+------------
+<plugin>
+  <groupId>de.juplo</groupId>
+  <artifactId>hibernate4-maven-plugin</artifactId>
+  ...
+  <configuration>
+    <skip>${maven.test.skip}</skip>
+  </configuration>
+</plugin>
+------------

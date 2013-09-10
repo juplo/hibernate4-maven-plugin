@@ -12,8 +12,8 @@ Force execution
   {{{http://mojo.codehaus.org/dbunit-maven-plugin/}dbunit-plugin}}
   {{{./pitfalls.html#fails}may fail}}, when the execution is skipped.
 
-  If you need the hibernate4-maven-plugin to <never skip automatically>
-  execution, you can force it to do so, if you set the parameter <<<force>>> to
+  If you need the hibernate4-maven-plugin to <never skip execution automatically>,
+  you can force it to do so, if you set the parameter <<<force>>> to
   <<<true>>>:
 
 ----------------
