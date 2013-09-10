@@ -83,7 +83,7 @@ public class Hbm2DdlMojo extends AbstractMojo
   public final static String PASSWORD = "hibernate.connection.password";
   public final static String DIALECT = "hibernate.dialect";
   public final static String NAMING_STRATEGY="hibernate.ejb.naming_strategy";
-  public final static String ENVERS = "hibernate.envers";
+  public final static String ENVERS = "hibernate.export.envers";
 
   private final static String MD5S = "schema.md5s";
 
@@ -280,7 +280,7 @@ public class Hbm2DdlMojo extends AbstractMojo
   /**
    * Generate envers schema for auditing tables.
    *
-   * @parameter expression="${hibernate.envers}" default-value="false"
+   * @parameter property="hibernate.export.envers" default-value="false"
    */
   private boolean envers;
 
