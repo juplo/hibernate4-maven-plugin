@@ -552,15 +552,27 @@ public class Hbm2DdlMojo extends AbstractMojo
         getLog().debug("SQL-dialect unchanged.");
       else
       {
-        getLog().debug("SQL-dialect changed: " + dialect);
         modified = true;
-        md5s.put(DIALECT, dialect);
+        if (dialect == null)
+        {
+          getLog().debug("SQL-dialect was unset.");
+          md5s.remove(DIALECT);
+        }
+        else
+        {
+          getLog().debug("SQL-dialect changed: " + dialect);
+          md5s.put(DIALECT, dialect);
+        }
       }
     }
     else
     {
-      modified = true;
-      md5s.put(DIALECT, properties.getProperty(DIALECT));
+      String dialect = properties.getProperty(DIALECT);
+      if (dialect != null)
+      {
+        modified = true;
+        md5s.put(DIALECT, properties.getProperty(DIALECT));
+      }
     }
 
     /** The generated SQL varies with the envers-configuration */
