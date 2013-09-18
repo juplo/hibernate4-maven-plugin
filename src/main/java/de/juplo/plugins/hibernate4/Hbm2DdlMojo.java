@@ -508,10 +508,10 @@ public class Hbm2DdlMojo extends AbstractMojo
         getLog().debug(
             "Overwriting property " +
             PASSWORD + "=" + properties.getProperty(PASSWORD) +
-            " with the value " + password
+            " with value " + password
           );
       else
-        getLog().debug("Using the value " + password);
+        getLog().debug("Using value " + password + " for property " + PASSWORD);
       properties.setProperty(PASSWORD, password);
     }
     if (hibernateDialect != null)
@@ -520,10 +520,12 @@ public class Hbm2DdlMojo extends AbstractMojo
         getLog().debug(
             "Overwriting property " +
             DIALECT + "=" + properties.getProperty(DIALECT) +
-            " with the value " + hibernateDialect
+            " with value " + hibernateDialect
           );
       else
-        getLog().debug("Using the value " + hibernateDialect);
+        getLog().debug(
+            "Using value " + hibernateDialect + " for property " + DIALECT
+            );
       properties.setProperty(DIALECT, hibernateDialect);
     }
     if ( hibernateNamingStrategy != null )
@@ -532,10 +534,13 @@ public class Hbm2DdlMojo extends AbstractMojo
         getLog().debug(
             "Overwriting property " +
             NAMING_STRATEGY + "=" + properties.getProperty(NAMING_STRATEGY) +
-            " with the value " + hibernateNamingStrategy
+            " with value " + hibernateNamingStrategy
            );
       else
-        getLog().debug("Using the value " + hibernateNamingStrategy);
+        getLog().debug(
+            "Using value " + hibernateNamingStrategy + " for property " +
+            NAMING_STRATEGY
+            );
       properties.setProperty(NAMING_STRATEGY, hibernateNamingStrategy);
     }
 
