@@ -160,23 +160,11 @@ Configuration Examples
 </plugin>
 ---------------
 
-  There are some seldom used parameters, that can only be configured throug
-  this method:
+  The parameter <<hibernateProperties>> (name of the hibernate-properties-file
+  to use, defaults to <<hibernate.properties>>) can only be configured through
+  this approach.
 
-    * <<delimiter>> the delimiter used in the generated sql-script
-
-    * <<format>> wether the generated sql-script is formatted, or not
-
-    * <<hibernateProperties>> name of the hibernate-properties-file
-
-    * <<outputFile>> name of the generated sql-script
-
-    * <<target>> create database or generate sql-script or both
-
-    * <<type>> create or drop the database or do both or nothing
-      (just validate the annotation-configuration)
-
-  For explanations, see the
+  For more explanations, see the
   {{{./export-mojo.html} Documentation of the export-Mojo}}.
 
 {Configuration-Method-Precedence}

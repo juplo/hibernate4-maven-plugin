@@ -3,6 +3,9 @@ A simple Plugin for generating a Database-Schema from Hibernate 4 Mapping-Annota
   <<hibernate4-maven-plugin>> is a plugin for generating a database-schema
   from your Hibernate-4-Mappings and create or update your database
   accordingly.
+  Its main usage is to automatically create and populate a test-database
+  for unit-tests in cooperation with the
+  {{{http://mojo.codehaus.org/dbunit-maven-plugin/} dbunit-maven-plugin}}.
 
   The plugin was designed with three main goals in mind:
 

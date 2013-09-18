@@ -21,6 +21,7 @@
       <item name="Configuration Examples" href="configuration.html"/>
       <item name="Parameter Documentation" href="export-mojo.html"/>
       <item name="Enable Debug-Output" href="debugging.html"/>
+      <item name="Skipping Execution" href="skip.html"/>
       <item name="Force Exceution" href="force.html"/>
       <item name="Known Pitfalls (FAQ)" href="pitfalls.html"/>
     </menu>

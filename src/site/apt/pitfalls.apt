@@ -5,7 +5,7 @@ Known Pitfalls
   The default-configuration uses the EXPORT-target of the SchemaExport-Tool.
   If you do not need to create a database with the evaluated schema, you can
   use the NONE- or the SCRIPT-target.
-  This can be achieved with the commandline-parameter
+  This can be achieved with the command-line parameter
   <<<-Dhibernate.export.target=SCRIPT>>> or with the following configuration:
 
 ------------
@@ -128,27 +128,18 @@ Known Pitfalls
 [INFO] Skipping schema generation!
 -------------
 
-  If one always uses <<<mvn clen>>> for cleanup, this will not happen.
+  If one always uses <<<mvn clean>>> for cleanup, this will not happen.
   Otherwise the recreation must be {{{./force.html}forced}}:
 
 -------------
 mvn hibernate4:export -Dhibernate.export.force=true
 -------------
 
-* The hibernate4:export goal is executed, even if <<<maven.test.skip>>> is
-  <<<true>>>
+* The hibernate4:export goal is not executed, when tests are skipped
 
-  Up to version 1.0.2 the hibernate4-maven-plugin automatically skipped
-  its execution, when <<<maven.test.skip>>> was set to <<<true>>>. Starting
-  with version 1.0.3 this behaviour was changed. The plugin now only skips
-  its execution, when explicitliy told so via the configuration-parameter
-  <<<skip>>> or via the property <<<hibernate.export.skip>>>.
-
-  This change was made, because in some use-cases it is necessary, that the
-  database-schema is always build and/or exported, even if the tests are
-  skipped, which was not possible with the old behaviour.
-
-  If you need/like the old behaviour, you can turn it on in your configuration:
+  The hibernate4-maven-plugin automatically skips its execution, when
+  <<<maven.test.skip>>> is set to <<<true>>>. If you need it to be always
+  executed, you can configure that explicitly like this:
 
 ------------
 <plugin>
@@ -156,7 +147,10 @@ mvn hibernate4:export -Dhibernate.export.force=true
   <artifactId>hibernate4-maven-plugin</artifactId>
   ...
   <configuration>
-    <skip>${maven.test.skip}</skip>
+    <skip>false</skip>
   </configuration>
 </plugin>
 ------------
+
+  Background-information for this design-decission can be found on the extra
+  page {{{./skip.html}To skip or not to skip: that is the question}}...
