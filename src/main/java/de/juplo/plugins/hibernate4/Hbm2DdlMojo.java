@@ -538,18 +538,6 @@ public class Hbm2DdlMojo extends AbstractMojo
         getLog().debug("Using the value " + hibernateNamingStrategy);
       properties.setProperty(NAMING_STRATEGY, hibernateNamingStrategy);
     }
-    if (envers)
-    {
-      if (properties.containsKey(ENVERS))
-        getLog().debug(
-            "Overwriting property " +
-            ENVERS + "=" + properties.getProperty(ENVERS) +
-            " with the value " + envers
-          );
-      else
-        getLog().debug("Using the value " + envers);
-      properties.setProperty(ENVERS, Boolean.toString(envers));
-    }
 
     /** The generated SQL varies with the dialect! */
     if (md5s.containsKey(DIALECT))
@@ -571,22 +559,21 @@ public class Hbm2DdlMojo extends AbstractMojo
     }
 
     /** The generated SQL varies with the envers-configuration */
-    if (md5s.containsKey(ENVERS))
+    if (md5s.get(ENVERS) != null)
     {
-      String envers = properties.getProperty(ENVERS);
-      if (md5s.get(ENVERS).equals(envers))
-        getLog().debug("Envers unchanged.");
+      if (md5s.get(ENVERS).equals(Boolean.toString(envers)))
+        getLog().debug("Envers-Configuration unchanged. Enabled: " + envers);
       else
       {
-        getLog().debug("Envers changed: " + envers);
+        getLog().debug("Envers-Configuration changed. Enabled: " + envers);
         modified = true;
-        md5s.put(ENVERS, envers);
+        md5s.put(ENVERS, Boolean.toString(envers));
       }
     }
     else
     {
       modified = true;
-      md5s.put(ENVERS, properties.getProperty(ENVERS));
+      md5s.put(ENVERS, Boolean.toString(envers));
     }
 
     if (properties.isEmpty())
@@ -793,9 +780,9 @@ public class Hbm2DdlMojo extends AbstractMojo
 
       config.buildMappings();
 
-      if ("true".equals(properties.getProperty(ENVERS)))
+      if (envers)
       {
-        getLog().debug("Using envers");
+        getLog().info("Automatic auditing via hibernate-envers enabled!");
         AuditConfiguration.getFor(config);
       }
 
