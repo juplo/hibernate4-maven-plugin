@@ -1,6 +1,10 @@
-Known Pitfalls
+  ---
+  Known Pitfalls
+  ---
+  Kai Moritz
+  ---
 
-* hibernate4-maven-plugin always needs a database-connection
+hibernate4-maven-plugin always needs a database-connection
 
   The default-configuration uses the EXPORT-target of the SchemaExport-Tool.
   If you do not need to create a database with the evaluated schema, you can
@@ -17,7 +21,7 @@ Known Pitfalls
   But even when no database is to be created, hibernate always needs to know
   the dialect. Hence, the plugin will fail if this parameter is missing!
 
-* Dependency for driver-class XYZ is missing
+Dependency for driver-class XYZ is missing
 
   One regular problem is the scope of the jdbc-driver-dependency.
   It is very unlikely, that this dependency is needed at compile-time.
@@ -81,7 +85,7 @@ Known Pitfalls
   Because otherwise, this dependency will unnecessarily bloat the
   runtime-dependencies of your project.
 
-* DBUnit {fails} after execution of hibernate4 was skipped because nothing has changed
+DBUnit {fails} after execution of hibernate4 was skipped because nothing has changed
 
   If hibernate4-maven-plugin skips its excecution, this may lead to errors in
   other plugins.
@@ -113,7 +117,7 @@ Known Pitfalls
 </plugin>
 ------------
 
-* The database will not be recreated after a manual drop/clean
+The database will not be recreated after a manual drop/clean
 
   If one manually drops the database or removes the hsqldb-files, it will not
   be recreated by the hibernate4-maven-plugin, because it cannot detect, that
@@ -135,7 +139,7 @@ Known Pitfalls
 mvn hibernate4:export -Dhibernate.export.force=true
 -------------
 
-* The hibernate4:export goal is not executed, when tests are skipped
+The hibernate4:export goal is not executed, when tests are skipped
 
   The hibernate4-maven-plugin automatically skips its execution, when
   <<<maven.test.skip>>> is set to <<<true>>>. If you need it to be always

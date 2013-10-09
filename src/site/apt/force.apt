@@ -1,4 +1,8 @@
-Force execution
+  ---
+  Force execution
+  ---
+  Kai Moritz
+  ---
 
   The hibernate4-maven-plugin computes MD5-sums for all found annotated
   classes and stores them together with the generated schema.

@@ -1,6 +1,10 @@
-Configuration Examples
+  ---
+  Configuration Examples
+  ---
+  Kai Moritz
+  ---
 
-* Configuration through a hibernate.properties-File
+Configuration through a hibernate.properties-File
 
   The most simple way to configure the plugin is, to put all the
   hibernate-configuration in a <<hibernate.properties>>-file on your
@@ -59,7 +63,7 @@ Configuration Examples
   You never can overwrite them by accident when specifying a property on
   the commandline or in your <<<settings.xml>>>.
 
-* Configuration through maven-properties
+Configuration through maven-properties
 
   Alternatively, it is possible, to configure the plugin via maven-properties.
   Each relevant configuration-option has a corresponding maven-property
@@ -120,7 +124,7 @@ Configuration Examples
 <plugins>
 ---------------
 
-* Configuration through the plugin-configuration
+Configuration through the plugin-configuration
 
   A third way for configuring the plugin is the plugin-configuration.
   The relevant configuration-parameters are:

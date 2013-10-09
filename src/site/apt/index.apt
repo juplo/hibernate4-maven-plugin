@@ -1,4 +1,8 @@
-A simple Plugin for generating a Database-Schema from Hibernate 4 Mapping-Annotations.
+  ---
+  A simple Plugin for generating a Database-Schema from Hibernate 4 Mapping-Annotations.
+  ---
+  Kai Moritz
+  ---
 
   <<hibernate4-maven-plugin>> is a plugin for generating a database-schema
   from your Hibernate-4-Mappings and create or update your database
@@ -31,7 +35,7 @@ A simple Plugin for generating a Database-Schema from Hibernate 4 Mapping-Annota
   For more information about the inspiration to write this tiny plugin,
   {{{/hibernate4-maven-plugin-a-simple-plugin-for-generating-a-database-schema-from-hibernate-4-mapping-annotations/} read our blog-article about the hibernate4-maven-plugin}}.
 
-* Documentation
+Documentation
 
  * See {{{./configuration.html} Configuration Examples}} for Usage-Explanations
    and simple examples of how to use this plugin.
@@ -42,7 +46,7 @@ A simple Plugin for generating a Database-Schema from Hibernate 4 Mapping-Annota
    of the Hibernate-Tools <<<SchemaExport>>> and <<<SchemaUpdate>>>, that do
    the work in the background.
 
-* Releases
+Releases
 
  * {{{http://juplo.de/hibernate4-maven-plugin} current version}}
 

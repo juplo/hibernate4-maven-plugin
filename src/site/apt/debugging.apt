@@ -1,4 +1,8 @@
-Enabling Debug-Output
+  ---
+  Enabling Debug-Output
+  ---
+  Kai Moritz
+  ---
 
   If you are new to <<<hibernate4-maven-plugin>>>, in many cases, the
   {Configuration-Method-Precedence} may be the source of configuration
