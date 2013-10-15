@@ -47,9 +47,12 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import javax.persistence.Embeddable;
 import javax.persistence.Entity;
 import javax.persistence.MappedSuperclass;
+import org.apache.maven.artifact.Artifact;
 import org.apache.maven.model.Resource;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -85,7 +88,10 @@ public class Hbm2DdlMojo extends AbstractMojo
   public final static String NAMING_STRATEGY="hibernate.ejb.naming_strategy";
   public final static String ENVERS = "hibernate.export.envers";
 
-  private final static String MD5S = "schema.md5s";
+  public final static String MD5S = "schema.md5s";
+
+  private final static Pattern split = Pattern.compile("[^,\\s]+");
+
 
   /**
    * The maven project.
@@ -128,6 +134,21 @@ public class Hbm2DdlMojo extends AbstractMojo
    * @parameter property="hibernate.export.scan_testclasses" default-value="false"
    */
   private boolean scanTestClasses;
+
+  /**
+   * Dependency-Scopes, that should be scanned for annotated classes.
+   * <p>
+   * By default, only dependencies in the scope <code>compile</code> are
+   * scanned for annotated classes. Multiple scopes can be seperated by
+   * white space or commas.
+   * <p>
+   * The plugin does not scan for annotated classes in transitive
+   * dependencies. If some of your annotated classes are hidden in a
+   * transitive dependency, you can simply add that dependency explicitly.
+   *
+   * @parameter property="hibernate.export.scan_dependencies" default-value="compile"
+   */
+  private String scanDependencies;
 
   /**
    * Test-Classes-Directory to scan.
@@ -379,6 +400,34 @@ public class Hbm2DdlMojo extends AbstractMojo
           getLog().info("Scanning directory " + testOutputDirectory + " for annotated classes...");
           URL dirUrl = dir.toURI().toURL();
           db.scanArchives(dirUrl);
+        }
+      }
+      if (scanDependencies != null)
+      {
+        Matcher matcher = split.matcher(scanDependencies);
+        while (matcher.find())
+        {
+          getLog().info("Scanning dependencies for scope " + matcher.group());
+          for (Artifact artifact : project.getDependencyArtifacts())
+          {
+            if (!artifact.getScope().equalsIgnoreCase(matcher.group()))
+              continue;
+            if (artifact.getFile() == null)
+            {
+              getLog().warn(
+                  "Cannot scan dependency " +
+                  artifact.getId() +
+                  ": no JAR-file available!"
+                  );
+              continue;
+            }
+            getLog().info(
+                "Scanning dependency " +
+                artifact.getId() +
+                " for annotated classes..."
+                );
+            db.scanArchives(artifact.getFile().toURI().toURL());
+          }
         }
       }
 

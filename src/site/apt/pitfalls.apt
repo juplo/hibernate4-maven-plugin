@@ -4,6 +4,12 @@
   Kai Moritz
   ---
 
+Annotated classes in dependencies are not found.
+
+  hibernate4-maven-plugin does not scan transitive dependencies for
+  annotated classes. If some of your annotated classes are hidden in a
+  transitive dependency, you can simply add that dependency explicitly.
+
 hibernate4-maven-plugin always needs a database-connection
 
   The default-configuration uses the EXPORT-target of the SchemaExport-Tool.
