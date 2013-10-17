@@ -122,6 +122,7 @@ public class Hbm2DdlMojo extends AbstractMojo
    * Additonally, all dependencies are scanned for annotated classes.
    *
    * @parameter property="project.build.outputDirectory"
+   * @since 1.0
    */
   private String outputDirectory;
 
@@ -132,6 +133,7 @@ public class Hbm2DdlMojo extends AbstractMojo
    * artifact will be scanned for hibernate-annotated classes additionally.
    *
    * @parameter property="hibernate.export.scan_testclasses" default-value="false"
+   * @since 1.0.1
    */
   private boolean scanTestClasses;
 
@@ -147,6 +149,7 @@ public class Hbm2DdlMojo extends AbstractMojo
    * transitive dependency, you can simply add that dependency explicitly.
    *
    * @parameter property="hibernate.export.scan_dependencies" default-value="compile"
+   * @since 1.0.3
    */
   private String scanDependencies;
 
@@ -160,6 +163,7 @@ public class Hbm2DdlMojo extends AbstractMojo
    * to <code>true</code>!
    *
    * @parameter property="project.build.testOutputDirectory"
+   * @since 1.0.2
    */
   private String testOutputDirectory;
 
@@ -175,6 +179,7 @@ public class Hbm2DdlMojo extends AbstractMojo
    * annotated classes are found and the dialect was not changed.
    *
    * @parameter property="maven.test.skip" default-value="false"
+   * @since 1.0
    */
   private boolean skip;
 
@@ -187,6 +192,7 @@ public class Hbm2DdlMojo extends AbstractMojo
    * <code>skip</code> takes precedence over <code>force</code>.
    *
    * @parameter property="hibernate.export.force" default-value="false"
+   * @since 1.0
    */
   private boolean force;
 
@@ -194,6 +200,7 @@ public class Hbm2DdlMojo extends AbstractMojo
    * SQL-Driver name.
    *
    * @parameter property="hibernate.connection.driver_class"
+   * @since 1.0
    */
   private String driverClassName;
 
@@ -201,6 +208,7 @@ public class Hbm2DdlMojo extends AbstractMojo
    * Database URL.
    *
    * @parameter property="hibernate.connection.url"
+   * @since 1.0
    */
   private String url;
 
@@ -208,6 +216,7 @@ public class Hbm2DdlMojo extends AbstractMojo
    * Database username
    *
    * @parameter property="hibernate.connection.username"
+   * @since 1.0
    */
   private String username;
 
@@ -215,6 +224,7 @@ public class Hbm2DdlMojo extends AbstractMojo
    * Database password
    *
    * @parameter property="hibernate.connection.password"
+   * @since 1.0
    */
   private String password;
 
@@ -222,12 +232,15 @@ public class Hbm2DdlMojo extends AbstractMojo
    * Hibernate dialect.
    *
    * @parameter property="hibernate.dialect"
+   * @since 1.0
    */
   private String hibernateDialect;
 
   /**
    * Hibernate Naming Strategy
+   *
    * @parameter property="hibernate.ejb.naming_strategy"
+   * @since 1.0.2
    */
   private String hibernateNamingStrategy;
 
@@ -235,6 +248,7 @@ public class Hbm2DdlMojo extends AbstractMojo
    * Path to Hibernate configuration file.
    *
    * @parameter default-value="${project.build.outputDirectory}/hibernate.properties"
+   * @since 1.0
    */
   private String hibernateProperties;
 
@@ -243,6 +257,7 @@ public class Hbm2DdlMojo extends AbstractMojo
    * Multiple files can be separated with white-spaces and/or commas.
    *
    * @parameter property="hibernate.mapping"
+   * @since 1.0.2
    */
   private String hibernateMapping;
 
@@ -259,6 +274,7 @@ public class Hbm2DdlMojo extends AbstractMojo
    * Hibernate-Dialect must always be choosen.
    *
    * @parameter property="hibernate.export.target" default-value="EXPORT"
+   * @since 1.0
    */
   private String target;
 
@@ -274,6 +290,7 @@ public class Hbm2DdlMojo extends AbstractMojo
    * If NONE is choosen, no databaseconnection is needed.
    *
    * @parameter property="hibernate.export.type" default-value="BOTH"
+   * @since 1.0
    */
   private String type;
 
@@ -281,6 +298,7 @@ public class Hbm2DdlMojo extends AbstractMojo
    * Output file.
    *
    * @parameter property="hibernate.export.schema.filename" default-value="${project.build.directory}/schema.sql"
+   * @since 1.0
    */
   private String outputFile;
 
@@ -288,6 +306,7 @@ public class Hbm2DdlMojo extends AbstractMojo
    * Delimiter in output-file.
    *
    * @parameter property="hibernate.export.schema.delimiter" default-value=";"
+   * @since 1.0
    */
   private String delimiter;
 
@@ -295,6 +314,7 @@ public class Hbm2DdlMojo extends AbstractMojo
    * Format output-file.
    *
    * @parameter property="hibernate.export.schema.format" default-value="true"
+   * @since 1.0
    */
   private boolean format;
 
@@ -302,8 +322,10 @@ public class Hbm2DdlMojo extends AbstractMojo
    * Generate envers schema for auditing tables.
    *
    * @parameter property="hibernate.export.envers" default-value="false"
+   * @since 1.0.3
    */
   private boolean envers;
+
 
   @Override
   public void execute()
