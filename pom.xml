@@ -13,7 +13,7 @@
   <artifactId>hibernate4-maven-plugin</artifactId>
   <name>Hibernate 4 Maven Plugin</name>
   <description>Plugin for generating a database-schema from Hibernate-4-Mapping-Annotations</description>
-  <version>1.0.3</version>
+  <version>1.0.4-SNAPSHOT</version>
   <packaging>maven-plugin</packaging>
   <url>http://juplo.de/hibernate4-maven-plugin</url>
 
