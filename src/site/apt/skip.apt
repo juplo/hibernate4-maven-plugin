@@ -1,0 +1,55 @@
+  ---
+  To Skip or not to skip: that is the question
+  ---
+  Kai Moritz
+  ---
+
+  In most use-cases, the hibernate4-maven-plugin is used to create a
+  test-database automatically. In this use-cases, it is very likely, that it
+  will result in mistakes/errors, if the goal is executed, when the tests
+  are skipped.
+  For example, one might manually overwrite the database-url with the url of
+  the production-database, in order to run other tests, like starting a
+  local webserver with the
+  {{{http://wiki.eclipse.org/Jetty/Feature/Jetty_Maven_Plugin}jetty-maven-plugin}}.
+  If the export-goal would be executed in such a scenario, it might erase the
+  hole production-database, which is not very desireable.
+
+  Because of this, the configuration-parameter <<<skip>>> defaults to the value
+  of the proptery <<<maven.test.skip>>>. This way, the execution of the
+  hibernate4-maven-plugin is skipped automatically, when the tests are
+  skipped. Think of it as a build-in security-belt.
+
+  If you do not like that, because you need the plugin to always execute the
+  export-goal, even if the tests are skipped you can configure that explicitly,
+  by setting the configuration-parameter <<<skip>>> to false:
+
+------------
+<plugin>
+  <groupId>de.juplo</groupId>
+  <artifactId>hibernate4-maven-plugin</artifactId>
+  ...
+  <configuration>
+    <skip>false</skip>
+  </configuration>
+</plugin>
+------------
+
+  Or, if you want the export-goal to be executed by default and to be skipped
+  if you say so, you can bind the value of the configuration-parameter
+  <<<skip>>> to a custom property. For example:
+
+------------
+<plugin>
+  <groupId>de.juplo</groupId>
+  <artifactId>hibernate4-maven-plugin</artifactId>
+  ...
+  <configuration>
+    <skip>${foo.bar}</skip>
+  </configuration>
+</plugin>
+------------
+
+  This way, the export-goal would be skipped, if you set the property
+  <<<foo.bar>>> to <<<true>>>. For example, if you specify <<<-Dfoo.bar=true>>>
+  on the command-line.
