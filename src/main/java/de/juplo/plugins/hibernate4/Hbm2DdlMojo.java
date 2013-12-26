@@ -119,7 +119,7 @@ public class Hbm2DdlMojo extends AbstractMojo
    * Classes-Directory to scan.
    * <p>
    * This parameter defaults to the maven build-output-directory for classes.
-   * Additonally, all dependencies are scanned for annotated classes.
+   * Additionally, all dependencies are scanned for annotated classes.
    *
    * @parameter property="project.build.outputDirectory"
    * @since 1.0
@@ -127,7 +127,7 @@ public class Hbm2DdlMojo extends AbstractMojo
   private String outputDirectory;
 
   /**
-   * Wether to scan test-classes too, or not.
+   * Whether to scan test-classes too, or not.
    * <p>
    * If this parameter is set to <code>true</code> the test-classes of the
    * artifact will be scanned for hibernate-annotated classes additionally.
@@ -172,10 +172,10 @@ public class Hbm2DdlMojo extends AbstractMojo
    * <p>
    * If set to <code>true</code>, the execution is skipped.
    * <p>
-   * A skipped excecution is signaled via the maven-property
+   * A skipped execution is signaled via the maven-property
    * <code>${hibernate.export.skipped}</code>.
    * <p>
-   * The excecution is skipped automatically, if no modified or newly added
+   * The execution is skipped automatically, if no modified or newly added
    * annotated classes are found and the dialect was not changed.
    *
    * @parameter property="hibernate.skip" default-value="${maven.test.skip}"
@@ -264,14 +264,14 @@ public class Hbm2DdlMojo extends AbstractMojo
   /**
    * Target of execution:
    * <ul>
-   *   <li><strong>NONE</strong> only export schema to SQL-script (forces excecution, signals skip)</li>
-   *   <li><strong>EXPORT</strong> create database (<strong>DEFAULT!</strong>). forces excecution, signals skip)</li>
+   *   <li><strong>NONE</strong> only export schema to SQL-script (forces execution, signals skip)</li>
+   *   <li><strong>EXPORT</strong> create database (<strong>DEFAULT!</strong>). forces execution, signals skip)</li>
    *   <li><strong>SCRIPT</strong> export schema to SQL-script and print it to STDOUT</li>
    *   <li><strong>BOTH</strong></li>
    * </ul>
    *
-   * A databaseconnection is only needed for EXPORT and BOTH, but a
-   * Hibernate-Dialect must always be choosen.
+   * A database connection is only needed for EXPORT and BOTH, but a
+   * Hibernate-Dialect must always be chosen.
    *
    * @parameter property="hibernate.export.target" default-value="EXPORT"
    * @since 1.0
@@ -335,7 +335,7 @@ public class Hbm2DdlMojo extends AbstractMojo
   {
     if (skip)
     {
-      getLog().info("Exectuion of hibernate4-maven-plugin:export was skipped!");
+      getLog().info("Execution of hibernate4-maven-plugin:export was skipped!");
       project.getProperties().setProperty(EXPORT_SKIPPED_PROPERTY, "true");
       return;
     }
@@ -536,7 +536,7 @@ public class Hbm2DdlMojo extends AbstractMojo
       throw new MojoExecutionException(e.getMessage());
     }
 
-    /** Overwrite values from propertie-file or set, if given */
+    /** Overwrite values from properties-file or set, if given */
     if (driverClassName != null)
     {
       if (properties.containsKey(DRIVER_CLASS))
@@ -667,7 +667,7 @@ public class Hbm2DdlMojo extends AbstractMojo
     if (properties.isEmpty())
     {
       getLog().error("No properties set!");
-      throw new MojoFailureException("Hibernate-Configuration is missing!");
+      throw new MojoFailureException("Hibernate configuration is missing!");
     }
 
     Configuration config = new Configuration();
@@ -747,15 +747,15 @@ public class Hbm2DdlMojo extends AbstractMojo
       }
       catch (NoSuchAlgorithmException e)
       {
-        throw new MojoFailureException("Cannot calculate MD5-summs!", e);
+        throw new MojoFailureException("Cannot calculate MD5 sums!", e);
       }
       catch (FileNotFoundException e)
       {
-        throw new MojoFailureException("Cannot calculate MD5-summs!", e);
+        throw new MojoFailureException("Cannot calculate MD5 sums!", e);
       }
       catch (IOException e)
       {
-        throw new MojoFailureException("Cannot calculate MD5-summs!", e);
+        throw new MojoFailureException("Cannot calculate MD5 sums!", e);
       }
     }
 
