@@ -88,7 +88,7 @@ public class Hbm2DdlMojo extends AbstractMojo
   public final static String NAMING_STRATEGY="hibernate.ejb.naming_strategy";
   public final static String ENVERS = "hibernate.export.envers";
 
-  public final static String MD5S = "schema.md5s";
+  public final static String MD5S = "hibernate4-generatedschema.md5s";
 
   private final static Pattern split = Pattern.compile("[^,\\s]+");
 
