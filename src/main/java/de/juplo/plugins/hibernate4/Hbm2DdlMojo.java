@@ -875,9 +875,34 @@ public class Hbm2DdlMojo extends AbstractMojo
       }
 
       SchemaExport export = new SchemaExport(config, connection);
-      export.setOutputFile(outputFile);
       export.setDelimiter(delimiter);
       export.setFormat(format);
+
+      File outF = new File(outputFile);
+
+      if (!outF.isAbsolute())
+      {
+        // Interpret relative file path relative to build directory
+        outF = new File(buildDirectory, outputFile);
+        getLog().info("Adjusted relative path, resulting path is " + outF.getPath());
+      }
+
+      // Ensure that directory path for specified file exists
+      File outFileParentDir = outF.getParentFile();
+      if (null != outFileParentDir && !outFileParentDir.exists())
+      {
+        try
+        {
+          getLog().info("Creating directory path for output file:" + outFileParentDir.getPath());
+          outFileParentDir.mkdirs();
+        }
+        catch (Exception e)
+        {
+          getLog().error("Error creating directory path for output file: " + e.getLocalizedMessage());
+        }
+      }
+
+      export.setOutputFile(outF.getPath());
       export.execute(target, type);
 
       for (Object exception : export.getExceptions())
