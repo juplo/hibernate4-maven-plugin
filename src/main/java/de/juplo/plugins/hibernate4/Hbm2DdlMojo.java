@@ -178,7 +178,7 @@ public class Hbm2DdlMojo extends AbstractMojo
    * The excecution is skipped automatically, if no modified or newly added
    * annotated classes are found and the dialect was not changed.
    *
-   * @parameter property="maven.test.skip" default-value="false"
+   * @parameter property="hibernate.skip" default-value="${maven.test.skip}"
    * @since 1.0
    */
   private boolean skip;
