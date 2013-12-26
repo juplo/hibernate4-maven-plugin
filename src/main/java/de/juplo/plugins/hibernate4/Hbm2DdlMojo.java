@@ -344,7 +344,7 @@ public class Hbm2DdlMojo extends AbstractMojo
     boolean modified = false;
     File saved = new File(buildDirectory + File.separator + MD5S);
 
-    if (saved.exists())
+    if (saved.isFile() && saved.length() > 0)
     {
       try
       {
