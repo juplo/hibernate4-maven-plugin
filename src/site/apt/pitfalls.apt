@@ -6,9 +6,12 @@
 
 Annotated classes in dependencies are not found.
 
-  hibernate4-maven-plugin does not scan transitive dependencies for
-  annotated classes. If some of your annotated classes are hidden in a
-  transitive dependency, you can simply add that dependency explicitly.
+  hibernate4-maven-plugin by default scans dependencies in the scope
+  <code>compile</code>. You can configure it to scan dependencies in other
+  scopes as well. But it scans only direct dependencies. Transitive
+  dependencies are not scanned for annotated classes. If some of your
+  annotated classes are hidden in a transitive dependency, you can simply
+  add that dependency explicitly.
 
 hibernate4-maven-plugin always needs a database-connection
 
