@@ -109,8 +109,9 @@
     <!-- Zeichensatz -->
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <!-- Verwendete Versionen -->
-    <hibernate-core.version>4.3.0.Final</hibernate-core.version>
-    <hibernate-envers.version>4.3.0.Final</hibernate-envers.version>
+    <hibernate-core.version>4.3.1.Final</hibernate-core.version>
+    <hibernate-envers.version>4.3.1.Final</hibernate-envers.version>
+    <hibernate-validator.version>4.3.1.Final</hibernate-validator.version>
     <maven.version>3.0.4</maven.version>
     <maven-plugin-log4j.version>1.0.1</maven-plugin-log4j.version>
     <scannotation.version>1.0.3</scannotation.version>
@@ -146,7 +147,7 @@
     <dependency>
       <groupId>org.hibernate</groupId>
       <artifactId>hibernate-validator</artifactId>
-      <version>4.3.1.Final</version>
+      <version>${hibernate-validator.version}</version>
     </dependency>
     <dependency>
       <groupId>org.scannotation</groupId>

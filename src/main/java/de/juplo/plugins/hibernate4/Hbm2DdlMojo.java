@@ -670,15 +670,7 @@ public class Hbm2DdlMojo extends AbstractMojo
       throw new MojoFailureException("Hibernate configuration is missing!");
     }
 
-    Configuration config= null;
-    try
-    {
-      config = new ValidationConfiguration(hibernateDialect);
-    }
-    catch (ClassNotFoundException e)
-    {
-      e.printStackTrace();
-    }
+    final Configuration config = new ValidationConfiguration(hibernateDialect);
 
     config.setProperties(properties);
 

@@ -1,9 +1,9 @@
 package de.juplo.plugins.hibernate4;
 
-import java.lang.reflect.Method;
-import java.util.Collection;
-import java.util.Properties;
+import javax.validation.Validation;
+
 import org.hibernate.cfg.Configuration;
+import org.hibernate.cfg.beanvalidation.TypeSafeActivatorAccessor;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.metamodel.source.MappingException;
 
@@ -20,16 +20,21 @@ import org.hibernate.metamodel.source.MappingException;
  * SchemaExport, some fancy subclassing is needed to invoke the integration
  * at the right time.
  * @author Mark Robinson <mark@mrobinson.ca>
+ * @author Frank Schimmel <frank.schimmel@cm4all.com>
  */
 public class ValidationConfiguration extends Configuration
 {
-  Class dialectClass;
+  private static final long serialVersionUID = 1L;
 
-  public ValidationConfiguration(String dialectClass)
-      throws
-        ClassNotFoundException
+  private Class<Dialect> dialectClass;
+
+  public ValidationConfiguration(final String dialectClass)
   {
-    this.dialectClass = Class.forName(dialectClass);
+    try {
+        this.dialectClass = (Class<Dialect>) Class.forName(dialectClass);
+    } catch (ClassNotFoundException e) {
+        throw new RuntimeException(e);
+    }
   }
 
   @Override
@@ -39,19 +44,8 @@ public class ValidationConfiguration extends Configuration
 
     try
     {
-      /** Thank you, hibernate folks, for making this useful class package private ... */
-      Method applyDDL =
-          Class
-            .forName("org.hibernate.cfg.beanvalidation.TypeSafeActivator")
-            .getMethod(
-                "applyRelationalConstraints",
-                Collection.class,
-                Properties.class,
-                Dialect.class
-                );
-      applyDDL.setAccessible(true);
-      applyDDL.invoke(
-          null,
+      TypeSafeActivatorAccessor.applyRelationalConstraints(
+          Validation.buildDefaultValidatorFactory(),
           classes.values(),
           getProperties(),
           dialectClass.newInstance()
