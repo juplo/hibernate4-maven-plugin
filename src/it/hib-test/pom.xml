@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>de.juplo</groupId>
+  <artifactId>hibernate4-basictest</artifactId>
+  <name>Hibernate 4 Test</name>
+  <version>0.1-SNAPSHOT</version>
+  <packaging>jar</packaging>
+  <properties>
+    <!--hibernate.skip>false</hibernate.skip-->
+    <hibernate.exportdir>${project.build.directory}/hibernate4-schema/another/subdir</hibernate.exportdir>
+  </properties>
+  <dependencies>
+    <dependency>
+      <groupId>org.hibernate</groupId>
+      <artifactId>hibernate-core</artifactId>
+      <version>4.3.0.Final</version>
+    </dependency>
+  </dependencies>
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>2.0.2</version>
+        <configuration>
+          <source>1.7</source>
+          <target>1.7</target>
+          <encoding>utf8</encoding>
+          <showWarnings>true</showWarnings>
+        </configuration>
+      </plugin>
+      <!--  Generate database schema files -->
+      <plugin>
+        <groupId>de.juplo</groupId>
+        <artifactId>hibernate4-maven-plugin</artifactId>
+        <version>@project.version@</version>
+        <configuration>
+          <!-- Target of none generates schema only, no DB connection -->
+          <target>none</target>
+          <!-- Generate both CREATE and DROP statements in scripts -->
+          <type>both</type>
+        </configuration>
+        <executions>
+          <execution>
+            <id>create-h2-ddl</id>
+            <goals>
+              <goal>export</goal>
+            </goals>
+            <configuration>
+              <hibernateDialect>org.hibernate.dialect.H2Dialect</hibernateDialect>
+              <outputFile>${hibernate.exportdir}/h2.sql</outputFile>
+            </configuration>
+          </execution>
+          <execution>
+            <id>create-postgres-ddl</id>
+            <goals>
+              <goal>export</goal>
+            </goals>
+            <configuration>
+              <hibernateDialect>org.hibernate.dialect.PostgreSQL82Dialect</hibernateDialect>
+              <outputFile>${hibernate.exportdir}/postgres.sql</outputFile>
+            </configuration>
+          </execution>
+          <execution>
+            <id>create-oracle-ddl</id>
+            <goals>
+              <goal>export</goal>
+            </goals>
+            <configuration>
+              <hibernateDialect>org.hibernate.dialect.Oracle10gDialect</hibernateDialect>
+              <outputFile>${hibernate.exportdir}/oracle.sql</outputFile>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+</project>
