@@ -282,6 +282,9 @@
         <plugin>
           <artifactId>maven-site-plugin</artifactId>
           <version>3.3</version>
+          <configuration>
+            <siteDirectory>${project.build.directory}/filtered-site</siteDirectory>
+          </configuration>
           <dependencies>
             <dependency><!-- add support for ssh/scp -->
               <groupId>org.apache.maven.wagon</groupId>
@@ -296,13 +299,6 @@
 
   <reporting>
     <plugins>
-      <plugin>
-        <artifactId>maven-site-plugin</artifactId>
-        <version>3.3</version>
-        <configuration>
-          <siteDirectory>${project.build.directory}/filtered-site</siteDirectory>
-        </configuration>
-      </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-changes-plugin</artifactId>
