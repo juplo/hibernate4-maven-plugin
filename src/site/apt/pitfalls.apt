@@ -110,7 +110,7 @@ DBUnit {fails} after execution of hibernate4 was skipped because nothing has cha
   development cycle, if you have to wait for slow IO.
 
   To circumvent this problem, hibernate4-maven-plugin signals a skipped
-  excecution by setting the  maven property <<<${hibernate.export.skipped}>>> to
+  excecution by setting the  maven property <<<$\{hibernate.export.skipped\}>>> to
   <<<true>>>.
   You can configure other plugins to react on this signal.
   For example, the dbunit-plugin can be configured to skip its excecution, if

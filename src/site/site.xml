@@ -14,6 +14,7 @@
   <skin>
     <groupId>de.juplo</groupId>
     <artifactId>juplo-maven-skin</artifactId>
+    <version>1.0.7</version>
   </skin>
 </project>
 

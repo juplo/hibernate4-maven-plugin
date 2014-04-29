@@ -11,7 +11,7 @@
   cycle.
 
   The plugin signals, that the execution was skipped by setting the maven
-  property <<<${hibernate.export.skipped}>>> to <<<true>>>.
+  property <<<$\{hibernate.export.skipped\}>>> to <<<true>>>.
   This may be helpful, because other plugins like
   {{{http://mojo.codehaus.org/dbunit-maven-plugin/}dbunit-plugin}}
   {{{./pitfalls.html#fails}may fail}}, when the execution is skipped.

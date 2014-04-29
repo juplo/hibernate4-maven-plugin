@@ -52,6 +52,8 @@ Releases
 
  * ${project.version} (this version)
 
+ * {{{http://juplo.de/hibernate4-maven-plugin-1.0.3} 1.0.3}}
+
  * {{{http://juplo.de/hibernate4-maven-plugin-1.0.2} 1.0.2}}
 
  * {{{http://juplo.de/hibernate4-maven-plugin-1.0.1} 1.0.1}}
