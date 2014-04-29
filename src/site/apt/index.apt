@@ -1,5 +1,5 @@
   ---
-  A simple Plugin for generating a Database-Schema from Hibernate 4 Mapping-Annotations.
+  Hibernate 4 Maven Plugin
   ---
   Kai Moritz
   ---
