@@ -1,46 +1,46 @@
-  ---
-  Known Pitfalls
-  ---
-  Kai Moritz
-  ---
-
-Annotated classes in dependencies are not found.
-
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+ <head>
+ <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+ </head>
+ <body>
+  <h2>Annotated classes in dependencies are not found.</h2>
+  <p>
   hibernate4-maven-plugin by default scans dependencies in the scope
   <code>compile</code>. You can configure it to scan dependencies in other
   scopes as well. But it scans only direct dependencies. Transitive
   dependencies are not scanned for annotated classes. If some of your
   annotated classes are hidden in a transitive dependency, you can simply
   add that dependency explicitly.
-
-hibernate4-maven-plugin always needs a database-connection
-
+  </p>
+  <h2>hibernate4-maven-plugin always needs a database-connection</h2>
+  <p>
   The default-configuration uses the EXPORT-target of the SchemaExport-Tool.
   If you do not need to create a database with the evaluated schema, you can
   use the NONE- or the SCRIPT-target.
   This can be achieved with the command-line parameter
-  <<<-Dhibernate.export.target=SCRIPT>>> or with the following configuration:
-
-------------
-<configuration>
-  <target>SCRIPT</target>
-</configuration>
-------------
-
+  <code>-Dhibernate.export.target=SCRIPT</code> or with the following configuration:
+  </p>
+  <pre class="prettyprint linenums lang-html">
+&lt;configuration&gt;
+  &lt;target&gt;SCRIPT&lt;/target&gt;
+&lt;/configuration&gt;</pre>
+  <p>
   But even when no database is to be created, hibernate always needs to know
   the dialect. Hence, the plugin will fail if this parameter is missing!
-
-Dependency for driver-class XYZ is missing
-
+  </p>
+  <h2>Dependency for driver-class XYZ is missing</h2>
+  <p>
   One regular problem is the scope of the jdbc-driver-dependency.
   It is very unlikely, that this dependency is needed at compile-time.
-  So a tidy maven-developer would usually scope it for <<<runtime>>>.
-
-  But this will break the execution of the <<<hibernate4-maven-plugin>>>.
+  So a tidy maven-developer would usually scope it for <code>runtime</code>.
+  </p>
+  <p>
+  But this will break the execution of the <code>hibernate4-maven-plugin</code>.
   Since it will not be able to see the needed dependency, it will fail with
   an error-message like:
-
----------------
+  </p>
+  <pre class="prettyprint">
 [INFO] Gathered hibernate-configuration (turn on debugging for details):
 [INFO]   hibernate.connection.username = sa
 [INFO]   hibernate.connection.password = 
@@ -58,76 +58,75 @@ Dependency for driver-class XYZ is missing
 [INFO] Total time: 2 seconds
 [INFO] Finished at: Thu Nov 29 11:31:14 CET 2012
 [INFO] Final Memory: 32M/342M
-[INFO] ------------------------------------------------------------------------
----------------
-
+[INFO] ------------------------------------------------------------------------</pre>
+  <p>
   A quick workaround for this error would be, to delete the runtime-constraint
   for the jdbc-driver-dependency.
-
+  </p>
+  <p>
   A much cleaner way is, to (additionally) ad the dependency, to the
   plugin-definition:
-
----------------
-<plugin>
-  <groupId>de.juplo</groupId>
-  <artifactId>hibernate4-maven-plugin</artifactId>
-  <version>${project.version}</version>
-  <executions>
-    <execution>
-      <goals>
-        <goal>export</goal>
-      </goals>
-    </execution>
-  </executions>
-  <dependencies>
-  <dependency>
-    <groupId>org.hsqldb</groupId>
-    <artifactId>hsqldb</artifactId>
-    <version>2.2.8</version>
-  </dependency>
-  </dependencies>
-</plugin>
----------------
-
+  </p>
+  <pre class="prettyprint linenums lang-html">
+&lt;plugin&gt;
+  &lt;groupId&gt;de.juplo&lt;/groupId&gt;
+  &lt;artifactId&gt;hibernate4-maven-plugin&lt;/artifactId&gt;
+  &lt;version&gt;${project.version}&lt;/version&gt;
+  &lt;executions&gt;
+    &lt;execution&gt;
+      &lt;goals&gt;
+        &lt;goal&gt;export&lt;/goal&gt;
+      &lt;/goals&gt;
+    &lt;/execution&gt;
+  &lt;/executions&gt;
+  &lt;dependencies&gt;
+  &lt;dependency&gt;
+    &lt;groupId&gt;org.hsqldb&lt;/groupId&gt;
+    &lt;artifactId&gt;hsqldb&lt;/artifactId&gt;
+    &lt;version&gt;2.2.8&lt;/version&gt;
+  &lt;/dependency&gt;
+  &lt;/dependencies&gt;
+&lt;/plugin&gt;</pre>
+  <p>
   This is also the best way, if you use a different jdbc-driver for
   testing, than in production.
   Because otherwise, this dependency will unnecessarily bloat the
   runtime-dependencies of your project.
-
-DBUnit {fails} after execution of hibernate4 was skipped because nothing has changed
-
+  </p>
+  <h2 id="fails">DBUnit fails after execution of hibernate4 was skipped because nothing has changed</h2>
+  <p>
   If hibernate4-maven-plugin skips its excecution, this may lead to errors in
   other plugins.
   For example, when importing sample-data in the automatically created database
-  with the help of the {{{http://mojo.codehaus.org/dbunit-maven-plugin/}dbunit-plugin}},
-  the <<<CLEAN_INSERT>>>-operation may fail because of foreign-key-constraints,
+  with the help of the <a href="http://mojo.codehaus.org/dbunit-maven-plugin/">dbunit-plugin</a>,
+  the <code>CLEAN_INSERT</code>-operation may fail because of foreign-key-constraints,
   if the database was not recreated, because the hibernate4-maven-plugin has
   skipped its excecution.
-
-  A quick fix to this problem is, to {{{./force.html}force}}
+  </p>
+  <p>
+  A quick fix to this problem is, to <a href="./force.html">force</a>
   hibernate4-maven-plugin to export the schema every time it is running.
   But to recreate the database on every testrun may noticeable slow down your
   development cycle, if you have to wait for slow IO.
-
+  </p>
+  <p>
   To circumvent this problem, hibernate4-maven-plugin signals a skipped
-  excecution by setting the  maven property <<<${hibernate.export.skipped}>>> to
-  <<<true>>>.
+  excecution by setting the  maven property <code>$\{hibernate.export.skipped\}</code> to
+  <code>true</code>.
   You can configure other plugins to react on this signal.
   For example, the dbunit-plugin can be configured to skip its excecution, if
   hibernate4-maven-plugin was skipped like this:
-
-------------
-<plugin>
-  <groupId>org.codehaus.mojo</groupId>
-  <artifactId>dbunit-maven-plugin</artifactId>
-  <configuration>
-    <skip>${hibernate.export.skipped}</skip>
-  </configuration>
-</plugin>
-------------
-
-The database will not be recreated after a manual drop/clean
-
+  </p>
+  <pre class="prettyprint linenums lang-html">
+&lt;plugin&gt;
+  &lt;groupId&gt;org.codehaus.mojo&lt;/groupId&gt;
+  &lt;artifactId&gt;dbunit-maven-plugin&lt;/artifactId&gt;
+  &lt;configuration&gt;
+    &lt;skip&gt;${hibernate.export.skipped}&lt;/skip&gt;
+  &lt;/configuration&gt;
+&lt;/plugin&gt;</pre>
+  <h2>The database will not be recreated after a manual drop/clean</h2>
+  <p>
   If one manually drops the database or removes the hsqldb-files, it will not
   be recreated by the hibernate4-maven-plugin, because it cannot detect, that
   the database needs to be recreated.
@@ -135,35 +134,34 @@ The database will not be recreated after a manual drop/clean
   the configuration nor the annotated classes have changed, because an
   unnecessary drop-create-cycle might take a long time. The plugin will
   report that like this:
-
--------------
+  </p>
+  <pre class="prettyprint">
 [INFO] No modified annotated classes found and dialect unchanged.
-[INFO] Skipping schema generation!
--------------
-
-  If one always uses <<<mvn clean>>> for cleanup, this will not happen.
-  Otherwise the recreation must be {{{./force.html}forced}}:
-
--------------
-mvn hibernate4:export -Dhibernate.export.force=true
--------------
-
-The hibernate4:export goal is not executed, when tests are skipped
-
+[INFO] Skipping schema generation!</pre>
+  <p>
+  If one always uses <code>mvn clean</code> for cleanup, this will not happen.
+  Otherwise the recreation must be <a href="./force.html">forced</a>:
+  </p>
+  <pre class="prettyprint">
+mvn hibernate4:export -Dhibernate.export.force=true</pre>
+  <h2>The hibernate4:export goal is not executed, when tests are skipped</h2>
+  <p>
   The hibernate4-maven-plugin automatically skips its execution, when
-  <<<maven.test.skip>>> is set to <<<true>>>. If you need it to be always
+  <code>maven.test.skip</code> is set to <code>true</code>. If you need it to be always
   executed, you can configure that explicitly like this:
-
-------------
-<plugin>
-  <groupId>de.juplo</groupId>
-  <artifactId>hibernate4-maven-plugin</artifactId>
+  </p>
+  <pre class="prettyprint linenums lang-html">
+&gt;plugin&lt;
+  &lt;groupId&gt;de.juplo&lt;/groupId&gt;
+  &lt;artifactId&gt;hibernate4-maven-plugin&lt;/artifactId&gt;
   ...
-  <configuration>
-    <skip>false</skip>
-  </configuration>
-</plugin>
-------------
-
+  &lt;configuration&gt;
+    &lt;skip&gt;false&lt;/skip&gt;
+  &lt;/configuration&gt;
+&lt;/plugin&gt;</pre>
+  <p>
   Background-information for this design-decission can be found on the extra
-  page {{{./skip.html}To skip or not to skip: that is the question}}...
+  page <a href="./skip.html">To skip or not to skip: that is the question</a>...
+  </p>
+ </body>
+</html>

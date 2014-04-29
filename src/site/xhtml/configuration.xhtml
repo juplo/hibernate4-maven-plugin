@@ -1,0 +1,213 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+ <head>
+ <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+ </head>
+ <body>
+  <h2>Configuration through a hibernate.properties-File</h2>
+  <p>
+  The most simple way to configure the plugin is, to put all the
+  hibernate-configuration in a <strong>hibernate.properties</strong>-file on your
+  classpath. Put the file in the <code>resources</code>-folder. Maven will put
+  it in the <code>class</code>-folder of your webapp, where it will be picked up
+  by this plugin as well as by Hibernate 4.
+  </p>
+  <p>
+  Doing so, the only additionally configuration needed, to activat the plugin
+  is the following entry in the <code>plugins</code>-section of your <code>pom.xml</code>:
+  </p>
+  <pre class="prettyprint linenums lang-html">
+&lt;plugin&gt;
+  &lt;groupId&gt;de.juplo&lt;/groupId&gt;
+  &lt;artifactId&gt;hibernate4-maven-plugin&lt;/artifactId&gt;
+  &lt;version&gt;${project.version}&lt;/version&gt;
+  &lt;executions&gt;
+    &lt;execution&gt;
+      &lt;goals&gt;
+        &lt;goal&gt;export&lt;/goal&gt;
+      &lt;/goals&gt;
+    &lt;/execution&gt;
+  &lt;/executions&gt;
+&lt;/plugin&gt;</pre>
+  <p>
+  But be aware, that in this case the database-url, that is
+  build in the application is the same that is used while testing, where
+  the database is droped and recreated by the plugin.
+  <strong>
+    So, you should never fire up this configuration on your production
+    system, or your database might be erased!
+  </strong>
+  </p>
+  <p>
+  Hence, you should specify a different url for testing like in the
+  following snippet:
+  </p>
+  <pre class="prettyprint linenums lang-html">
+&lt;plugin&gt;
+  &lt;groupId&gt;de.juplo&lt;/groupId&gt;
+  &lt;artifactId&gt;hibernate4-maven-plugin&lt;/artifactId&gt;
+  &lt;version&gt;${project.version}&lt;/version&gt;
+  &lt;executions&gt;
+    &lt;execution&gt;
+      &lt;goals&gt;
+        &lt;goal&gt;export&lt;/goal&gt;
+      &lt;/goals&gt;
+    &lt;/execution&gt;
+  &lt;/executions&gt;
+  &lt;configuration&gt;
+    &lt;url&gt;&lt;![CDATA[jdbc:mysql://localhost/test-db]]&gt;&lt;/url&gt;
+  &lt;/configuration&gt;
+&lt;/plugin&gt;</pre>
+  <p>
+  Configuration properties, that are set in the <code>configuration</code>-section
+  of the plugin-configuration cannnot be overwritten elsewere (for details
+  see <a href="#precedence">Configuration-Method-Precedence</a>).
+  You never can overwrite them by accident when specifying a property on
+  the commandline or in your <code>settings.xml</code>.
+  </p>
+  <h2>Configuration through maven-properties</h2>
+  <p>
+  Alternatively, it is possible, to configure the plugin via maven-properties.
+  Each relevant configuration-option has a corresponding maven-property
+  (for a full list see the <a href="./export-mojo.html">Documentation of the export-Mojo</a>).
+  These are named after the
+  <a href="http://docs.jboss.org/hibernate/orm/4.1/manual/en-US/html_single/#configuration-hibernatejdbc">Hibernate JDBC Properties</a>:
+  </p>
+  <ul>
+    <li><code>hibernate.connection.driver_class</code></li>
+    <li><code>hibernate.dialect</code></li>
+    <li><code>hibernate.connection.url</code></li>
+    <li><code>hibernate.connection.username</code></li>
+    <li><code>hibernate.connection.password</code></li>
+  </ul>
+  <p>
+  So, instead of writing the hibernate-configuration in the properties-file,
+  like above, you could put it in the <code>properties</code>-section of your
+  <code>pom.xml</code>.
+  </p>
+  <p>
+  Thogether with the plugin-definition from above, the following would
+  be a complete configuration (again, the database-url was overwritten in
+  the plugin-configuration, to be sure to have a separate database for
+  testing):
+  </p>
+  <pre class="prettyprint linenums lang-html">
+&lt;properties&gt;
+  &lt;hibernate.connection.driver_class&gt;org.hsqldb.jdbcDriver&lt;/hibernate.connection.driver_class&gt;
+  &lt;hibernate.dialect&gt;org.hibernate.dialect.HSQLDialect&lt;/hibernate.dialect&gt;
+  &lt;hibernate.connection.url&gt;&lt;![CDATA[jdbc:hsqldb:res:org.my.path.production_db]]&gt;&lt;/hibernate.connection.url&gt;
+  &lt;hibernate.connection.username&gt;sa&lt;/hibernate.connection.username&gt;
+  &lt;hibernate.connection.password&gt;&lt;/hibernate.connection.password&gt;
+&lt;/properties&gt;
+
+...
+
+&lt;plugins&gt;
+
+  ...
+
+  &lt;plugin&gt;
+    &lt;groupId&gt;de.juplo&lt;/groupId&gt;
+    &lt;artifactId&gt;hibernate4-maven-plugin&lt;/artifactId&gt;
+    &lt;version&gt;${project.version}&lt;/version&gt;
+    &lt;executions&gt;
+      &lt;execution&gt;
+        &lt;goals&gt;
+          &lt;goal&gt;export&lt;/goal&gt;
+        &lt;/goals&gt;
+      &lt;/execution&gt;
+    &lt;/executions&gt;
+    &lt;configuration&gt;
+      &lt;url&gt;&lt;![CDATA[jdbc:hsqldb:target/db/testdb;shutdown=true]]&gt;&lt;/url&gt;
+    &lt;/configuration&gt;
+  &lt;/plugin&gt;
+
+&lt;plugins&gt;</pre>
+  <h2>Configuration through the plugin-configuration</h2>
+  <p>
+  A third way for configuring the plugin is the plugin-configuration.
+  The relevant configuration-parameters are:
+  </p>
+  <ul>
+    <li><code>driverClassName</code></li>
+    <li><code>hibernateDialect</code></li>
+    <li><code>url</code></li>
+    <li><code>username</code></li>
+    <li><code>password</code></li>
+  </ul>
+  <p>
+  The equivalent of the configuration from the last section would look
+  like this:
+  </p>
+  <pre class="prettyprint linenums lang-html">
+&lt;plugin&gt;
+  &lt;groupId&gt;de.juplo&lt;/groupId&gt;
+  &lt;artifactId&gt;hibernate4-maven-plugin&lt;/artifactId&gt;
+  &lt;version&gt;${project.version}&lt;/version&gt;
+  &lt;executions&gt;
+    &lt;execution&gt;
+      &lt;goals&gt;
+        &lt;goal&gt;export&lt;/goal&gt;
+      &lt;/goals&gt;
+    &lt;/execution&gt;
+  &lt;/executions&gt;
+  &lt;configuration&gt;
+    &lt;driverClassName&gt;org.hsqldb.jdbcDriver&lt;/driverClassName&gt;
+    &lt;hibernateDialect&gt;org.hibernate.dialect.HSQLDialect&lt;/hibernateDialect&gt;
+    &lt;url&gt;&lt;![CDATA[jdbc:hsqldb:target/db/fotos;shutdown=true]]&gt;&lt;/url&gt;
+    &lt;username&gt;sa&lt;/username&gt;
+    &lt;password&gt;&lt;/password&gt;
+  &lt;/configuration&gt;
+&lt;/plugin&gt;</pre>
+  <p>
+  The parameter <strong>hibernateProperties</strong> (name of the hibernate-properties-file
+  to use, defaults to <strong>hibernate.properties</strong>) can only be configured through
+  this approach.
+  </p>
+  <p>
+  For more explanations, see the
+  <a href="./export-mojo.html">Documentation of the export-Mojo</a>.
+  </p>
+  <h2 id="precedence">Configuration-Method-Precedence</h2>
+  <p>
+  The configuration is gathered in a fix order:
+  </p>
+  <ol>
+    <li><code>hibernate.properties</code></li>
+    <li>maven-properties</li>
+    <li>plugin-configuration</li>
+  </ol>
+  <p>
+  If you are in doubt about where a configuration-value comes from, run
+  maven with the <a href="./debugging.html">debug-output</a> enabled: <code>mvn -X hibernate4:export</code>
+  and be aware, that maven-properties can be overwitten on the command-line,
+  in your <code>~/.m2/settings.xml</code> and in a profile.
+  </p>
+  <p>
+  The plugin-configuration comes last and overwrites everything else.
+  That way, you can be sure, that a configuration-value, that is
+  specified in the plugin-configuration will never be overwritten by any
+  other configuration-method.
+  </p>
+  <p>
+  If you realy need to overwrite plugin-configuration-values with
+  maven-properties, you can use maven-properties in the plugin-configuration:
+  </p>
+  <pre class="prettyprint linenums lang-html">
+&lt;plugin&gt;
+  &lt;groupId&gt;de.juplo&lt;/groupId&gt;
+  &lt;artifactId&gt;hibernate4-maven-plugin&lt;/artifactId&gt;
+  &lt;version&gt;${project.version}&lt;/version&gt;
+  &lt;executions&gt;
+    &lt;execution&gt;
+      &lt;goals&gt;
+        &lt;goal&gt;export&lt;/goal&gt;
+      &lt;/goals&gt;
+    &lt;/execution&gt;
+  &lt;/executions&gt;
+  &lt;configuration&gt;
+    &lt;password&gt;${my-password-property}&lt;/password&gt;
+  &lt;/configuration&gt;
+&lt;/plugin&gt;</pre>
+ </body>
+</html>

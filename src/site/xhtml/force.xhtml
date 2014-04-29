@@ -1,0 +1,40 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+ <head>
+ <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+ </head>
+ <body>
+  <p>
+  The hibernate4-maven-plugin computes MD5-sums for all found annotated
+  classes and stores them together with the generated schema.
+  If no classes were changed or added and the dialect wasn't changed too, it
+  automatically skips the configured schema-export, to speed up the development
+  cycle.
+  </p>
+  <p>
+  The plugin signals, that the execution was skipped by setting the maven
+  property <code>$\{hibernate.export.skipped\}</code> to <code>true</code>.
+  This may be helpful, because other plugins like
+  <a href="http://mojo.codehaus.org/dbunit-maven-plugin/">dbunit-plugin</a>
+  <a href="./pitfalls.html#fails">may fail</a>, when the execution is skipped.
+  </p>
+  <p>
+  If you need the hibernate4-maven-plugin to &lt;never skip execution automatically&gt;,
+  you can force it to do so, if you set the parameter <code>force</code> to
+  <code>true</code>:
+  </p>
+  <pre class="prettyprint linenums lang-html">
+&lt;plugin&gt;
+  &lt;groupId&gt;de.juplo&lt;/groupId&gt;
+  &lt;artifactId&gt;hibernate4-maven-plugin&lt;/artifactId&gt;
+  &lt;version&gt;${project.version}&lt;/version&gt;
+  &lt;configuration&gt;
+    &lt;force&gt;true&lt;/force&gt;
+  &lt;/configuration&gt;
+&lt;/plugin&gt;</pre>
+  <p>
+  Or you may specify <code>-Dhibernate.export.force=true</code> at the command line,
+  if you want to force hibernate4-maven-plugin only once.
+  </p>
+ </body>
+</html>
