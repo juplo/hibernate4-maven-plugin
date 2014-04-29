@@ -1,0 +1,11 @@
+import de.juplo.test.FileComparator;
+
+
+FileComparator comparator = new FileComparator(basedir);
+
+if (!comparator.isEqual("h2.sql","target/h2.sql"))
+  return false;
+if (!comparator.isEqual("oracle.sql","target/oracle.sql"))
+  return false;
+if (!comparator.isEqual("postgres.sql","target/postgres.sql"))
+  return false;

@@ -264,6 +264,7 @@
           <settingsFile>src/it/settings.xml</settingsFile>
           <cloneProjectsTo>${project.build.directory}/it</cloneProjectsTo>
           <postBuildHookScript>verify</postBuildHookScript>
+          <addTestClassPath>true</addTestClassPath>
         </configuration>
         <executions>
           <execution>
