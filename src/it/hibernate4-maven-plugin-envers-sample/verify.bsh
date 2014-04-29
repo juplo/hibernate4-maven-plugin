@@ -1,0 +1,9 @@
+import de.juplo.test.FileComparator;
+
+
+FileComparator comparator = new FileComparator(basedir);
+
+if (!comparator.isEqual("create-tables-hsqldb.sql","target/test-classes/sql/create-tables-hsqldb.sql"))
+  return false;
+if (!comparator.isEqual("drop-tables-hsqldb.sql","target/test-classes/sql/drop-tables-hsqldb.sql"))
+  return false;
