@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE log4j:configuration SYSTEM "log4j.dtd">
+<log4j:configuration xmlns:log4j="http://jakarta.apache.org/log4j/">
+    <appender name="stdout" class="org.apache.log4j.ConsoleAppender">
+        <layout class="org.apache.log4j.PatternLayout">
+            <!-- Print the date in ISO 8601 initiationServiceType -->
+            <param name="ConversionPattern" value="%d [%t] %-5p %c - %m%n"/>
+        </layout>
+    </appender>
+
+    <logger name="org.hibernate" additivity="false">
+        <!-- Print only messages of level warn or above in the package com.foo -->
+        <level value="info"/>
+        <appender-ref ref="stdout" />
+    </logger>
+    <logger name="org.hibernate.tool.hbm2ddl" additivity="false">
+        <!-- Print only messages of level warn or above in the package com.foo -->
+        <level value="warn"/>
+        <appender-ref ref="stdout" />
+    </logger>
+    <logger name="org.hibernate.SQL" additivity="false">
+        <!-- Print only messages of level warn or above in the package com.foo -->
+        <level value="debug"/>
+        <appender-ref ref="stdout" />
+    </logger>
+    <logger name="org.hibernate.type.descriptor.sql.BasicBinder" additivity="false">
+        <!-- Print only messages of level warn or above in the package com.foo -->
+        <level value="trace"/>
+        <appender-ref ref="stdout" />
+    </logger>
+    <logger name="org.hibernate.type.descriptor.sql.BasicExtractor" additivity="false">
+        <!-- Print only messages of level warn or above in the package com.foo -->
+        <level value="info"/>
+        <appender-ref ref="stdout" />
+    </logger>
+
+    <root>
+        <priority value ="warn" />
+        <appender-ref ref="stdout" />
+    </root>
+</log4j:configuration>
