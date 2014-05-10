@@ -291,6 +291,11 @@
               <artifactId>wagon-ssh</artifactId>
               <version>1.0</version>
             </dependency>
+            <dependency>
+              <groupId>org.apache.maven.doxia</groupId>
+              <artifactId>doxia-module-xhtml</artifactId>
+              <version>1.4</version><!-- doxia version appropriate to the site plugin version -->
+            </dependency>
           </dependencies>
         </plugin>
       </plugins>

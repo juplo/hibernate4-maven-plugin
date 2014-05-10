@@ -8,6 +8,7 @@
       <item name="Skipping Execution" href="skip.html"/>
       <item name="Force Exceution" href="force.html"/>
       <item name="Known Pitfalls (FAQ)" href="pitfalls.html"/>
+      <item name="TEST" href="test.html"/>
     </menu>
     <menu ref="reports"/>
   </body>
