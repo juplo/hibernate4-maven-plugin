@@ -33,13 +33,14 @@
   But be aware, that in this case the database-url, that is
   build in the application is the same that is used while testing, where
   the database is droped and recreated by the plugin.
+  Because of that,
   <strong>
-    So, you should never fire up this configuration on your production
+    you should never fire up this configuration on your production
     system, or your database might be erased!
   </strong>
   </p>
   <p>
-  Hence, you should specify a different url for testing like in the
+  A better approach is, to specify a different url for testing like in the
   following snippet:
   </p>
   <pre class="prettyprint linenums lang-html">
@@ -190,7 +191,7 @@
   other configuration-method.
   </p>
   <p>
-  If you realy need to overwrite plugin-configuration-values with
+  If you need to overwrite plugin-configuration-values with
   maven-properties, you can use maven-properties in the plugin-configuration:
   </p>
   <pre class="prettyprint linenums lang-html">
