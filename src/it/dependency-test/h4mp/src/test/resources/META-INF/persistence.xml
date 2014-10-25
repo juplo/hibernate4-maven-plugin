@@ -1,0 +1,23 @@
+<persistence version="2.0"
+	xmlns="http://java.sun.com/xml/ns/persistence" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="
+    	http://java.sun.com/xml/ns/persistence
+    	http://java.sun.com/xml/ns/persistence/persistence_2_0.xsd">
+
+	<persistence-unit name="jpaIntegrationTest"
+		transaction-type="RESOURCE_LOCAL">
+
+		<class>dependent.DependentEntity</class>
+		<class>h4mp.MainEntity</class>
+		<!-- <exclude-unlisted-classes>true</exclude-unlisted-classes> -->
+
+		<properties>
+			<property name="javax.persistence.jdbc.url" value="jdbc:derby:memory:testDB;create=true" />
+			<property name="javax.persistence.jdbc.driver" value="org.apache.derby.jdbc.EmbeddedDriver" />
+			<!-- Properties for Hibernate -->
+			<property name="hibernate.hbm2ddl.auto" value="create-drop" />
+			<property name="hibernate.show_sql" value="false" />
+		</properties>
+	</persistence-unit>
+</persistence>
+
