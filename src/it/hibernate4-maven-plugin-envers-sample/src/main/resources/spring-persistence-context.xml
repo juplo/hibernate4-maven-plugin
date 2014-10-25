@@ -24,6 +24,7 @@
           p:persistenceUnitName="${jpa.persistence.context.name}"
           p:persistenceXmlLocation="classpath:META-INF/persistence-jpa.xml"
           p:dataSource-ref="dataSource"
+          p:packagesToScan="de.test.schemaexport.domain"
             >
 
         <property name="jpaVendorAdapter">

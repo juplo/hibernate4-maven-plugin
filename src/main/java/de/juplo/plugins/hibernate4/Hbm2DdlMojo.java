@@ -58,7 +58,6 @@ import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.project.MavenProject;
-import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.envers.configuration.spi.AuditConfiguration;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
@@ -670,7 +669,7 @@ public class Hbm2DdlMojo extends AbstractMojo
       throw new MojoFailureException("Hibernate configuration is missing!");
     }
 
-    final Configuration config = new ValidationConfiguration(hibernateDialect);
+    final ValidationConfiguration config = new ValidationConfiguration(hibernateDialect);
 
     config.setProperties(properties);
 
@@ -691,173 +690,8 @@ public class Hbm2DdlMojo extends AbstractMojo
       }
     }
 
-    getLog().debug("Adding annotated classes to hibernate-mapping-configuration...");
-    for (Class<?> annotatedClass : classes)
-    {
-      getLog().debug("Class " + annotatedClass);
-      config.addAnnotatedClass(annotatedClass);
-    }
-
-    if (hibernateMapping != null)
-    {
-      try
-      {
-        MessageDigest digest = java.security.MessageDigest.getInstance("MD5");
-        for (String filename : hibernateMapping.split("[\\s,]+"))
-        {
-          // First try the filename as absolute/relative path
-          File file = new File(filename);
-          if (!file.exists())
-          {
-            // If the file was not found, search for it in the resource-directories
-            for (Resource resource : project.getResources())
-            {
-              file = new File(resource.getDirectory() + File.separator + filename);
-              if (file.exists())
-                break;
-            }
-          }
-          if (file != null && file.exists())
-          {
-            InputStream is = new FileInputStream(file);
-            byte[] buffer = new byte[1024*4]; // copy data in 4MB-chunks
-            int i;
-            while((i = is.read(buffer)) > -1)
-              digest.update(buffer, 0, i);
-            is.close();
-            byte[] bytes = digest.digest();
-            BigInteger bi = new BigInteger(1, bytes);
-            String newMd5 = String.format("%0" + (bytes.length << 1) + "x", bi);
-            String oldMd5 = !md5s.containsKey(filename) ? "" : md5s.get(filename);
-            if (!newMd5.equals(oldMd5))
-            {
-              getLog().debug("Found new or modified mapping-file: " + filename);
-              modified = true;
-              md5s.put(filename, newMd5);
-            }
-            else
-            {
-              getLog().debug(oldMd5 + " -> mapping-file unchanged: " + filename);
-            }
-            getLog().debug("Adding mappings from XML-configurationfile: " + file);
-            config.addFile(file);
-          }
-          else
-            throw new MojoFailureException("File " + filename + " could not be found in any of the configured resource-directories!");
-        }
-      }
-      catch (NoSuchAlgorithmException e)
-      {
-        throw new MojoFailureException("Cannot calculate MD5 sums!", e);
-      }
-      catch (FileNotFoundException e)
-      {
-        throw new MojoFailureException("Cannot calculate MD5 sums!", e);
-      }
-      catch (IOException e)
-      {
-        throw new MojoFailureException("Cannot calculate MD5 sums!", e);
-      }
-    }
-
-    Target target = null;
-    try
-    {
-      target = Target.valueOf(this.target.toUpperCase());
-    }
-    catch (IllegalArgumentException e)
-    {
-      getLog().error("Invalid value for configuration-option \"target\": " + this.target);
-      getLog().error("Valid values are: NONE, SCRIPT, EXPORT, BOTH");
-      throw new MojoExecutionException("Invalid value for configuration-option \"target\"");
-    }
-    Type type = null;
-    try
-    {
-      type = Type.valueOf(this.type.toUpperCase());
-    }
-    catch (IllegalArgumentException e)
-    {
-      getLog().error("Invalid value for configuration-option \"type\": " + this.type);
-      getLog().error("Valid values are: NONE, CREATE, DROP, BOTH");
-      throw new MojoExecutionException("Invalid value for configuration-option \"type\"");
-    }
-
-    if (target.equals(Target.SCRIPT) || target.equals(Target.NONE))
-    {
-      project.getProperties().setProperty(EXPORT_SKIPPED_PROPERTY, "true");
-    }
-    if (
-        !modified
-        && !target.equals(Target.SCRIPT)
-        && !target.equals(Target.NONE)
-        && !force
-      )
-    {
-      getLog().info("No modified annotated classes or mapping-files found and dialect unchanged.");
-      getLog().info("Skipping schema generation!");
-      project.getProperties().setProperty(EXPORT_SKIPPED_PROPERTY, "true");
-      return;
-    }
-
-    getLog().info("Gathered hibernate-configuration (turn on debugging for details):");
-    for (Entry<Object,Object> entry : properties.entrySet())
-      getLog().info("  " + entry.getKey() + " = " + entry.getValue());
-
-    Connection connection = null;
-    try
-    {
-      /**
-       * The connection must be established outside of hibernate, because
-       * hibernate does not use the context-classloader of the current
-       * thread and, hence, would not be able to resolve the driver-class!
-       */
-      getLog().debug("Target: " + target + ", Type: " + type);
-      switch (target)
-      {
-        case EXPORT:
-        case BOTH:
-          switch (type)
-          {
-            case CREATE:
-            case DROP:
-            case BOTH:
-              Class driverClass = classLoader.loadClass(properties.getProperty(DRIVER_CLASS));
-              getLog().debug("Registering JDBC-driver " + driverClass.getName());
-              DriverManager.registerDriver(new DriverProxy((Driver)driverClass.newInstance()));
-              getLog().debug(
-                  "Opening JDBC-connection to "
-                  + properties.getProperty(URL)
-                  + " as "
-                  + properties.getProperty(USERNAME)
-                  + " with password "
-                  + properties.getProperty(PASSWORD)
-                  );
-              connection = DriverManager.getConnection(
-                  properties.getProperty(URL),
-                  properties.getProperty(USERNAME),
-                  properties.getProperty(PASSWORD)
-                  );
-          }
-      }
-    }
-    catch (ClassNotFoundException e)
-    {
-      getLog().error("Dependency for driver-class " + properties.getProperty(DRIVER_CLASS) + " is missing!");
-      throw new MojoExecutionException(e.getMessage());
-    }
-    catch (Exception e)
-    {
-      getLog().error("Cannot establish connection to database!");
-      Enumeration<Driver> drivers = DriverManager.getDrivers();
-      if (!drivers.hasMoreElements())
-        getLog().error("No drivers registered!");
-      while (drivers.hasMoreElements())
-        getLog().debug("Driver: " + drivers.nextElement());
-      throw new MojoExecutionException(e.getMessage());
-    }
-
     ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
+    Connection connection = null;
     MavenLogAppender.startPluginLog(this);
     try
     {
@@ -866,6 +700,181 @@ public class Hbm2DdlMojo extends AbstractMojo
        * see all dependencies!
        */
       Thread.currentThread().setContextClassLoader(classLoader);
+
+      getLog().debug("Adding annotated classes to hibernate-mapping-configuration...");
+      // build annotated packages
+      Set<String> packages = new HashSet<String>();
+      for (Class<?> annotatedClass : classes)
+      {
+        String packageName = annotatedClass.getPackage().getName();
+        if (!packages.contains(packageName))
+        {
+          getLog().debug("Add package " + packageName);
+          packages.add(packageName);
+          config.addPackage(packageName);
+          getLog().debug("type definintions" + config.getTypeDefs());
+        }
+        getLog().debug("Class " + annotatedClass);
+        config.addAnnotatedClass(annotatedClass);
+      }
+
+      if (hibernateMapping != null)
+      {
+        try
+        {
+          MessageDigest digest = java.security.MessageDigest.getInstance("MD5");
+          for (String filename : hibernateMapping.split("[\\s,]+"))
+          {
+            // First try the filename as absolute/relative path
+            File file = new File(filename);
+            if (!file.exists())
+            {
+              // If the file was not found, search for it in the resource-directories
+              for (Resource resource : project.getResources())
+              {
+                file = new File(resource.getDirectory() + File.separator + filename);
+                if (file.exists())
+                  break;
+              }
+            }
+            if (file != null && file.exists())
+            {
+              InputStream is = new FileInputStream(file);
+              byte[] buffer = new byte[1024*4]; // copy data in 4MB-chunks
+              int i;
+              while((i = is.read(buffer)) > -1)
+                digest.update(buffer, 0, i);
+              is.close();
+              byte[] bytes = digest.digest();
+              BigInteger bi = new BigInteger(1, bytes);
+              String newMd5 = String.format("%0" + (bytes.length << 1) + "x", bi);
+              String oldMd5 = !md5s.containsKey(filename) ? "" : md5s.get(filename);
+              if (!newMd5.equals(oldMd5))
+              {
+                getLog().debug("Found new or modified mapping-file: " + filename);
+                modified = true;
+                md5s.put(filename, newMd5);
+              }
+              else
+              {
+                getLog().debug(oldMd5 + " -> mapping-file unchanged: " + filename);
+              }
+              getLog().debug("Adding mappings from XML-configurationfile: " + file);
+              config.addFile(file);
+            }
+            else
+              throw new MojoFailureException("File " + filename + " could not be found in any of the configured resource-directories!");
+          }
+        }
+        catch (NoSuchAlgorithmException e)
+        {
+          throw new MojoFailureException("Cannot calculate MD5 sums!", e);
+        }
+        catch (FileNotFoundException e)
+        {
+          throw new MojoFailureException("Cannot calculate MD5 sums!", e);
+        }
+        catch (IOException e)
+        {
+          throw new MojoFailureException("Cannot calculate MD5 sums!", e);
+        }
+      }
+
+      Target target = null;
+      try
+      {
+        target = Target.valueOf(this.target.toUpperCase());
+      }
+      catch (IllegalArgumentException e)
+      {
+        getLog().error("Invalid value for configuration-option \"target\": " + this.target);
+        getLog().error("Valid values are: NONE, SCRIPT, EXPORT, BOTH");
+        throw new MojoExecutionException("Invalid value for configuration-option \"target\"");
+      }
+      Type type = null;
+      try
+      {
+        type = Type.valueOf(this.type.toUpperCase());
+      }
+      catch (IllegalArgumentException e)
+      {
+        getLog().error("Invalid value for configuration-option \"type\": " + this.type);
+        getLog().error("Valid values are: NONE, CREATE, DROP, BOTH");
+        throw new MojoExecutionException("Invalid value for configuration-option \"type\"");
+      }
+
+      if (target.equals(Target.SCRIPT) || target.equals(Target.NONE))
+      {
+        project.getProperties().setProperty(EXPORT_SKIPPED_PROPERTY, "true");
+      }
+      if (
+          !modified
+          && !target.equals(Target.SCRIPT)
+          && !target.equals(Target.NONE)
+          && !force
+        )
+      {
+        getLog().info("No modified annotated classes or mapping-files found and dialect unchanged.");
+        getLog().info("Skipping schema generation!");
+        project.getProperties().setProperty(EXPORT_SKIPPED_PROPERTY, "true");
+        return;
+      }
+
+      getLog().info("Gathered hibernate-configuration (turn on debugging for details):");
+      for (Entry<Object,Object> entry : properties.entrySet())
+        getLog().info("  " + entry.getKey() + " = " + entry.getValue());
+
+      try
+      {
+        /**
+         * The connection must be established outside of hibernate, because
+         * hibernate does not use the context-classloader of the current
+         * thread and, hence, would not be able to resolve the driver-class!
+         */
+        getLog().debug("Target: " + target + ", Type: " + type);
+        switch (target)
+        {
+          case EXPORT:
+          case BOTH:
+            switch (type)
+            {
+              case CREATE:
+              case DROP:
+              case BOTH:
+                Class driverClass = classLoader.loadClass(properties.getProperty(DRIVER_CLASS));
+                getLog().debug("Registering JDBC-driver " + driverClass.getName());
+                DriverManager.registerDriver(new DriverProxy((Driver)driverClass.newInstance()));
+                getLog().debug(
+                    "Opening JDBC-connection to "
+                    + properties.getProperty(URL)
+                    + " as "
+                    + properties.getProperty(USERNAME)
+                    + " with password "
+                    + properties.getProperty(PASSWORD)
+                    );
+                connection = DriverManager.getConnection(
+                    properties.getProperty(URL),
+                    properties.getProperty(USERNAME),
+                    properties.getProperty(PASSWORD)
+                    );
+            }
+        }
+      }
+      catch (ClassNotFoundException e)
+      {
+        getLog().error("Dependency for driver-class " + properties.getProperty(DRIVER_CLASS) + " is missing!");
+        throw new MojoExecutionException(e.getMessage());
+      }
+      catch (Exception e)
+      {
+        getLog().error("Cannot establish connection to database!");
+        Enumeration<Driver> drivers = DriverManager.getDrivers();
+        if (!drivers.hasMoreElements())
+          getLog().error("No drivers registered!");
+        while (drivers.hasMoreElements())
+          getLog().debug("Driver: " + drivers.nextElement());
+        throw new MojoExecutionException(e.getMessage());
+      }
 
       config.buildMappings();
 

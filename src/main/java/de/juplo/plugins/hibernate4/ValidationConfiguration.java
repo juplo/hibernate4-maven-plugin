@@ -56,4 +56,9 @@ public class ValidationConfiguration extends Configuration
       throw new RuntimeException(e);
     }
   }
+
+  public String getTypeDefs()
+  {
+    return typeDefs.entrySet().toString();
+  }
 }

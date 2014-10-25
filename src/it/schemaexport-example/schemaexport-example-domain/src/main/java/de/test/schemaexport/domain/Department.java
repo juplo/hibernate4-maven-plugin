@@ -6,6 +6,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
+import org.hibernate.annotations.Type;
 
 /**
  * Abteilungsklasse (Generator-Beispielcode).
@@ -24,6 +25,9 @@ public class Department {
 	
 	@Column(name = "name", nullable = false)
 	private String name;
+
+	@Type(type = "genderType")
+	private Gender gender;
 
 	public long getOid() {
 		return oid;
