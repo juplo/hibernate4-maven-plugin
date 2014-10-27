@@ -598,6 +598,10 @@ public class Hbm2DdlMojo extends AbstractMojo
             );
       properties.setProperty(DIALECT, hibernateDialect);
     }
+    else
+    {
+      hibernateDialect = properties.getProperty(DIALECT);
+    }
     if ( hibernateNamingStrategy != null )
     {
       if ( properties.contains(NAMING_STRATEGY))
