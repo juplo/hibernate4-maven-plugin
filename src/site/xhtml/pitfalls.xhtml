@@ -151,7 +151,7 @@ mvn hibernate4:export -Dhibernate.export.force=true</pre>
   executed, you can configure that explicitly like this:
   </p>
   <pre class="prettyprint linenums lang-html">
-&gt;plugin&lt;
+&lt;plugin&gt;
   &lt;groupId&gt;de.juplo&lt;/groupId&gt;
   &lt;artifactId&gt;hibernate4-maven-plugin&lt;/artifactId&gt;
   ...
@@ -163,5 +163,21 @@ mvn hibernate4:export -Dhibernate.export.force=true</pre>
   Background-information for this design-decission can be found on the extra
   page <a href="./skip.html">To skip or not to skip: that is the question</a>...
   </p>
+  <h2>I do not want my dependencies to be scanned for hibernate annotations</h2>
+  <p>
+    If you do not want your dependencies to be scanned for hibernate annotations,
+    you can pass <code>-Dhibernate.export.scan_dependencies=none</code> to maven
+    or set <code>scanDependencies</code> to <code>none</code> in the configuration
+    of the plugin like this:
+  </p>
+  <pre class="prettyprint linenums lang-html">
+&lt;plugin&gt;
+  &lt;groupId&gt;de.juplo&lt;/groupId&gt;
+  &lt;artifactId&gt;hibernate4-maven-plugin&lt;/artifactId&gt;
+  ...
+  &lt;configuration&gt;
+    &lt;scanDependencies&gt;none&lt;/scanDependencies&gt;
+  &lt;/configuration&gt;
+&lt;/plugin&gt;</pre>
  </body>
 </html>

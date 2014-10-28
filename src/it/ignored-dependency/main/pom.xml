@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>de.juplo</groupId>
+  <artifactId>main</artifactId>
+  <version>1</version>
+  <packaging>jar</packaging>
+  <name>main</name>
+
+  <dependencies>
+    <dependency>
+      <groupId>org.hibernate</groupId>
+      <artifactId>hibernate-core</artifactId>
+      <version>4.3.5.Final</version>
+    </dependency>
+    <dependency>
+      <groupId>de.juplo</groupId>
+      <artifactId>ignored</artifactId>
+      <version>1</version>
+    </dependency>
+  </dependencies>
+
+  <properties>
+    <maven.compiler.source>1.7</maven.compiler.source>
+    <maven.compiler.target>1.7</maven.compiler.target>
+  </properties>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>de.juplo</groupId>
+        <artifactId>hibernate4-maven-plugin</artifactId>
+        <version>@project.version@</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>export</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <target>NONE</target>
+          <format>true</format>
+          <type>CREATE</type>
+          <hibernateDialect>org.hibernate.dialect.PostgreSQL9Dialect</hibernateDialect>
+          <scanDependencies>none</scanDependencies>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+
+</project>

@@ -143,6 +143,9 @@ public class Hbm2DdlMojo extends AbstractMojo
    * scanned for annotated classes. Multiple scopes can be seperated by
    * white space or commas.
    * <p>
+   * If you do not want any dependencies to be scanned for annotated
+   * classes, set this parameter to <code>none</code>.
+   * <p>
    * The plugin does not scan for annotated classes in transitive
    * dependencies. If some of your annotated classes are hidden in a
    * transitive dependency, you can simply add that dependency explicitly.
