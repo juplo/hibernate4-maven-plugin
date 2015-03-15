@@ -93,6 +93,16 @@
       <name>Joachim Van der Auwera</name>
       <email>joachim@progs.be</email>
     </contributor>
+    <contributor>
+      <name>Andreas Kuhtz</name>
+      <email>andreas.kuhtz@gmail.com</email>
+    </contributor>
+    <!--
+    <contributor>
+      <name></name>
+      <email></email>
+    </contributor>
+    -->
   </contributors>
 
   <distributionManagement>
