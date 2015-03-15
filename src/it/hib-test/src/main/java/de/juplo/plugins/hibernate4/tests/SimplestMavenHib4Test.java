@@ -7,6 +7,8 @@ import javax.persistence.Lob;
 import javax.persistence.Table;
 
 import org.hibernate.annotations.Index;
+import org.hibernate.annotations.Type;
+import org.joda.time.DateTime;
 
 @Entity
 @Table(name = "test_simple")
@@ -29,4 +31,7 @@ public class SimplestMavenHib4Test {
 
     @Column(name = "externalid", length=148)
     private String externalXyzId;
+
+    @Type(type = "joda")
+    private DateTime created;
 }

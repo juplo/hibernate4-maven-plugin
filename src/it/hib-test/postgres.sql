@@ -4,6 +4,7 @@
     create table test_simple (
         uuid varchar(36) not null,
         content text,
+        created timestamp,
         externalid varchar(148),
         sources varchar(255),
         primary key (uuid)
