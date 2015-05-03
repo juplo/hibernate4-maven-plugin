@@ -34,9 +34,11 @@ import java.sql.Driver;
 import java.sql.DriverPropertyInfo;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -49,6 +51,7 @@ import java.util.regex.Pattern;
 import javax.persistence.Embeddable;
 import javax.persistence.Entity;
 import javax.persistence.MappedSuperclass;
+import javax.persistence.spi.PersistenceUnitTransactionType;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.model.Resource;
 import org.apache.maven.plugin.AbstractMojo;
@@ -56,11 +59,16 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.project.MavenProject;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
 import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.envers.configuration.spi.AuditConfiguration;
 import org.hibernate.internal.util.config.ConfigurationHelper;
+import org.hibernate.jpa.boot.internal.ParsedPersistenceXmlDescriptor;
+import org.hibernate.jpa.boot.internal.PersistenceXmlParser;
+import org.hibernate.jpa.boot.spi.ProviderChecker;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.hbm2ddl.SchemaExport.Type;
 import org.hibernate.tool.hbm2ddl.Target;
@@ -254,6 +262,15 @@ public class Hbm2DdlMojo extends AbstractMojo
    * @since 1.0
    */
   private String hibernateProperties;
+
+  /**
+   * Name of the persistence-unit.
+   * If there is only one persistence-unit available, that unit will be used
+   * automatically.
+   *
+   * @since 1.1.0
+   */
+  private String persistenceUnit;
 
   /**
    * List of Hibernate-Mapping-Files (XML).
@@ -538,6 +555,15 @@ public class Hbm2DdlMojo extends AbstractMojo
       getLog().error("Error while reading properties!", e);
       throw new MojoExecutionException(e.getMessage());
     }
+
+    ParsedPersistenceXmlDescriptor persistenceUnitDescriptor =
+        getPersistenceUnitDescriptor(
+            persistenceUnit,
+            properties,
+            new MavenProjectClassLoaderService(classLoader)
+            );
+    if (persistenceUnitDescriptor != null)
+      properties = persistenceUnitDescriptor.getProperties();
 
     /** Overwrite values from properties-file or set, if given */
     if (driverClassName != null)
@@ -902,6 +928,123 @@ public class Hbm2DdlMojo extends AbstractMojo
       getLog().error("Cannot write md5-sums to file: " + e);
     }
   }
+
+  private ParsedPersistenceXmlDescriptor getPersistenceUnitDescriptor(
+      String name,
+      Properties properties,
+      ClassLoaderService loader
+      )
+      throws
+        MojoFailureException
+  {
+    PersistenceXmlParser parser =
+        new PersistenceXmlParser(
+            loader,
+            PersistenceUnitTransactionType.RESOURCE_LOCAL
+             );
+
+    List<ParsedPersistenceXmlDescriptor> units = parser.doResolve(properties);
+
+    if (name == null)
+    {
+      switch (units.size())
+      {
+        case 0:
+          getLog().info("Found no META-INF/persistence.xml.");
+          return null;
+        case 1:
+          getLog().info("Using persistence-unit " + units.get(0).getName());
+          return units.get(0);
+        default:
+          getLog().warn("No name provided and multiple persistence units found:");
+          for (ParsedPersistenceXmlDescriptor unit : units)
+            getLog().warn(" - " + unit.getName());
+          return null;
+      }
+
+    }
+
+    for (ParsedPersistenceXmlDescriptor unit : units)
+    {
+      getLog().debug("Found persistence-unit " + unit.getName());
+      if (!unit.getName().equals(name))
+        continue;
+
+      // See if we (Hibernate) are the persistence provider
+      if (!ProviderChecker.isProvider(unit, properties))
+      {
+        getLog().debug("Wrong provider: " + unit.getProviderClassName());
+        continue;
+      }
+
+      getLog().info("Using persistence-unit " + unit.getName());
+      return unit;
+    }
+
+    throw new MojoFailureException("Could not find persistence-unit " + name);
+  }
+
+
+  static final class MavenProjectClassLoaderService implements ClassLoaderService
+  {
+    final private ClassLoader loader;
+
+
+    public MavenProjectClassLoaderService(ClassLoader loader)
+    {
+      this.loader = loader;
+    }
+
+
+    @Override
+    public <T> Class<T> classForName(String name)
+    {
+      try
+      {
+        return (Class<T>)loader.loadClass(name);
+      }
+      catch (ClassNotFoundException e)
+      {
+        throw new ClassLoadingException( "Unable to load class [" + name + "]", e );
+      }
+    }
+
+    @Override
+    public URL locateResource(String name)
+    {
+      return loader.getResource(name);
+    }
+
+    @Override
+    public InputStream locateResourceStream(String name)
+    {
+      return loader.getResourceAsStream(name);
+    }
+
+    @Override
+    public List<URL> locateResources(String name)
+    {
+      try
+      {
+        return Collections.list(loader.getResources(name));
+      }
+      catch (IOException e)
+      {
+        return Collections.EMPTY_LIST;
+      }
+    }
+
+    @Override
+    public <S> LinkedHashSet<S> loadJavaServices(Class<S> serviceContract)
+    {
+      throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public void stop() { }
+    
+  }
+
 
   /**
    * Needed, because DriverManager won't pick up drivers, that were not
