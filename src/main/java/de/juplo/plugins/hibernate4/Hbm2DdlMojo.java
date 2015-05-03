@@ -341,7 +341,7 @@ public class Hbm2DdlMojo extends AbstractMojo
   /**
    * Generate envers schema for auditing tables.
    *
-   * @parameter property="hibernate.export.envers" default-value="false"
+   * @parameter property="hibernate.export.envers" default-value="true"
    * @since 1.0.3
    */
   private boolean envers;
