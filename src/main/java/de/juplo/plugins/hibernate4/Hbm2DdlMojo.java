@@ -30,14 +30,11 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.sql.Connection;
 import java.sql.Driver;
-import java.sql.DriverManager;
 import java.sql.DriverPropertyInfo;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
 import java.util.Comparator;
-import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -58,8 +55,12 @@ import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.project.MavenProject;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
+import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.envers.configuration.spi.AuditConfiguration;
+import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.hbm2ddl.SchemaExport.Type;
 import org.hibernate.tool.hbm2ddl.Target;
@@ -698,7 +699,6 @@ public class Hbm2DdlMojo extends AbstractMojo
     }
 
     ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
-    Connection connection = null;
     MavenLogAppender.startPluginLog(this);
     try
     {
@@ -831,57 +831,11 @@ public class Hbm2DdlMojo extends AbstractMojo
       for (Entry<Object,Object> entry : properties.entrySet())
         getLog().info("  " + entry.getKey() + " = " + entry.getValue());
 
-      try
-      {
-        /**
-         * The connection must be established outside of hibernate, because
-         * hibernate does not use the context-classloader of the current
-         * thread and, hence, would not be able to resolve the driver-class!
-         */
-        getLog().debug("Target: " + target + ", Type: " + type);
-        switch (target)
-        {
-          case EXPORT:
-          case BOTH:
-            switch (type)
-            {
-              case CREATE:
-              case DROP:
-              case BOTH:
-                Class driverClass = classLoader.loadClass(properties.getProperty(DRIVER_CLASS));
-                getLog().debug("Registering JDBC-driver " + driverClass.getName());
-                DriverManager.registerDriver(new DriverProxy((Driver)driverClass.newInstance()));
-                getLog().debug(
-                    "Opening JDBC-connection to "
-                    + properties.getProperty(URL)
-                    + " as "
-                    + properties.getProperty(USERNAME)
-                    + " with password "
-                    + properties.getProperty(PASSWORD)
-                    );
-                connection = DriverManager.getConnection(
-                    properties.getProperty(URL),
-                    properties.getProperty(USERNAME),
-                    properties.getProperty(PASSWORD)
-                    );
-            }
-        }
-      }
-      catch (ClassNotFoundException e)
-      {
-        getLog().error("Dependency for driver-class " + properties.getProperty(DRIVER_CLASS) + " is missing!");
-        throw new MojoExecutionException(e.getMessage());
-      }
-      catch (Exception e)
-      {
-        getLog().error("Cannot establish connection to database!");
-        Enumeration<Driver> drivers = DriverManager.getDrivers();
-        if (!drivers.hasMoreElements())
-          getLog().error("No drivers registered!");
-        while (drivers.hasMoreElements())
-          getLog().debug("Driver: " + drivers.nextElement());
-        throw new MojoExecutionException(e.getMessage());
-      }
+      Environment.verifyProperties( properties );
+      ConfigurationHelper.resolvePlaceHolders( properties );
+      StandardServiceRegistryImpl registry =
+          (StandardServiceRegistryImpl)
+          new StandardServiceRegistryBuilder().applySettings(properties).build();
 
       config.buildMappings();
 
@@ -891,7 +845,7 @@ public class Hbm2DdlMojo extends AbstractMojo
         AuditConfiguration.getFor(config);
       }
 
-      SchemaExport export = new SchemaExport(config, connection);
+      SchemaExport export = new SchemaExport(registry, config);
       export.setDelimiter(delimiter);
       export.setFormat(format);
 
@@ -932,17 +886,6 @@ public class Hbm2DdlMojo extends AbstractMojo
 
       /** Restore the old class-loader (TODO: is this really necessary?) */
       Thread.currentThread().setContextClassLoader(contextClassLoader);
-
-      /** Close the connection */
-      try
-      {
-        if (connection != null)
-          connection.close();
-      }
-      catch (SQLException e)
-      {
-        getLog().error("Error while closing connection: " + e.getMessage());
-      }
     }
 
     /** Write md5-sums for annotated classes to file */
