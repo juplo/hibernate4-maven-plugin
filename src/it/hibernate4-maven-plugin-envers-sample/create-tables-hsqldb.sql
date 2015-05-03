@@ -1,7 +1,7 @@
 
     create table TTL_AUDIT_REVISION (
         ID bigint not null,
-        EVENT_DATE timestamp,
+        EVENT_DATE timestamp not null,
         ENVERS_TSTAMP bigint not null,
         USER_NAME varchar(80) not null,
         primary key (ID)
@@ -28,6 +28,6 @@
         foreign key (REV) 
         references TTL_AUDIT_REVISION;
 
-    create sequence TTL_AUDIT_REVISION_SEQ;
+    create sequence TTL_AUDIT_REVISION_SEQ start with 1;
 
-    create sequence TTL_EVENT_SEQ;
+    create sequence TTL_EVENT_SEQ start with 1;

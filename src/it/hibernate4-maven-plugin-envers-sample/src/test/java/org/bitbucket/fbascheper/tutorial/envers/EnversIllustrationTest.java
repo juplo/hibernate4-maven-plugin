@@ -113,8 +113,8 @@ public class EnversIllustrationTest extends AbstractIntegrationTest {
                 long event2Revision1 = event2Revisions.get(0).longValue();
                 long event2Revision2 = event2Revisions.get(1).longValue();
 
-                assertThat(event2Revision1, is(2L));
-                assertThat(event2Revision2, is(3L));
+                assertThat(event2Revision1, is(11L));
+                assertThat(event2Revision2, is(12L));
 
                 Event firstRevision = reader.find(Event.class, event2Id, event2Revision1);
 

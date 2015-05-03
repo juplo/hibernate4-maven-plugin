@@ -35,83 +35,6 @@
     </properties>
 
 
-    <profiles>
-        <profile>
-            <id>createHsqlDbScript</id>
-            <!-- Activate this profile to create a database script for a clean HSQLDB schema -->
-            <activation>
-                <activeByDefault>false</activeByDefault>
-            </activation>
-
-            <properties>
-                <!-- These properties are filtered into the integration-test-context-properties
-                     and loaded by spring to run the integration tests -->
-                <filter.execute.db.creation.script>true</filter.execute.db.creation.script>
-                <filter.db.creation.script.location>classpath:/sql/create-tables-hsqldb.sql
-                </filter.db.creation.script.location>
-
-                <filter.dataSource.driverClassName>org.hsqldb.jdbc.JDBCDriver</filter.dataSource.driverClassName>
-                <filter.dataSource.url>jdbc:hsqldb:mem:demodb</filter.dataSource.url>
-                <filter.dataSource.user>sa</filter.dataSource.user>
-                <filter.dataSource.password>sapwd</filter.dataSource.password>
-                <filter.hibernate.dialect>org.hibernate.dialect.HSQLDialect</filter.hibernate.dialect>
-
-                <!-- These properties are used by hibernate4-maven-plugin to create the script -->
-                <hibernate.connection.driver_class>org.hsqldb.jdbcDriver</hibernate.connection.driver_class>
-                <hibernate.dialect>org.hibernate.dialect.HSQLDialect</hibernate.dialect>
-                <hibernate.connection.url>
-                    <![CDATA[jdbc:hsqldb:target/db/testdb;shutdown=true]]></hibernate.connection.url>
-                <hibernate.connection.username>sa</hibernate.connection.username>
-                <hibernate.connection.password></hibernate.connection.password>
-                <hibernate.export.envers>true</hibernate.export.envers>
-            </properties>
-
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>de.juplo</groupId>
-                        <artifactId>hibernate4-maven-plugin</artifactId>
-                        <version>${de.juplo-hibernate-plugin-version}</version>
-                        <executions>
-                            <execution>
-                                <goals>
-                                    <goal>export</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                        <configuration>
-                            <outputFile>${project.build.sourceDirectory}/../scripts/sql/create-tables-hsqldb.sql
-                            </outputFile>
-                            <target>SCRIPT</target>
-                            <type>CREATE</type>
-                        </configuration>
-                        <dependencies>
-                            <dependency>
-                                <groupId>org.hibernate</groupId>
-                                <artifactId>hibernate-core</artifactId>
-                                <version>${org.hibernate.version}</version>
-                            </dependency>
-                            <dependency>
-                                <groupId>org.scannotation</groupId>
-                                <artifactId>scannotation</artifactId>
-                                <version>1.0.3</version>
-                            </dependency>
-                            <dependency>
-                                <groupId>org.slf4j</groupId>
-                                <artifactId>slf4j-api</artifactId>
-                                <version>${org.slf4j.version}</version>
-                            </dependency>
-                            <dependency>
-                                <groupId>org.hsqldb</groupId>
-                                <artifactId>hsqldb</artifactId>
-                                <version>${org.hsqldb.version}</version>
-                            </dependency>
-                        </dependencies>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-    </profiles>
 
 
     <dependencies>
@@ -250,6 +173,48 @@
                     <encoding>utf8</encoding>
                     <showWarnings>true</showWarnings>
                 </configuration>
+            </plugin>
+            <plugin>
+                <groupId>de.juplo</groupId>
+                <artifactId>hibernate4-maven-plugin</artifactId>
+                <version>${de.juplo-hibernate-plugin-version}</version>
+                <executions>
+                    <execution>
+                        <id>create-create-script</id>
+                        <goals>
+                            <goal>export</goal>
+                        </goals>
+                        <configuration>
+                            <outputFile>${project.build.directory}/test-classes/sql/create-tables-hsqldb.sql
+                            </outputFile>
+                            <type>CREATE</type>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>create-drop-script</id>
+                        <goals>
+                            <goal>export</goal>
+                        </goals>
+                        <configuration>
+                            <outputFile>${project.build.directory}/test-classes/sql/drop-tables-hsqldb.sql
+                            </outputFile>
+                            <type>DROP</type>
+                        </configuration>
+                    </execution>
+                </executions>
+                <configuration>
+                    <target>SCRIPT</target>
+                    <driverClassName>org.hsqldb.jdbc.JDBCDriver</driverClassName>
+                    <hibernateDialect>org.hibernate.dialect.HSQLDialect</hibernateDialect>
+                    <envers>true</envers>
+                </configuration>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.hsqldb</groupId>
+                        <artifactId>hsqldb</artifactId>
+                        <version>${org.hsqldb.version}</version>
+                    </dependency>
+                </dependencies>
             </plugin>
         </plugins>
 

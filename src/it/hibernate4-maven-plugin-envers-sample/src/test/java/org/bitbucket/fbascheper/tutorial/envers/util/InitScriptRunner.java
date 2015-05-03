@@ -71,8 +71,14 @@ public interface InitScriptRunner {
         public void runScript() {
 
             JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-            JdbcTestUtils.executeSqlScript(jdbcTemplate, dbDropScriptLocation, false);
+            try {
+                JdbcTestUtils.executeSqlScript(jdbcTemplate, dbDropScriptLocation, false);
+            }
+            catch (Exception e) {}
+            try {
             JdbcTestUtils.executeSqlScript(jdbcTemplate, dbCreateScriptLocation, false);
+            }
+            catch (Exception e) {}
 
         }
 
