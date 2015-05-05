@@ -703,6 +703,13 @@ public class Hbm2DdlMojo extends AbstractMojo
       throw new MojoFailureException("Hibernate configuration is missing!");
     }
 
+    getLog().info("Gathered hibernate-configuration (turn on debugging for details):");
+    for (Entry<Object,Object> entry : properties.entrySet())
+      getLog().info("  " + entry.getKey() + " = " + entry.getValue());
+
+    if (hibernateDialect == null)
+      throw new MojoFailureException("hibernate-dialect must be set!");
+
     final ValidationConfiguration config = new ValidationConfiguration(hibernateDialect);
 
     config.setProperties(properties);
@@ -852,10 +859,6 @@ public class Hbm2DdlMojo extends AbstractMojo
         project.getProperties().setProperty(EXPORT_SKIPPED_PROPERTY, "true");
         return;
       }
-
-      getLog().info("Gathered hibernate-configuration (turn on debugging for details):");
-      for (Entry<Object,Object> entry : properties.entrySet())
-        getLog().info("  " + entry.getKey() + " = " + entry.getValue());
 
       Environment.verifyProperties( properties );
       ConfigurationHelper.resolvePlaceHolders( properties );
