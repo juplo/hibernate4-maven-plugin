@@ -6,6 +6,10 @@
 	<version>1.0.0</version>
     <packaging>bundle</packaging>
 
+	<properties>
+		<h4mp.version>@project.version@</h4mp.version>
+	</properties>
+
 	<dependencies>
 		<dependency>
             <groupId>org.hibernate.javax.persistence</groupId>
@@ -69,6 +73,18 @@
 						</Import-Package>
 					</instructions>
 				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>de.juplo</groupId>
+				<artifactId>hibernate4-maven-plugin</artifactId>
+				<version>${h4mp.version}</version>
+				<executions>
+					<execution>
+						<goals>
+							<goal>export</goal>
+						</goals>
+					</execution>
+				</executions>
 			</plugin>
 		</plugins>
 	</build>

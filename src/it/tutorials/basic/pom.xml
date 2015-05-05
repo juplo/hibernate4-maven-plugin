@@ -40,6 +40,28 @@
     <properties>
         <!-- Skip artifact deployment -->
         <maven.deploy.skip>true</maven.deploy.skip>
+        <h4mp.version>@project.version@</h4mp.version>
     </properties>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>de.juplo</groupId>
+                <artifactId>hibernate4-maven-plugin</artifactId>
+                <version>${h4mp.version}</version>
+                <executions>
+                    <execution>
+                        <phase>process-test-classes</phase>
+                        <goals>
+                            <goal>export</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <scanTestClasses>true</scanTestClasses>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 
 </project>

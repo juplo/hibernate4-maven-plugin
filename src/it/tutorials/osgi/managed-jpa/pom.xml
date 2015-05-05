@@ -6,6 +6,10 @@
 	<version>1.0.0</version>
     <packaging>bundle</packaging>
 
+	<properties>
+		<h4mp.version>@project.version@</h4mp.version>
+	</properties>
+
 	<dependencies>
 		<dependency>
 			<groupId>org.hibernate.javax.persistence</groupId>
@@ -26,6 +30,11 @@
             <groupId>org.apache.karaf.shell</groupId>
             <artifactId>org.apache.karaf.shell.console</artifactId>
             <version>2.3.0</version>
+        </dependency>
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <version>1.4.187</version>
         </dependency>
 	</dependencies>
 
@@ -57,6 +66,21 @@
 						</Import-Package>
 						<Meta-Persistence>META-INF/persistence.xml</Meta-Persistence>
 					</instructions>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>de.juplo</groupId>
+				<artifactId>hibernate4-maven-plugin</artifactId>
+				<version>${h4mp.version}</version>
+				<executions>
+					<execution>
+						<goals>
+							<goal>export</goal>
+						</goals>
+					</execution>
+				</executions>
+				<configuration>
+					<url>jdbc:h2:mem:db1;MVCC=TRUE</url>
 				</configuration>
 			</plugin>
 		</plugins>
