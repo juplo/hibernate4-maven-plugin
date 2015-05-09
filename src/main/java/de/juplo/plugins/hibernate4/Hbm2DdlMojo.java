@@ -541,8 +541,11 @@ public class Hbm2DdlMojo extends AbstractMojo
     // Clear unused system-properties
     config.setProperties(new Properties());
 
+
     ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
+    StandardServiceRegistryImpl registry = null;
     MavenLogAppender.startPluginLog(this);
+
     try
     {
       /** Try to read configuration from properties-file */
@@ -897,7 +900,7 @@ public class Hbm2DdlMojo extends AbstractMojo
 
       Environment.verifyProperties(config.getProperties());
       ConfigurationHelper.resolvePlaceHolders(config.getProperties());
-      StandardServiceRegistryImpl registry =
+      registry =
           (StandardServiceRegistryImpl)
           new StandardServiceRegistryBuilder()
               .applySettings(config.getProperties())
@@ -952,6 +955,9 @@ public class Hbm2DdlMojo extends AbstractMojo
 
       /** Restore the old class-loader (TODO: is this really necessary?) */
       Thread.currentThread().setContextClassLoader(contextClassLoader);
+
+      if (registry != null)
+        registry.destroy();
     }
 
     /** Write md5-sums for annotated classes to file */
