@@ -38,6 +38,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -69,6 +70,7 @@ import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.jpa.boot.internal.ParsedPersistenceXmlDescriptor;
 import org.hibernate.jpa.boot.internal.PersistenceXmlParser;
 import org.hibernate.jpa.boot.spi.ProviderChecker;
+import org.hibernate.mapping.PersistentClass;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.hbm2ddl.SchemaExport.Type;
 import org.hibernate.tool.hbm2ddl.Target;
@@ -256,7 +258,7 @@ public class Hbm2DdlMojo extends AbstractMojo
   private String hibernateNamingStrategy;
 
   /**
-   * Path to Hibernate configuration file.
+   * Path to Hibernate properties file.
    *
    * @parameter default-value="${project.build.outputDirectory}/hibernate.properties"
    * @since 1.0
@@ -264,9 +266,20 @@ public class Hbm2DdlMojo extends AbstractMojo
   private String hibernateProperties;
 
   /**
+   * Path to Hibernate configuration file (.cfg.xml).
+   * Settings in this file will overwrite settings in the properties file.
+   *
+   * @parameter default-value="${project.build.outputDirectory}/hibernate.cfg.xml"
+   * @since 1.1.0
+   */
+  private String hibernateConfig;
+
+  /**
    * Name of the persistence-unit.
    * If there is only one persistence-unit available, that unit will be used
    * automatically.
+   * Settings in this file will overwrite settings in the properties or the
+   * configuration file.
    *
    * @since 1.1.0
    */
@@ -523,241 +536,208 @@ public class Hbm2DdlMojo extends AbstractMojo
       throw new MojoFailureException(e.getMessage());
     }
 
-    if (classes.isEmpty())
-    {
-      if (hibernateMapping == null || hibernateMapping.isEmpty())
-        throw new MojoFailureException("No annotated classes found in directory " + outputDirectory);
-    }
-    else
-    {
-      getLog().debug("Detected classes with mapping-annotations:");
-      for (Class<?> annotatedClass : classes)
-        getLog().debug("  " + annotatedClass.getName());
-    }
 
-
-    Properties properties = new Properties();
-
-    /** Try to read configuration from properties-file */
-    try
-    {
-      File file = new File(hibernateProperties);
-      if (file.exists())
-      {
-        getLog().info("Reading properties from file " + hibernateProperties + "...");
-        properties.load(new FileInputStream(file));
-      }
-      else
-        getLog().info("No hibernate-properties-file found! (Checked path: " + hibernateProperties + ")");
-    }
-    catch (IOException e)
-    {
-      getLog().error("Error while reading properties!", e);
-      throw new MojoExecutionException(e.getMessage());
-    }
-
-    ParsedPersistenceXmlDescriptor persistenceUnitDescriptor =
-        getPersistenceUnitDescriptor(
-            persistenceUnit,
-            properties,
-            new MavenProjectClassLoaderService(classLoader)
-            );
-    if (persistenceUnitDescriptor != null)
-      properties = persistenceUnitDescriptor.getProperties();
-
-    /** Overwrite values from properties-file or set, if given */
-    if (driverClassName != null)
-    {
-      if (properties.containsKey(DRIVER_CLASS))
-        getLog().debug(
-            "Overwriting property " +
-            DRIVER_CLASS + "=" + properties.getProperty(DRIVER_CLASS) +
-            " with the value " + driverClassName
-          );
-      else
-        getLog().debug("Using the value " + driverClassName);
-      properties.setProperty(DRIVER_CLASS, driverClassName);
-    }
-    if (url != null)
-    {
-      if (properties.containsKey(URL))
-        getLog().debug(
-            "Overwriting property " +
-            URL + "=" + properties.getProperty(URL) +
-            " with the value " + url
-          );
-      else
-        getLog().debug("Using the value " + url);
-      properties.setProperty(URL, url);
-    }
-    if (username != null)
-    {
-      if (properties.containsKey(USERNAME))
-        getLog().debug(
-            "Overwriting property " +
-            USERNAME + "=" + properties.getProperty(USERNAME) +
-            " with the value " + username
-          );
-      else
-        getLog().debug("Using the value " + username);
-      properties.setProperty(USERNAME, username);
-    }
-    if (password != null)
-    {
-      if (properties.containsKey(PASSWORD))
-        getLog().debug(
-            "Overwriting property " +
-            PASSWORD + "=" + properties.getProperty(PASSWORD) +
-            " with value " + password
-          );
-      else
-        getLog().debug("Using value " + password + " for property " + PASSWORD);
-      properties.setProperty(PASSWORD, password);
-    }
-    if (hibernateDialect != null)
-    {
-      if (properties.containsKey(DIALECT))
-        getLog().debug(
-            "Overwriting property " +
-            DIALECT + "=" + properties.getProperty(DIALECT) +
-            " with value " + hibernateDialect
-          );
-      else
-        getLog().debug(
-            "Using value " + hibernateDialect + " for property " + DIALECT
-            );
-      properties.setProperty(DIALECT, hibernateDialect);
-    }
-    else
-    {
-      hibernateDialect = properties.getProperty(DIALECT);
-    }
-    if ( hibernateNamingStrategy != null )
-    {
-      if ( properties.contains(NAMING_STRATEGY))
-        getLog().debug(
-            "Overwriting property " +
-            NAMING_STRATEGY + "=" + properties.getProperty(NAMING_STRATEGY) +
-            " with value " + hibernateNamingStrategy
-           );
-      else
-        getLog().debug(
-            "Using value " + hibernateNamingStrategy + " for property " +
-            NAMING_STRATEGY
-            );
-      properties.setProperty(NAMING_STRATEGY, hibernateNamingStrategy);
-    }
-
-    /** The generated SQL varies with the dialect! */
-    if (md5s.containsKey(DIALECT))
-    {
-      String dialect = properties.getProperty(DIALECT);
-      if (md5s.get(DIALECT).equals(dialect))
-        getLog().debug("SQL-dialect unchanged.");
-      else
-      {
-        modified = true;
-        if (dialect == null)
-        {
-          getLog().debug("SQL-dialect was unset.");
-          md5s.remove(DIALECT);
-        }
-        else
-        {
-          getLog().debug("SQL-dialect changed: " + dialect);
-          md5s.put(DIALECT, dialect);
-        }
-      }
-    }
-    else
-    {
-      String dialect = properties.getProperty(DIALECT);
-      if (dialect != null)
-      {
-        modified = true;
-        md5s.put(DIALECT, properties.getProperty(DIALECT));
-      }
-    }
-
-    /** The generated SQL varies with the envers-configuration */
-    if (md5s.get(ENVERS) != null)
-    {
-      if (md5s.get(ENVERS).equals(Boolean.toString(envers)))
-        getLog().debug("Envers-Configuration unchanged. Enabled: " + envers);
-      else
-      {
-        getLog().debug("Envers-Configuration changed. Enabled: " + envers);
-        modified = true;
-        md5s.put(ENVERS, Boolean.toString(envers));
-      }
-    }
-    else
-    {
-      modified = true;
-      md5s.put(ENVERS, Boolean.toString(envers));
-    }
-
-    if (properties.isEmpty())
-    {
-      getLog().error("No properties set!");
-      throw new MojoFailureException("Hibernate configuration is missing!");
-    }
-
-    getLog().info("Gathered hibernate-configuration (turn on debugging for details):");
-    for (Entry<Object,Object> entry : properties.entrySet())
-      getLog().info("  " + entry.getKey() + " = " + entry.getValue());
-
-    if (hibernateDialect == null)
-      throw new MojoFailureException("hibernate-dialect must be set!");
-
-    final ValidationConfiguration config = new ValidationConfiguration(hibernateDialect);
-
-    config.setProperties(properties);
-
-    if ( properties.containsKey(NAMING_STRATEGY))
-    {
-      String namingStrategy = properties.getProperty(NAMING_STRATEGY);
-      getLog().debug("Explicitly set NamingStrategy: " + namingStrategy);
-      try
-      {
-        @SuppressWarnings("unchecked")
-        Class<NamingStrategy> namingStrategyClass = (Class<NamingStrategy>) Class.forName(namingStrategy);
-        config.setNamingStrategy(namingStrategyClass.newInstance());
-      }
-      catch (Exception e)
-      {
-        getLog().error("Error setting NamingStrategy", e);
-        throw new MojoExecutionException(e.getMessage());
-      }
-    }
+    ValidationConfiguration config = new ValidationConfiguration();
+    // Clear unused system-properties
+    config.setProperties(new Properties());
 
     ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
     MavenLogAppender.startPluginLog(this);
     try
     {
+      /** Try to read configuration from properties-file */
+      try
+      {
+        File file = new File(hibernateProperties);
+        if (file.exists())
+        {
+          getLog().info("Reading properties from file " + hibernateProperties + "...");
+          Properties properties = new Properties();
+          properties.load(new FileInputStream(file));
+          config.setProperties(properties);
+        }
+        else
+          getLog().info("No hibernate-properties-file found! (Checked path: " + hibernateProperties + ")");
+      }
+      catch (IOException e)
+      {
+        getLog().error("Error while reading properties!", e);
+        throw new MojoExecutionException(e.getMessage());
+      }
+
       /**
        * Change class-loader of current thread, so that hibernate can
        * see all dependencies!
        */
       Thread.currentThread().setContextClassLoader(classLoader);
 
-      getLog().debug("Adding annotated classes to hibernate-mapping-configuration...");
-      // build annotated packages
-      Set<String> packages = new HashSet<String>();
-      for (Class<?> annotatedClass : classes)
+      /** Try to read configuration from configuration-file */
+      try
       {
-        String packageName = annotatedClass.getPackage().getName();
-        if (!packages.contains(packageName))
+        File file = new File(hibernateConfig);
+        if (file.exists())
         {
-          getLog().debug("Add package " + packageName);
-          packages.add(packageName);
-          config.addPackage(packageName);
-          getLog().debug("type definintions" + config.getTypeDefs());
+          getLog().info("Reading configuration from file " + hibernateConfig + "...");
+          config.configure(file);
         }
-        getLog().debug("Class " + annotatedClass);
-        config.addAnnotatedClass(annotatedClass);
+        else
+          getLog().info("No hibernate-configuration-file found! (Checked path: " + hibernateConfig + ")");
+      }
+      catch (Exception e)
+      {
+        getLog().error("Error while reading configuration!", e);
+        throw new MojoExecutionException(e.getMessage());
       }
 
+      ParsedPersistenceXmlDescriptor persistenceUnitDescriptor =
+          getPersistenceUnitDescriptor(
+              persistenceUnit,
+              config.getProperties(),
+              new MavenProjectClassLoaderService(classLoader)
+              );
+      if (persistenceUnitDescriptor != null)
+        config.setProperties(persistenceUnitDescriptor.getProperties());
+
+      /** Overwrite values from properties-file or set, if given */
+      if (driverClassName != null)
+      {
+        if (config.getProperties().containsKey(DRIVER_CLASS))
+          getLog().debug(
+              "Overwriting property " +
+              DRIVER_CLASS + "=" + config.getProperty(DRIVER_CLASS) +
+              " with the value " + driverClassName
+            );
+        else
+          getLog().debug("Using the value " + driverClassName);
+        config.setProperty(DRIVER_CLASS, driverClassName);
+      }
+      if (url != null)
+      {
+        if (config.getProperties().containsKey(URL))
+          getLog().debug(
+              "Overwriting property " +
+              URL + "=" + config.getProperty(URL) +
+              " with the value " + url
+            );
+        else
+          getLog().debug("Using the value " + url);
+        config.setProperty(URL, url);
+      }
+      if (username != null)
+      {
+        if (config.getProperties().containsKey(USERNAME))
+          getLog().debug(
+              "Overwriting property " +
+              USERNAME + "=" + config.getProperty(USERNAME) +
+              " with the value " + username
+            );
+        else
+          getLog().debug("Using the value " + username);
+        config.setProperty(USERNAME, username);
+      }
+      if (password != null)
+      {
+        if (config.getProperties().containsKey(PASSWORD))
+          getLog().debug(
+              "Overwriting property " +
+              PASSWORD + "=" + config.getProperty(PASSWORD) +
+              " with value " + password
+            );
+        else
+          getLog().debug("Using value " + password + " for property " + PASSWORD);
+        config.setProperty(PASSWORD, password);
+      }
+      if (hibernateDialect != null)
+      {
+        if (config.getProperties().containsKey(DIALECT))
+          getLog().debug(
+              "Overwriting property " +
+              DIALECT + "=" + config.getProperty(DIALECT) +
+              " with value " + hibernateDialect
+            );
+        else
+          getLog().debug(
+              "Using value " + hibernateDialect + " for property " + DIALECT
+              );
+        config.setProperty(DIALECT, hibernateDialect);
+      }
+      if ( hibernateNamingStrategy != null )
+      {
+        if ( config.getProperties().contains(NAMING_STRATEGY))
+          getLog().debug(
+              "Overwriting property " +
+              NAMING_STRATEGY + "=" + config.getProperty(NAMING_STRATEGY) +
+              " with value " + hibernateNamingStrategy
+             );
+        else
+          getLog().debug(
+              "Using value " + hibernateNamingStrategy + " for property " +
+              NAMING_STRATEGY
+              );
+        config.setProperty(NAMING_STRATEGY, hibernateNamingStrategy);
+      }
+
+      /** The generated SQL varies with the dialect! */
+      if (md5s.containsKey(DIALECT))
+      {
+        String dialect = config.getProperty(DIALECT);
+        if (md5s.get(DIALECT).equals(dialect))
+          getLog().debug("SQL-dialect unchanged.");
+        else
+        {
+          modified = true;
+          if (dialect == null)
+          {
+            getLog().debug("SQL-dialect was unset.");
+            md5s.remove(DIALECT);
+          }
+          else
+          {
+            getLog().debug("SQL-dialect changed: " + dialect);
+            md5s.put(DIALECT, dialect);
+          }
+        }
+      }
+      else
+      {
+        String dialect = config.getProperty(DIALECT);
+        if (dialect != null)
+        {
+          modified = true;
+          md5s.put(DIALECT, config.getProperty(DIALECT));
+        }
+      }
+
+      /** The generated SQL varies with the envers-configuration */
+      if (md5s.get(ENVERS) != null)
+      {
+        if (md5s.get(ENVERS).equals(Boolean.toString(envers)))
+          getLog().debug("Envers-Configuration unchanged. Enabled: " + envers);
+        else
+        {
+          getLog().debug("Envers-Configuration changed. Enabled: " + envers);
+          modified = true;
+          md5s.put(ENVERS, Boolean.toString(envers));
+        }
+      }
+      else
+      {
+        modified = true;
+        md5s.put(ENVERS, Boolean.toString(envers));
+      }
+
+      if (config.getProperties().isEmpty())
+      {
+        getLog().error("No properties set!");
+        throw new MojoFailureException("Hibernate configuration is missing!");
+      }
+
+      getLog().info("Gathered hibernate-configuration (turn on debugging for details):");
+      for (Entry<Object,Object> entry : config.getProperties().entrySet())
+        getLog().info("  " + entry.getKey() + " = " + entry.getValue());
+
+
+      getLog().debug("Adding explicitly configured mappings...");
       if (hibernateMapping != null)
       {
         try
@@ -820,6 +800,23 @@ public class Hbm2DdlMojo extends AbstractMojo
         }
       }
 
+      getLog().debug("Adding annotated classes to hibernate-mapping-configuration...");
+      // build annotated packages
+      Set<String> packages = new HashSet<String>();
+      for (Class<?> annotatedClass : classes)
+      {
+        String packageName = annotatedClass.getPackage().getName();
+        if (!packages.contains(packageName))
+        {
+          getLog().debug("Add package " + packageName);
+          packages.add(packageName);
+          config.addPackage(packageName);
+          getLog().debug("type definintions" + config.getTypeDefs());
+        }
+        getLog().debug("Class " + annotatedClass);
+        config.addAnnotatedClass(annotatedClass);
+      }
+
       Target target = null;
       try
       {
@@ -843,6 +840,25 @@ public class Hbm2DdlMojo extends AbstractMojo
         throw new MojoExecutionException("Invalid value for configuration-option \"type\"");
       }
 
+
+      Iterator<PersistentClass> it = config.getClassMappings();
+      if (!it.hasNext())
+      {
+        throw new MojoFailureException("No mapped classes found!");
+      }
+      else
+      {
+        getLog().info("Mapped classes:");
+        while (it.hasNext())
+        {
+          getLog().debug("  " + it.next().getClassName());
+        }
+      }
+
+      if (config.getProperty(DIALECT) == null)
+        throw new MojoFailureException("hibernate-dialect must be set!");
+
+
       if (target.equals(Target.SCRIPT) || target.equals(Target.NONE))
       {
         project.getProperties().setProperty(EXPORT_SKIPPED_PROPERTY, "true");
@@ -860,11 +876,32 @@ public class Hbm2DdlMojo extends AbstractMojo
         return;
       }
 
-      Environment.verifyProperties( properties );
-      ConfigurationHelper.resolvePlaceHolders( properties );
+
+      if ( config.getProperties().containsKey(NAMING_STRATEGY))
+      {
+        String namingStrategy = config.getProperty(NAMING_STRATEGY);
+        getLog().debug("Explicitly set NamingStrategy: " + namingStrategy);
+        try
+        {
+          @SuppressWarnings("unchecked")
+          Class<NamingStrategy> namingStrategyClass = (Class<NamingStrategy>) Class.forName(namingStrategy);
+          config.setNamingStrategy(namingStrategyClass.newInstance());
+        }
+        catch (Exception e)
+        {
+          getLog().error("Error setting NamingStrategy", e);
+          throw new MojoExecutionException(e.getMessage());
+        }
+      }
+
+
+      Environment.verifyProperties(config.getProperties());
+      ConfigurationHelper.resolvePlaceHolders(config.getProperties());
       StandardServiceRegistryImpl registry =
           (StandardServiceRegistryImpl)
-          new StandardServiceRegistryBuilder().applySettings(properties).build();
+          new StandardServiceRegistryBuilder()
+              .applySettings(config.getProperties())
+              .build();
 
       config.buildMappings();
 
@@ -1045,7 +1082,7 @@ public class Hbm2DdlMojo extends AbstractMojo
 
     @Override
     public void stop() { }
-    
+
   }
 
 

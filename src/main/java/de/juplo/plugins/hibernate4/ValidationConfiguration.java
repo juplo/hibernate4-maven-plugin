@@ -26,16 +26,6 @@ public class ValidationConfiguration extends Configuration
 {
   private static final long serialVersionUID = 1L;
 
-  private Class<Dialect> dialectClass;
-
-  public ValidationConfiguration(final String dialectClass)
-  {
-    try {
-        this.dialectClass = (Class<Dialect>) Class.forName(dialectClass);
-    } catch (ClassNotFoundException e) {
-        throw new RuntimeException(e);
-    }
-  }
 
   @Override
   protected void secondPassCompile() throws MappingException
@@ -48,7 +38,7 @@ public class ValidationConfiguration extends Configuration
           Validation.buildDefaultValidatorFactory(),
           classes.values(),
           getProperties(),
-          dialectClass.newInstance()
+          ((Class<Dialect>)Class.forName(getProperty(Hbm2DdlMojo.DIALECT))).newInstance()
           );
     }
     catch (Exception e)
