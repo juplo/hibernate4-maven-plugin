@@ -184,19 +184,12 @@ mvn hibernate4:export -Dhibernate.export.force=true</pre>
     If you are working under Windows and get the error-message
     <code>No annotated classes found in directory C:\projects\X Y Z\path-to-project\target\classes</code>,
     but you are really sure, that there are annotated classes in that
-    directory, you should try to rename your folders, so that their names
-    do not contain any whitespaces.
-  </p>
-  <p>
-    So fare, I got to bug-reports considering this.
-    In both cases, removing all whitespaces from the path solved the error.
-    In both cases, I was not able to reproduce the bug on my development
-    system, which is running under linux.
+    directory, you are expiriencing a bug, in the scannotation-library, that
+    was closed in version 1.1.0 of the hibernate-maven-plugin.
   </p>
   <p>
     <strong>
-      Hence, I assume, this is a sublte bug in the way, the java-version for
-      Windows is handling paths, that contain whitespaces.
+      You should consider to upgrade to that version of the plugin.
     </strong>
   </p>
  </body>

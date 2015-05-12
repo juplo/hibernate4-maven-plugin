@@ -132,7 +132,7 @@
     <el-api.version>3.0.0</el-api.version>
     <maven.version>3.3.3</maven.version>
     <maven-plugin-log4j.version>1.0.1</maven-plugin-log4j.version>
-    <scannotation.version>1.0.3</scannotation.version>
+    <scannotation.version>1.0.4</scannotation.version>
   </properties>
 
   <dependencies>
@@ -173,7 +173,7 @@
       <version>${el-api.version}</version>
     </dependency>
     <dependency>
-      <groupId>org.scannotation</groupId>
+      <groupId>de.juplo</groupId>
       <artifactId>scannotation</artifactId>
       <version>${scannotation.version}</version>
     </dependency>
