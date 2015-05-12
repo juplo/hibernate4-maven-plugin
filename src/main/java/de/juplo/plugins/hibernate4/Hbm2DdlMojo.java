@@ -17,6 +17,7 @@ package de.juplo.plugins.hibernate4;
  */
 
 import com.pyx4j.log4j.MavenLogAppender;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -49,9 +50,11 @@ import java.util.TreeSet;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
 import javax.persistence.Embeddable;
 import javax.persistence.Entity;
 import javax.persistence.MappedSuperclass;
+
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.model.Resource;
 import org.apache.maven.plugin.AbstractMojo;
@@ -62,6 +65,7 @@ import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.envers.configuration.spi.AuditConfiguration;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.hbm2ddl.SchemaExport.Type;
+import org.hibernate.tool.hbm2ddl.SchemaUpdate;
 import org.hibernate.tool.hbm2ddl.Target;
 import org.scannotation.AnnotationDB;
 
@@ -295,6 +299,18 @@ public class Hbm2DdlMojo extends AbstractMojo
    * @since 1.0
    */
   private String type;
+
+  /**
+   * Type of execution.
+   * <ul>
+   *   <li><strong>true</strong> do schema update</li>
+   *   <li><strong>false</strong> do schema export</li>
+   * </ul>
+   *
+   * @parameter property="hibernate.export.update" default-value="false"
+   * @since 1.0.6
+   */
+  private boolean update;
 
   /**
    * Output file.
@@ -891,9 +907,22 @@ public class Hbm2DdlMojo extends AbstractMojo
         AuditConfiguration.getFor(config);
       }
 
-      SchemaExport export = new SchemaExport(config, connection);
-      export.setDelimiter(delimiter);
-      export.setFormat(format);
+      
+      SchemaUpdate schemaUpdate;
+      SchemaExport export;
+      
+      if (update)
+      {
+        export = null;
+        schemaUpdate = new SchemaUpdate(config);
+      }
+      else
+      {
+        schemaUpdate = null;
+        export = new SchemaExport(config, connection);
+        export.setDelimiter(delimiter);
+        export.setFormat(format);
+      }
 
       File outF = new File(outputFile);
 
@@ -919,11 +948,21 @@ public class Hbm2DdlMojo extends AbstractMojo
         }
       }
 
-      export.setOutputFile(outF.getPath());
-      export.execute(target, type);
+      if (schemaUpdate != null)
+      {
+        schemaUpdate.setOutputFile(outF.getPath());
+        schemaUpdate.execute(target);
+        for (Object exception : schemaUpdate.getExceptions())
+          getLog().debug(exception.toString());
+      }
+      else if (export != null)
+      {
+        export.setOutputFile(outF.getPath());
+        export.execute(target, type);
+        for (Object exception : export.getExceptions())
+          getLog().debug(exception.toString());
+      }
 
-      for (Object exception : export.getExceptions())
-        getLog().debug(exception.toString());
     }
     finally
     {
