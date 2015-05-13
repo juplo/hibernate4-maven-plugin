@@ -844,20 +844,6 @@ public class Hbm2DdlMojo extends AbstractMojo
       }
 
 
-      Iterator<PersistentClass> it = config.getClassMappings();
-      if (!it.hasNext())
-      {
-        throw new MojoFailureException("No mapped classes found!");
-      }
-      else
-      {
-        getLog().info("Mapped classes:");
-        while (it.hasNext())
-        {
-          getLog().debug("  " + it.next().getClassName());
-        }
-      }
-
       if (config.getProperty(DIALECT) == null)
         throw new MojoFailureException("hibernate-dialect must be set!");
 
