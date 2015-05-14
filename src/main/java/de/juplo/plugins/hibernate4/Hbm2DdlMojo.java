@@ -38,8 +38,8 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedHashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -70,7 +70,6 @@ import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.jpa.boot.internal.ParsedPersistenceXmlDescriptor;
 import org.hibernate.jpa.boot.internal.PersistenceXmlParser;
 import org.hibernate.jpa.boot.spi.ProviderChecker;
-import org.hibernate.mapping.PersistentClass;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.hbm2ddl.SchemaExport.Type;
 import org.hibernate.tool.hbm2ddl.Target;
@@ -259,8 +258,11 @@ public class Hbm2DdlMojo extends AbstractMojo
 
   /**
    * Path to Hibernate properties file.
+   * If this parameter is not set the plugin will try to load the configuration
+   * from a file <code>hibernate.properties</code> on the classpath. The
+   * test-classpath takes precedence.
    *
-   * @parameter default-value="${project.build.outputDirectory}/hibernate.properties"
+   * @parameter
    * @since 1.0
    */
   private String hibernateProperties;
@@ -268,8 +270,11 @@ public class Hbm2DdlMojo extends AbstractMojo
   /**
    * Path to Hibernate configuration file (.cfg.xml).
    * Settings in this file will overwrite settings in the properties file.
+   * If this parameter is not set the plugin will try to load the configuration
+   * from a file <code>hibernate.cfg.xml</code> on the classpath. The
+   * test-classpath takes precedence.
    *
-   * @parameter default-value="${project.build.outputDirectory}/hibernate.cfg.xml"
+   * @parameter
    * @since 1.1.0
    */
   private String hibernateConfig;
@@ -281,6 +286,7 @@ public class Hbm2DdlMojo extends AbstractMojo
    * Settings in this file will overwrite settings in the properties or the
    * configuration file.
    *
+   * @parameter
    * @since 1.1.0
    */
   private String persistenceUnit;
@@ -405,20 +411,39 @@ public class Hbm2DdlMojo extends AbstractMojo
       }
     }
 
-    ClassLoader classLoader = null;
+    URLClassLoader classLoader = null;
     try
     {
       getLog().debug("Creating ClassLoader for project-dependencies...");
       List<String> classpathFiles = project.getCompileClasspathElements();
       if (scanTestClasses)
         classpathFiles.addAll(project.getTestClasspathElements());
-      URL[] urls = new URL[classpathFiles.size()];
-      for (int i = 0; i < classpathFiles.size(); ++i)
+      List<URL> urls = new LinkedList<URL>();
+      File file;
+      file = new File(testOutputDirectory);
+      if (!file.exists())
       {
-        getLog().debug("Dependency: " + classpathFiles.get(i));
-        urls[i] = new File(classpathFiles.get(i)).toURI().toURL();
+        getLog().info("creating test-output-directory: " + testOutputDirectory);
+        file.mkdirs();
       }
-      classLoader = new URLClassLoader(urls, getClass().getClassLoader());
+      urls.add(file.toURI().toURL());
+      file = new File(outputDirectory);
+      if (!file.exists())
+      {
+        getLog().info("creating output-directory: " + outputDirectory);
+        file.mkdirs();
+      }
+      urls.add(file.toURI().toURL());
+      for (String pathElement : classpathFiles)
+      {
+        getLog().debug("Dependency: " + pathElement);
+        urls.add(new File(pathElement).toURI().toURL());
+      }
+      classLoader =
+          new URLClassLoader(
+              urls.toArray(new URL[urls.size()]),
+              getClass().getClassLoader()
+              );
     }
     catch (Exception e)
     {
@@ -548,19 +573,44 @@ public class Hbm2DdlMojo extends AbstractMojo
 
     try
     {
+      /**
+       * Change class-loader of current thread, so that hibernate can
+       * see all dependencies!
+       */
+      Thread.currentThread().setContextClassLoader(classLoader);
+
+
       /** Try to read configuration from properties-file */
       try
       {
-        File file = new File(hibernateProperties);
-        if (file.exists())
+        if (hibernateProperties == null)
         {
-          getLog().info("Reading properties from file " + hibernateProperties + "...");
-          Properties properties = new Properties();
-          properties.load(new FileInputStream(file));
-          config.setProperties(properties);
+          URL url = classLoader.findResource("hibernate.properties");
+          if (url == null)
+          {
+            getLog().info("No hibernate.properties on the classpath!");
+          }
+          else
+          {
+            getLog().info("Reading settings from hibernate.properties on the classpath.");
+            Properties properties = new Properties();
+            properties.load(url.openStream());
+            config.setProperties(properties);
+          }
         }
         else
-          getLog().info("No hibernate-properties-file found! (Checked path: " + hibernateProperties + ")");
+        {
+          File file = new File(hibernateProperties);
+          if (file.exists())
+          {
+            getLog().info("Reading settings from file " + hibernateProperties + "...");
+            Properties properties = new Properties();
+            properties.load(new FileInputStream(file));
+            config.setProperties(properties);
+          }
+          else
+            getLog().info("No hibernate-properties-file found! (Checked path: " + hibernateProperties + ")");
+        }
       }
       catch (IOException e)
       {
@@ -568,23 +618,33 @@ public class Hbm2DdlMojo extends AbstractMojo
         throw new MojoExecutionException(e.getMessage());
       }
 
-      /**
-       * Change class-loader of current thread, so that hibernate can
-       * see all dependencies!
-       */
-      Thread.currentThread().setContextClassLoader(classLoader);
-
       /** Try to read configuration from configuration-file */
       try
       {
-        File file = new File(hibernateConfig);
-        if (file.exists())
+        if (hibernateConfig == null)
         {
-          getLog().info("Reading configuration from file " + hibernateConfig + "...");
-          config.configure(file);
+          URL url = classLoader.findResource("hibernate.cfg.xml");
+          if (url == null)
+          {
+            getLog().info("No hibernate.cfg.xml on the classpath!");
+          }
+          else
+          {
+            getLog().info("Reading settings from hibernate.cfg.xml on the classpath.");
+            config.configure(url);
+          }
         }
         else
-          getLog().info("No hibernate-configuration-file found! (Checked path: " + hibernateConfig + ")");
+        {
+          File file = new File(hibernateConfig);
+          if (file.exists())
+          {
+            getLog().info("Reading configuration from file " + hibernateConfig + "...");
+            config.configure(file);
+          }
+          else
+            getLog().info("No hibernate-configuration-file found! (Checked path: " + hibernateConfig + ")");
+        }
       }
       catch (Exception e)
       {
