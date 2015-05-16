@@ -1,0 +1,19 @@
+import de.juplo.test.FileComparator;
+
+
+FileComparator comparator = new FileComparator(basedir);
+
+if (!comparator.isEqual("schema-annotations.sql","annotations/target/schema.sql"))
+  return false;
+if (!comparator.isEqual("schema-basic.sql","basic/target/schema.sql"))
+  return false;
+if (!comparator.isEqual("schema-entitymanager.sql","entitymanager/target/schema.sql"))
+  return false;
+if (!comparator.isEqual("schema-envers.sql","envers/target/schema.sql"))
+  return false;
+if (!comparator.isEqual("schema-osgi-managed-jpa.sql","osgi/managed-jpa/target/schema.sql"))
+  return false;
+if (!comparator.isEqual("schema-osgi-unmanaged-jpa.sql","osgi/unmanaged-jpa/target/schema.sql"))
+  return false;
+if (!comparator.isEqual("schema-osgi-unmanaged-native.sql","osgi/unmanaged-native/target/schema.sql"))
+  return false;
