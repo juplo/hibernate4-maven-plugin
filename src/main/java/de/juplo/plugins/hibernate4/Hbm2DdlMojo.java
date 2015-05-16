@@ -97,6 +97,11 @@ public class Hbm2DdlMojo extends AbstractMojo
   public final static String NAMING_STRATEGY="hibernate.ejb.naming_strategy";
   public final static String ENVERS = "hibernate.export.envers";
 
+  public final static String JPA_DRIVER = "javax.persistence.jdbc.driver";
+  public final static String JPA_URL = "javax.persistence.jdbc.url";
+  public final static String JPA_USERNAME = "javax.persistence.jdbc.user";
+  public final static String JPA_PASSWORD = "javax.persistence.jdbc.password";
+
   public final static String MD5S = "hibernate4-generatedschema.md5s";
 
   private final static Pattern split = Pattern.compile("[^,\\s]+");
@@ -661,7 +666,9 @@ public class Hbm2DdlMojo extends AbstractMojo
       if (persistenceUnitDescriptor != null)
         config.setProperties(persistenceUnitDescriptor.getProperties());
 
+
       /** Overwrite values from properties-file or set, if given */
+
       if (driverClassName != null)
       {
         if (config.getProperties().containsKey(DRIVER_CLASS))
@@ -674,6 +681,21 @@ public class Hbm2DdlMojo extends AbstractMojo
           getLog().debug("Using the value " + driverClassName);
         config.setProperty(DRIVER_CLASS, driverClassName);
       }
+      if (config.getProperty(DRIVER_CLASS) == null)
+      {
+        String driver = config.getProperty(JPA_DRIVER);
+        if (driver != null)
+        {
+          getLog().info(
+              DRIVER_CLASS +
+              " is not set. Borrow setting from " +
+              JPA_DRIVER +
+              ": " +
+              driver);
+          config.setProperty(DRIVER_CLASS, driver);
+        }
+      }
+
       if (url != null)
       {
         if (config.getProperties().containsKey(URL))
@@ -686,6 +708,21 @@ public class Hbm2DdlMojo extends AbstractMojo
           getLog().debug("Using the value " + url);
         config.setProperty(URL, url);
       }
+      if (config.getProperty(URL) == null)
+      {
+        String url = config.getProperty(JPA_URL);
+        if (url != null)
+        {
+          getLog().info(
+              URL +
+              " is not set. Borrow setting from " +
+              JPA_URL +
+              ": " +
+              url);
+          config.setProperty(URL, url);
+        }
+      }
+
       if (username != null)
       {
         if (config.getProperties().containsKey(USERNAME))
@@ -698,6 +735,21 @@ public class Hbm2DdlMojo extends AbstractMojo
           getLog().debug("Using the value " + username);
         config.setProperty(USERNAME, username);
       }
+      if (config.getProperty(USERNAME) == null)
+      {
+        String username = config.getProperty(JPA_USERNAME);
+        if (username != null)
+        {
+          getLog().info(
+              USERNAME +
+              " is not set. Borrow setting from " +
+              JPA_USERNAME +
+              ": " +
+              username);
+          config.setProperty(USERNAME, username);
+        }
+      }
+
       if (password != null)
       {
         if (config.getProperties().containsKey(PASSWORD))
@@ -710,6 +762,21 @@ public class Hbm2DdlMojo extends AbstractMojo
           getLog().debug("Using value " + password + " for property " + PASSWORD);
         config.setProperty(PASSWORD, password);
       }
+      if (config.getProperty(PASSWORD) == null)
+      {
+        String password = config.getProperty(JPA_PASSWORD);
+        if (password != null)
+        {
+          getLog().info(
+              PASSWORD +
+              " is not set. Borrow setting from " +
+              JPA_PASSWORD +
+              ": " +
+              password);
+          config.setProperty(PASSWORD, password);
+        }
+      }
+
       if (hibernateDialect != null)
       {
         if (config.getProperties().containsKey(DIALECT))
@@ -724,6 +791,7 @@ public class Hbm2DdlMojo extends AbstractMojo
               );
         config.setProperty(DIALECT, hibernateDialect);
       }
+
       if ( hibernateNamingStrategy != null )
       {
         if ( config.getProperties().contains(NAMING_STRATEGY))
