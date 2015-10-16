@@ -60,19 +60,19 @@
         <plugins>
             <plugin>
                 <groupId>de.juplo</groupId>
-                <artifactId>hibernate4-maven-plugin</artifactId>
+                <artifactId>hibernate-maven-plugin</artifactId>
                 <version>${h4mp.version}</version>
                 <executions>
                     <execution>
                         <phase>process-test-classes</phase>
                         <goals>
-                            <goal>export</goal>
+                            <goal>create</goal>
                         </goals>
                     </execution>
                 </executions>
                 <configuration>
                     <scanTestClasses>true</scanTestClasses>
-                    <hibernateDialect>org.hibernate.dialect.H2Dialect</hibernateDialect>
+                    <dialect>org.hibernate.dialect.H2Dialect</dialect>
                 </configuration>
             </plugin>
         </plugins>

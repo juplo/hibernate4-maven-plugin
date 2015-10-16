@@ -47,13 +47,13 @@
         <plugins>
             <plugin>
                 <groupId>de.juplo</groupId>
-                <artifactId>hibernate4-maven-plugin</artifactId>
+                <artifactId>hibernate-maven-plugin</artifactId>
                 <version>${h4mp.version}</version>
                 <executions>
                     <execution>
                         <phase>process-test-classes</phase>
                         <goals>
-                            <goal>export</goal>
+                            <goal>create</goal>
                         </goals>
                     </execution>
                 </executions>

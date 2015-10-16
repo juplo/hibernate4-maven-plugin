@@ -16,7 +16,7 @@
     <description>Sample project to test the maven plugin</description>
     <version>1.0-SNAPSHOT</version>
     <packaging>jar</packaging>
-    <url>http://juplo.de/hibernate4-maven-plugin</url>
+    <url>http://juplo.de/hibernate-maven-plugin</url>
 
     <properties>
         <de.juplo-hibernate-plugin-version>@project.version@</de.juplo-hibernate-plugin-version>
@@ -176,36 +176,36 @@
             </plugin>
             <plugin>
                 <groupId>de.juplo</groupId>
-                <artifactId>hibernate4-maven-plugin</artifactId>
+                <artifactId>hibernate-maven-plugin</artifactId>
                 <version>${de.juplo-hibernate-plugin-version}</version>
                 <executions>
                     <execution>
                         <id>create-create-script</id>
                         <goals>
-                            <goal>export</goal>
+                            <goal>create</goal>
                         </goals>
                         <configuration>
                             <outputFile>${project.build.directory}/test-classes/sql/create-tables-hsqldb.sql
                             </outputFile>
-                            <type>CREATE</type>
+                            <drop>false</drop>
                         </configuration>
                     </execution>
                     <execution>
                         <id>create-drop-script</id>
                         <goals>
-                            <goal>export</goal>
+                            <goal>create</goal>
                         </goals>
                         <configuration>
                             <outputFile>${project.build.directory}/test-classes/sql/drop-tables-hsqldb.sql
                             </outputFile>
-                            <type>DROP</type>
+                            <drop>true</drop>
                         </configuration>
                     </execution>
                 </executions>
                 <configuration>
-                    <target>SCRIPT</target>
-                    <driverClassName>org.hsqldb.jdbc.JDBCDriver</driverClassName>
-                    <hibernateDialect>org.hibernate.dialect.HSQLDialect</hibernateDialect>
+                    <export>false</export>
+                    <driver>org.hsqldb.jdbc.JDBCDriver</driver>
+                    <dialect>org.hibernate.dialect.HSQLDialect</dialect>
                     <envers>true</envers>
                 </configuration>
                 <dependencies>

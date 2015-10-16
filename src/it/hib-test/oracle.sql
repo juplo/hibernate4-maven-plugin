@@ -1,6 +1,4 @@
 
-    drop table test_simple cascade constraints;
-
     create table test_simple (
         uuid varchar2(36 char) not null,
         content clob,

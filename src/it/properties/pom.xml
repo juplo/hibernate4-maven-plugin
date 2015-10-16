@@ -32,18 +32,16 @@
       <!--  Generate database schema files -->
       <plugin>
         <groupId>de.juplo</groupId>
-        <artifactId>hibernate4-maven-plugin</artifactId>
+        <artifactId>hibernate-maven-plugin</artifactId>
         <version>@project.version@</version>
         <configuration>
-          <!-- Target of none generates schema only, no DB connection -->
-          <target>none</target>
-          <!-- Generate both CREATE and DROP statements in scripts -->
-          <type>both</type>
+          <!-- Gnerate schema only, no DB connection needed -->
+          <export>false</export>
         </configuration>
         <executions>
           <execution>
             <goals>
-              <goal>export</goal>
+              <goal>create</goal>
             </goals>
           </execution>
         </executions>

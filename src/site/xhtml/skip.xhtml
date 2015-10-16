@@ -5,7 +5,7 @@
  </head>
  <body>
   <p>
-  In most use-cases, the hibernate4-maven-plugin is used to create a
+  In most use-cases, the hibernate-maven-plugin is used to create a
   test-database automatically. In this use-cases, it is very likely, that it
   will result in mistakes/errors, if the goal is executed, when the tests
   are skipped.
@@ -19,7 +19,7 @@
   <p>
   Because of this, the configuration-parameter <code>skip</code> defaults to the value
   of the proptery <code>maven.test.skip</code>. This way, the execution of the
-  hibernate4-maven-plugin is skipped automatically, when the tests are
+  hibernate-maven-plugin is skipped automatically, when the tests are
   skipped. Think of it as a build-in security-belt.
   </p>
   <p>
@@ -30,7 +30,7 @@
   <pre class="prettyprint linenums lang-html">
 &lt;plugin&gt;
   &lt;groupId&gt;de.juplo&lt;/groupId&gt;
-  &lt;artifactId&gt;hibernate4-maven-plugin&lt;/artifactId&gt;
+  &lt;artifactId&gt;hibernate-maven-plugin&lt;/artifactId&gt;
   ...
   &lt;configuration&gt;
     &lt;skip&gt;false&lt;/skip&gt;
@@ -44,7 +44,7 @@
   <pre class="prettyprint linenums lang-html">
 &lt;plugin&gt;
   &lt;groupId&gt;de.juplo&lt;/groupId&gt;
-  &lt;artifactId&gt;hibernate4-maven-plugin&lt;/artifactId&gt;
+  &lt;artifactId&gt;hibernate-maven-plugin&lt;/artifactId&gt;
   ...
   &lt;configuration&gt;
     &lt;skip&gt;${foo.bar}&lt;/skip&gt;

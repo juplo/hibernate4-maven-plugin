@@ -6,14 +6,14 @@
  <body>
   <h2>Annotated classes in dependencies are not found.</h2>
   <p>
-  hibernate4-maven-plugin by default scans dependencies in the scope
+  hibernate-maven-plugin by default scans dependencies in the scope
   <code>compile</code>. You can configure it to scan dependencies in other
   scopes as well. But it scans only direct dependencies. Transitive
   dependencies are not scanned for annotated classes. If some of your
   annotated classes are hidden in a transitive dependency, you can simply
   add that dependency explicitly.
   </p>
-  <h2>hibernate4-maven-plugin always needs a database-connection</h2>
+  <h2>hibernate-maven-plugin always needs a database-connection</h2>
   <p>
   The default-configuration uses the EXPORT-target of the SchemaExport-Tool.
   If you do not need to create a database with the evaluated schema, you can
@@ -36,7 +36,7 @@
   So a tidy maven-developer would usually scope it for <code>runtime</code>.
   </p>
   <p>
-  But this will break the execution of the <code>hibernate4-maven-plugin</code>.
+  But this will break the execution of the <code>hibernate-maven-plugin</code>.
   Since it will not be able to see the needed dependency, it will fail with
   an error-message like:
   </p>
@@ -70,7 +70,7 @@
   <pre class="prettyprint linenums lang-html">
 &lt;plugin&gt;
   &lt;groupId&gt;de.juplo&lt;/groupId&gt;
-  &lt;artifactId&gt;hibernate4-maven-plugin&lt;/artifactId&gt;
+  &lt;artifactId&gt;hibernate-maven-plugin&lt;/artifactId&gt;
   &lt;version&gt;${project.version}&lt;/version&gt;
   &lt;executions&gt;
     &lt;execution&gt;
@@ -93,29 +93,29 @@
   Because otherwise, this dependency will unnecessarily bloat the
   runtime-dependencies of your project.
   </p>
-  <h2 id="fails">DBUnit fails after execution of hibernate4 was skipped because nothing has changed</h2>
+  <h2 id="fails">DBUnit fails after execution of hibernate was skipped because nothing has changed</h2>
   <p>
-  If hibernate4-maven-plugin skips its excecution, this may lead to errors in
+  If hibernate-maven-plugin skips its excecution, this may lead to errors in
   other plugins.
   For example, when importing sample-data in the automatically created database
   with the help of the <a href="http://mojo.codehaus.org/dbunit-maven-plugin/">dbunit-plugin</a>,
   the <code>CLEAN_INSERT</code>-operation may fail because of foreign-key-constraints,
-  if the database was not recreated, because the hibernate4-maven-plugin has
+  if the database was not recreated, because the hibernate-maven-plugin has
   skipped its excecution.
   </p>
   <p>
   A quick fix to this problem is, to <a href="./force.html">force</a>
-  hibernate4-maven-plugin to export the schema every time it is running.
+  hibernate-maven-plugin to export the schema every time it is running.
   But to recreate the database on every testrun may noticeable slow down your
   development cycle, if you have to wait for slow IO.
   </p>
   <p>
-  To circumvent this problem, hibernate4-maven-plugin signals a skipped
+  To circumvent this problem, hibernate-maven-plugin signals a skipped
   excecution by setting the  maven property <code>$\{hibernate.export.skipped\}</code> to
   <code>true</code>.
   You can configure other plugins to react on this signal.
   For example, the dbunit-plugin can be configured to skip its excecution, if
-  hibernate4-maven-plugin was skipped like this:
+  hibernate-maven-plugin was skipped like this:
   </p>
   <pre class="prettyprint linenums lang-html">
 &lt;plugin&gt;
@@ -128,7 +128,7 @@
   <h2>The database will not be recreated after a manual drop/clean</h2>
   <p>
   If one manually drops the database or removes the hsqldb-files, it will not
-  be recreated by the hibernate4-maven-plugin, because it cannot detect, that
+  be recreated by the hibernate-maven-plugin, because it cannot detect, that
   the database needs to be recreated.
   This happens, because the plugin will not recreate the database if neither
   the configuration nor the annotated classes have changed, because an
@@ -143,17 +143,17 @@
   Otherwise the recreation must be <a href="./force.html">forced</a>:
   </p>
   <pre class="prettyprint">
-mvn hibernate4:export -Dhibernate.export.force=true</pre>
-  <h2>The hibernate4:export goal is not executed, when tests are skipped</h2>
+mvn hibernate:export -Dhibernate.export.force=true</pre>
+  <h2>The hibernate:export goal is not executed, when tests are skipped</h2>
   <p>
-  The hibernate4-maven-plugin automatically skips its execution, when
+  The hibernate-maven-plugin automatically skips its execution, when
   <code>maven.test.skip</code> is set to <code>true</code>. If you need it to be always
   executed, you can configure that explicitly like this:
   </p>
   <pre class="prettyprint linenums lang-html">
 &lt;plugin&gt;
   &lt;groupId&gt;de.juplo&lt;/groupId&gt;
-  &lt;artifactId&gt;hibernate4-maven-plugin&lt;/artifactId&gt;
+  &lt;artifactId&gt;hibernate-maven-plugin&lt;/artifactId&gt;
   ...
   &lt;configuration&gt;
     &lt;skip&gt;false&lt;/skip&gt;
@@ -173,7 +173,7 @@ mvn hibernate4:export -Dhibernate.export.force=true</pre>
   <pre class="prettyprint linenums lang-html">
 &lt;plugin&gt;
   &lt;groupId&gt;de.juplo&lt;/groupId&gt;
-  &lt;artifactId&gt;hibernate4-maven-plugin&lt;/artifactId&gt;
+  &lt;artifactId&gt;hibernate-maven-plugin&lt;/artifactId&gt;
   ...
   &lt;configuration&gt;
     &lt;scanDependencies&gt;none&lt;/scanDependencies&gt;

@@ -5,7 +5,7 @@
  </head>
  <body>
   <p>
-  The hibernate4-maven-plugin computes MD5-sums for all found annotated
+  The hibernate-maven-plugin computes MD5-sums for all found annotated
   classes and stores them together with the generated schema.
   If no classes were changed or added and the dialect wasn't changed too, it
   automatically skips the configured schema-export, to speed up the development
@@ -19,14 +19,14 @@
   <a href="./pitfalls.html#fails">may fail</a>, when the execution is skipped.
   </p>
   <p>
-  If you need the hibernate4-maven-plugin to &lt;never skip execution automatically&gt;,
+  If you need the hibernate-maven-plugin to &lt;never skip execution automatically&gt;,
   you can force it to do so, if you set the parameter <code>force</code> to
   <code>true</code>:
   </p>
   <pre class="prettyprint linenums lang-html">
 &lt;plugin&gt;
   &lt;groupId&gt;de.juplo&lt;/groupId&gt;
-  &lt;artifactId&gt;hibernate4-maven-plugin&lt;/artifactId&gt;
+  &lt;artifactId&gt;hibernate-maven-plugin&lt;/artifactId&gt;
   &lt;version&gt;${project.version}&lt;/version&gt;
   &lt;configuration&gt;
     &lt;force&gt;true&lt;/force&gt;
@@ -34,7 +34,7 @@
 &lt;/plugin&gt;</pre>
   <p>
   Or you may specify <code>-Dhibernate.export.force=true</code> at the command line,
-  if you want to force hibernate4-maven-plugin only once.
+  if you want to force hibernate-maven-plugin only once.
   </p>
  </body>
 </html>

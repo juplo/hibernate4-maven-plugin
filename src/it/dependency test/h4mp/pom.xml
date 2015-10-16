@@ -61,23 +61,23 @@
 		<plugins>
 			<plugin>
 				<groupId>de.juplo</groupId>
-				<artifactId>hibernate4-maven-plugin</artifactId>
+				<artifactId>hibernate-maven-plugin</artifactId>
 				<version>@project.version@</version>
 				<executions>
 					<execution>
 						<goals>
-							<goal>export</goal>
+							<goal>create</goal>
 						</goals>
 					</execution>
 				</executions>
 				<configuration>
-					<target>NONE</target>
+					<export>false</export>
 					<envers>true</envers>
 					<format>true</format>
 					<delimiter>;</delimiter>
 					<force>true</force>
-					<type>CREATE</type>
-					<hibernateDialect>org.hibernate.dialect.PostgreSQL9Dialect</hibernateDialect>
+					<drop>false</drop>
+					<dialect>org.hibernate.dialect.PostgreSQL9Dialect</dialect>
 				</configuration>
 			</plugin>
 		</plugins>

@@ -1,6 +1,4 @@
 
-    drop table test_simple if exists;
-
     create table test_simple (
         uuid varchar(36) not null,
         content clob,

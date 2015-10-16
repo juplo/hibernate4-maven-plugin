@@ -1,6 +1,4 @@
 
-    drop table if exists test_simple cascade;
-
     create table test_simple (
         uuid varchar(36) not null,
         content text,

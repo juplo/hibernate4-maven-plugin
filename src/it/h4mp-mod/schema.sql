@@ -1,4 +1,6 @@
 
+    create sequence hibernate_sequence start 1 increment 1;
+
     create table MainEntity (
         id int8 not null,
         str varchar(255),
@@ -21,8 +23,6 @@
     );
 
     alter table MainEntity_AUD 
-        add constraint FK_kpx35pyi0ssiutbfxbf8klu06 
+        add constraint FKdyho0e2yvr52e1nf5rt18k2ec 
         foreign key (REV) 
         references REVINFO;
-
-    create sequence hibernate_sequence;

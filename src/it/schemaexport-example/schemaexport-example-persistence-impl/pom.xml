@@ -53,21 +53,20 @@
 		<plugins>
 			<plugin>
 				<groupId>de.juplo</groupId>
-				<artifactId>hibernate4-maven-plugin</artifactId>
+				<artifactId>hibernate-maven-plugin</artifactId>
 				<version>@project.version@</version>
 				<configuration>
-					<target>SCRIPT</target>
-					<driverClassName>org.hsqldb.jdbcDriver</driverClassName>
-					<hibernateDialect>org.hibernate.dialect.HSQLDialect</hibernateDialect>
+					<driver>org.hsqldb.jdbcDriver</driver>
+					<dialect>org.hibernate.dialect.HSQLDialect</dialect>
 					<!-- 
-					<driverClassName>com.mysql.jdbc.Driver</driverClassName>
-					<hibernateDialect>org.hibernate.dialect.MySQLDialect</hibernateDialect>
+					<driver>com.mysql.jdbc.Driver</driver>
+					<dialect>org.hibernate.dialect.MySQLDialect</dialect>
 					-->
 				</configuration>
 				<executions>
 					<execution>
 						<goals>
-							<goal>export</goal>
+							<goal>create</goal>
 						</goals>
 					</execution>
 				</executions>

@@ -42,42 +42,40 @@
       <!--  Generate database schema files -->
       <plugin>
         <groupId>de.juplo</groupId>
-        <artifactId>hibernate4-maven-plugin</artifactId>
+        <artifactId>hibernate-maven-plugin</artifactId>
         <version>@project.version@</version>
         <configuration>
-          <!-- Target of none generates schema only, no DB connection -->
-          <target>none</target>
-          <!-- Generate both CREATE and DROP statements in scripts -->
-          <type>both</type>
+          <!-- Generat schema only, no DB connection needed -->
+          <export>false</export>
         </configuration>
         <executions>
           <execution>
             <id>create-h2-ddl</id>
             <goals>
-              <goal>export</goal>
+              <goal>create</goal>
             </goals>
             <configuration>
-              <hibernateDialect>org.hibernate.dialect.H2Dialect</hibernateDialect>
+              <dialect>org.hibernate.dialect.H2Dialect</dialect>
               <outputFile>h2.sql</outputFile>
             </configuration>
           </execution>
           <execution>
             <id>create-postgres-ddl</id>
             <goals>
-              <goal>export</goal>
+              <goal>create</goal>
             </goals>
             <configuration>
-              <hibernateDialect>org.hibernate.dialect.PostgreSQL82Dialect</hibernateDialect>
+              <dialect>org.hibernate.dialect.PostgreSQL82Dialect</dialect>
               <outputFile>postgres.sql</outputFile>
             </configuration>
           </execution>
           <execution>
             <id>create-oracle-ddl</id>
             <goals>
-              <goal>export</goal>
+              <goal>create</goal>
             </goals>
             <configuration>
-              <hibernateDialect>org.hibernate.dialect.Oracle10gDialect</hibernateDialect>
+              <dialect>org.hibernate.dialect.Oracle10gDialect</dialect>
               <outputFile>oracle.sql</outputFile>
             </configuration>
           </execution>

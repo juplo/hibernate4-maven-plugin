@@ -10,12 +10,12 @@
   </parent>
 
   <groupId>de.juplo</groupId>
-  <artifactId>hibernate4-maven-plugin</artifactId>
-  <name>Hibernate 4 Maven Plugin</name>
-  <description>Plugin for generating a database-schema from Hibernate-4-Mapping-Annotations</description>
+  <artifactId>hibernate-maven-plugin</artifactId>
+  <name>Hibernate Maven Plugin</name>
+  <description>Plugin for generating a database-schema from Hibernate-Mapping-Annotations</description>
   <version>2.0-SNAPSHOT</version>
   <packaging>maven-plugin</packaging>
-  <url>http://juplo.de/hibernate4-maven-plugin</url>
+  <url>http://juplo.de/hibernate-maven-plugin</url>
 
   <prerequisites>
     <maven>2.0.6</maven>
@@ -31,9 +31,9 @@
   </licenses>
 
   <scm>
-    <connection>scm:git:http://juplo.de/git/hibernate4-maven-plugin</connection>
-    <developerConnection>scm:git:ssh://juplo.de:/var/lib/git/juplo/hibernate4-maven-plugin</developerConnection>
-    <url>http://juplo.de/gitweb/?p=hibernate4-maven-plugin;a=summary</url>
+    <connection>scm:git:http://juplo.de/git/hibernate-maven-plugin</connection>
+    <developerConnection>scm:git:ssh://juplo.de:/var/lib/git/juplo/hibernate-maven-plugin</developerConnection>
+    <url>http://juplo.de/gitweb/?p=hibernate-maven-plugin;a=summary</url>
   </scm>
 
   <developers>
@@ -108,7 +108,7 @@
   <distributionManagement>
     <site>
       <id>www.juplo.de</id>
-      <url>scp://juplo.de/var/www/juplo/hibernate4-maven-plugin-${project.version}</url>
+      <url>scp://juplo.de/var/www/juplo/hibernate-maven-plugin-${project.version}</url>
     </site>
   </distributionManagement>
 
@@ -127,8 +127,8 @@
     <!-- Zeichensatz -->
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <!-- Verwendete Versionen -->
-    <hibernate.version>4.3.9.Final</hibernate.version>
-    <hibernate-validator.version>5.1.3.Final</hibernate-validator.version>
+    <hibernate.version>5.0.2.Final</hibernate.version>
+    <hibernate-validator.version>5.2.2.Final</hibernate-validator.version>
     <el-api.version>3.0.0</el-api.version>
     <maven.version>3.3.3</maven.version>
     <maven-plugin-log4j.version>1.0.1</maven-plugin-log4j.version>
@@ -246,6 +246,9 @@
             <goals>
               <goal>jar</goal>
             </goals>
+            <configuration>
+              <additionalparam>-Xdoclint:none</additionalparam>
+            </configuration>
           </execution>
         </executions>
       </plugin>

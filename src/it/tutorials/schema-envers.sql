@@ -1,10 +1,4 @@
 
-    drop table EVENTS if exists;
-
-    drop table EVENTS_AUD if exists;
-
-    drop table REVINFO if exists;
-
     create table EVENTS (
         id bigint not null,
         EVENT_DATE timestamp,
@@ -28,6 +22,6 @@
     );
 
     alter table EVENTS_AUD 
-        add constraint FK_3hegaqrrpmx0jj0c8qacjtira 
+        add constraint FK5cembm6xahf542q8e4h0pq2t1 
         foreign key (REV) 
         references REVINFO;
