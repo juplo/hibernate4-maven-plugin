@@ -568,155 +568,13 @@ public abstract class AbstractSchemaMojo extends AbstractMojo
   {
     /** Overwrite values from properties-file or set, if given */
 
-    if (driver != null)
-    {
-      if (properties.containsKey(DRIVER))
-        getLog().debug("Overwriting property " +
-            DRIVER + "=" + properties.getProperty(DRIVER) +
-            " with the value " + driver
-          );
-      else
-        getLog().debug("Using the value " + driver);
-      properties.setProperty(DRIVER, driver);
-    }
-    if (properties.getProperty(DRIVER) == null)
-    {
-      String driver = properties.getProperty(JDBC_DRIVER);
-      if (driver != null)
-      {
-        getLog().info(DRIVER +
-            " is not set. Borrow setting from " +
-            JDBC_DRIVER +
-            ": " +
-            driver);
-        properties.setProperty(DRIVER, driver);
-      }
-    }
-
-    if (url != null)
-    {
-      if (properties.containsKey(URL))
-        getLog().debug(
-            "Overwriting property " +
-            URL + "=" + properties.getProperty(URL) +
-            " with the value " + url
-          );
-      else
-        getLog().debug("Using the value " + url);
-      properties.setProperty(URL, url);
-    }
-    if (properties.getProperty(URL) == null)
-    {
-      String url = properties.getProperty(JDBC_URL);
-      if (url != null)
-      {
-        getLog().info(URL +
-            " is not set. Borrow setting from " +
-            JDBC_URL +
-            ": " +
-            url);
-        properties.setProperty(URL, url);
-      }
-    }
-
-    if (username != null)
-    {
-      if (properties.containsKey(USER))
-        getLog().debug("Overwriting property " +
-            USER + "=" + properties.getProperty(USER) +
-            " with the value " + username
-          );
-      else
-        getLog().debug("Using the value " + username);
-      properties.setProperty(USER, username);
-    }
-    if (properties.getProperty(USER) == null)
-    {
-      username = properties.getProperty(JDBC_USER);
-      if (username != null)
-      {
-        getLog().info(USER +
-            " is not set. Borrow setting from " +
-            JDBC_USER +
-            ": " +
-            username);
-        properties.setProperty(USER, username);
-      }
-    }
-
-    if (password != null)
-    {
-      if (properties.containsKey(PASS))
-        getLog().debug("Overwriting property " +
-            PASS + "=" + properties.getProperty(PASS) +
-            " with value " + password
-          );
-      else
-        getLog().debug("Using value " + password + " for property " + PASS);
-      properties.setProperty(PASS, password);
-    }
-    if (properties.getProperty(PASS) == null)
-    {
-      password = properties.getProperty(JDBC_PASSWORD);
-      if (password != null)
-      {
-        getLog().info(PASS +
-            " is not set. Borrow setting from " +
-            JDBC_PASSWORD +
-            ": " +
-            password);
-        properties.setProperty(PASS, password);
-      }
-    }
-
-    if (dialect != null)
-    {
-      if (properties.containsKey(DIALECT))
-        getLog().debug(
-            "Overwriting property " +
-            DIALECT + "=" + properties.getProperty(DIALECT) +
-            " with value " + dialect
-          );
-      else
-        getLog().debug(
-            "Using value " + dialect + " for property " + DIALECT
-            );
-      properties.setProperty(DIALECT, dialect);
-    }
-
-    if (implicitNamingStrategy != null )
-    {
-      if ( properties.contains(IMPLICIT_NAMING_STRATEGY))
-        getLog().debug(
-            "Overwriting property " +
-            IMPLICIT_NAMING_STRATEGY + "=" + properties.getProperty(IMPLICIT_NAMING_STRATEGY) +
-            " with value " + implicitNamingStrategy
-           );
-      else
-        getLog().debug(
-            "Using value " + implicitNamingStrategy + " for property " +
-            IMPLICIT_NAMING_STRATEGY +
-            "Using value " + dialect + " for property " + DIALECT
-            );
-      properties.setProperty(IMPLICIT_NAMING_STRATEGY, implicitNamingStrategy);
-    }
-
-    if (physicalNamingStrategy != null )
-    {
-      if ( properties.contains(PHYSICAL_NAMING_STRATEGY))
-        getLog().debug(
-            "Overwriting property " +
-            PHYSICAL_NAMING_STRATEGY + "=" + properties.getProperty(PHYSICAL_NAMING_STRATEGY) +
-            " with value " + physicalNamingStrategy
-           );
-      else
-        getLog().debug(
-            "Using value " + physicalNamingStrategy + " for property " +
-            PHYSICAL_NAMING_STRATEGY +
-            "Using value " + dialect + " for property " + DIALECT
-            );
-      properties.setProperty(PHYSICAL_NAMING_STRATEGY, physicalNamingStrategy);
-    }
+    configure(properties, driver, DRIVER, JDBC_DRIVER);
+    configure(properties, url, URL, JDBC_URL);
+    configure(properties, username, USER, JDBC_USER);
+    configure(properties, password, PASS, JDBC_PASSWORD);
+    configure(properties, dialect, DIALECT);
+    configure(properties, implicitNamingStrategy, IMPLICIT_NAMING_STRATEGY);
+    configure(properties, physicalNamingStrategy, PHYSICAL_NAMING_STRATEGY);
 
     if (properties.isEmpty())
     {
@@ -727,6 +585,40 @@ public abstract class AbstractSchemaMojo extends AbstractMojo
     getLog().info("Gathered hibernate-configuration (turn on debugging for details):");
     for (Entry<Object,Object> entry : properties.entrySet())
       getLog().info("  " + entry.getKey() + " = " + entry.getValue());
+  }
+
+  private void configure(
+      Properties properties,
+      String value,
+      String key,
+      String alternativeKey
+      )
+  {
+    configure(properties, value, key);
+    if (properties.containsKey(key) && properties.containsKey(alternativeKey))
+    {
+      getLog().warn(
+          "Ignoring property " + alternativeKey + "=" +
+          properties.getProperty(alternativeKey) + " in favour for property " +
+          key + "=" + properties.getProperty(key)
+          );
+      properties.remove(JDBC_DRIVER);
+    }
+  }
+
+  private void configure(Properties properties, String value, String key)
+  {
+    if (value != null)
+    {
+      if (properties.containsKey(key))
+        getLog().debug(
+            "Overwriting property " + key + "=" + properties.getProperty(key) +
+            " with the value " + value
+            );
+      else
+        getLog().debug("Using the value " + value + " for property " + key);
+      properties.setProperty(key, value);
+    }
   }
 
   private void addMappings(MetadataSources sources, ModificationTracker tracker)
