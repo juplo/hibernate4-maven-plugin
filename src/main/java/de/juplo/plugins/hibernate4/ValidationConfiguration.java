@@ -34,11 +34,12 @@ public class ValidationConfiguration extends Configuration
 
     try
     {
+      Class<?> dialectClass = Class.forName( getProperty(Hbm2DdlMojo.DIALECT), true, Thread.currentThread().getContextClassLoader()); 
       TypeSafeActivatorAccessor.applyRelationalConstraints(
           Validation.buildDefaultValidatorFactory(),
           classes.values(),
           getProperties(),
-          ((Class<Dialect>)Class.forName(getProperty(Hbm2DdlMojo.DIALECT))).newInstance()
+          (Dialect)dialectClass.newInstance()
           );
     }
     catch (Exception e)
