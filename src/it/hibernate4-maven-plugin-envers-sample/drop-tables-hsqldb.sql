@@ -1,6 +1,6 @@
 
     alter table TTL_EVENT_AUD 
-        drop constraint FK_cjsh8995uabmdm9b30uvmyj6p;
+        drop constraint FK295td34se5kaxwgo8i1ph0k4;
 
     drop table TTL_AUDIT_REVISION if exists;
 

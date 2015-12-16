@@ -3,5 +3,5 @@ import de.juplo.test.FileComparator;
 
 FileComparator comparator = new FileComparator(basedir);
 
-if (!comparator.isEqual("h2.sql","target/schema.sql"))
+if (!comparator.isEqual("h2.sql","target/create.sql"))
   return false;

@@ -27,12 +27,12 @@ import org.hibernate.tool.hbm2ddl.SchemaExport;
  * Goal which extracts the hibernate-mapping-configuration and
  * exports an according SQL-database-schema.
  *
- * @goal create
+ * @goal drop
  * @phase process-classes
  * @threadSafe
  * @requiresDependencyResolution runtime
  */
-public class CreateMojo extends AbstractSchemaMojo
+public class DropMojo extends AbstractSchemaMojo
 {
   /**
    * Output file.
@@ -41,7 +41,7 @@ public class CreateMojo extends AbstractSchemaMojo
    * relative to the project build directory
    * (<code>project.build.directory</code>).
    *
-   * @parameter property="hibernate.schema.export.create" default-value="create.sql"
+   * @parameter property="hibernate.schema.export.drop" default-value="drop.sql"
    * @since 1.0
    */
   private String outputFile;
@@ -92,7 +92,7 @@ public class CreateMojo extends AbstractSchemaMojo
     }
 
     schemaExport.setOutputFile(output.getPath());
-    schemaExport.execute(false, this.export, false, true);
+    schemaExport.execute(false, this.export, true, false);
 
     for (Object exception : schemaExport.getExceptions())
       getLog().error(exception.toString());

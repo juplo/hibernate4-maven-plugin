@@ -187,7 +187,6 @@
                         <configuration>
                             <outputFile>${project.build.directory}/test-classes/sql/create-tables-hsqldb.sql
                             </outputFile>
-                            <drop>false</drop>
                             <format>true</format>
                         </configuration>
                     </execution>
@@ -199,7 +198,6 @@
                         <configuration>
                             <outputFile>${project.build.directory}/test-classes/sql/drop-tables-hsqldb.sql
                             </outputFile>
-                            <drop>true</drop>
                             <format>true</format>
                         </configuration>
                     </execution>
