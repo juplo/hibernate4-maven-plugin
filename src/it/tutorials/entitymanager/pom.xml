@@ -68,6 +68,7 @@
                 <configuration>
                     <scanTestClasses>true</scanTestClasses>
                     <dialect>org.hibernate.dialect.H2Dialect</dialect>
+                    <format>true</format>
                 </configuration>
             </plugin>
         </plugins>

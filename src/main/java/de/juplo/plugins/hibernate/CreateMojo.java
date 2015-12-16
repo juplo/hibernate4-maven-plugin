@@ -35,48 +35,26 @@ import org.hibernate.tool.hbm2ddl.SchemaExport;
 public class CreateMojo extends AbstractSchemaMojo
 {
   /**
-   * Export the database-schma to the database.
-   * If set to <code>false</code>, only the SQL-script is created and the
-   * database is not touched.
-   *
-   * @parameter property="hibernate.export.export" default-value="true"
-   * @since 2.0
-   */
-  private boolean export;
-
-  /**
-   * Create the catalog
-   * If set to <code>false</code>, only the SQL-script is created and the
-   * database is not touched.
-   *
-   * @parameter property=org.hibernate.cfg.AvailableSettings.HBM2DDL_IMPORT_FILES_SQL_EXTRACTOR default-value="false"
-   * @since 2.0
-   */
-  private boolean createNamespaces; // TODO handle in configure-Method
-
-  /**
    * Output file.
+   * <p>
+   * If the specified filename is not absolut, the file will be created
+   * relative to the project build directory
+   * (<code>project.build.directory</code>).
    *
-   * @parameter property="hibernate.export.schema.filename" default-value="${project.build.directory}/schema.sql"
+   * @parameter property="hibernate.schema.export.create" default-value="schema.sql"
    * @since 1.0
    */
   private String outputFile;
 
-  /**
-   * Delimiter in output-file.
-   *
-   * @parameter property="hibernate.export.schema.delimiter" default-value=";"
-   * @since 1.0
-   */
-  private String delimiter;
 
-  /**
-   * Format output-file.
-   *
-   * @parameter property="hibernate.export.schema.format" default-value="true"
-   * @since 1.0
-   */
-  private boolean format;
+  @Override
+  public final void execute()
+    throws
+      MojoFailureException,
+      MojoExecutionException
+  {
+    super.execute(outputFile);
+  }
 
 
   @Override

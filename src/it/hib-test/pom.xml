@@ -47,6 +47,7 @@
         <configuration>
           <!-- Generat schema only, no DB connection needed -->
           <export>false</export>
+          <format>true</format>
         </configuration>
         <executions>
           <execution>

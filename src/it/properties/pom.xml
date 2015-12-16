@@ -43,6 +43,9 @@
             <goals>
               <goal>create</goal>
             </goals>
+            <configuration>
+              <format>true</format>
+            </configuration>
           </execution>
         </executions>
       </plugin>

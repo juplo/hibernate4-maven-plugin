@@ -62,6 +62,7 @@
 					<driver>com.mysql.jdbc.Driver</driver>
 					<dialect>org.hibernate.dialect.MySQLDialect</dialect>
 					-->
+					<format>true</format>
 				</configuration>
 				<executions>
 					<execution>

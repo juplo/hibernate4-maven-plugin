@@ -26,8 +26,6 @@ import org.apache.maven.plugin.logging.Log;
  */
 public class ModificationTracker
 {
-  public final static String MD5S = "hibernate-generatedschema.md5s";
-
   private Map<String,String> properties;
   private Map<String,String> classes;
 
@@ -41,13 +39,23 @@ public class ModificationTracker
   private final Log log;
 
 
-  ModificationTracker(String buildDirectory, Log log)
+  ModificationTracker(String buildDirectory, String filename, Log log)
       throws
         NoSuchAlgorithmException
   {
     propertyNames = new HashSet<String>();
     classNames = new HashSet<String>();
-    saved = new File(buildDirectory + File.separator + MD5S);
+    File output = new File(filename + ".md5s");
+    if (output.isAbsolute())
+    {
+      saved = output;
+    }
+    else
+    {
+      // Interpret relative file path relative to build directory
+      saved = new File(buildDirectory, output.getPath());
+      log.debug("Adjusted relative path, resulting path is " + saved.getPath());
+    }
     digest = java.security.MessageDigest.getInstance("MD5");
     this.log = log;
   }
@@ -79,7 +87,7 @@ public class ModificationTracker
   }
 
 
-  boolean check(String name, InputStream is) throws IOException
+  boolean track(String name, InputStream is) throws IOException
   {
     boolean result = check(classes, name, calculate(is));
     classNames.add(name);
@@ -87,22 +95,33 @@ public class ModificationTracker
     return result;
   }
 
+
   boolean check(String name, String property)
   {
-    boolean result = check(properties, name, property);
     propertyNames.add(name);
+    return check(properties, name, property);
+  }
+
+  boolean track(String name, String property)
+  {
+    boolean result = check(name, property);
     modified |= result;
     return result;
   }
 
-  boolean check(Properties properties)
+  boolean track(Properties properties)
   {
     boolean result = false;
     for (String name : properties.stringPropertyNames())
-      result |= check(name, properties.getProperty(name));
+      result |= track(name, properties.getProperty(name));
     return result;
   }
 
+
+  void touch()
+  {
+    modified = true;
+  }
 
   boolean modified()
   {

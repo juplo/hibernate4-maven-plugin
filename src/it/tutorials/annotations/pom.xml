@@ -60,6 +60,7 @@
                 </executions>
                 <configuration>
                     <scanTestClasses>true</scanTestClasses>
+                    <format>true</format>
                 </configuration>
             </plugin>
         </plugins>

@@ -44,9 +44,12 @@ import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.boot.spi.MetadataImplementor;
 import static org.hibernate.cfg.AvailableSettings.DIALECT;
 import static org.hibernate.cfg.AvailableSettings.DRIVER;
+import static org.hibernate.cfg.AvailableSettings.FORMAT_SQL;
+import static org.hibernate.cfg.AvailableSettings.HBM2DLL_CREATE_NAMESPACES;
 import static org.hibernate.cfg.AvailableSettings.IMPLICIT_NAMING_STRATEGY;
 import static org.hibernate.cfg.AvailableSettings.PASS;
 import static org.hibernate.cfg.AvailableSettings.PHYSICAL_NAMING_STRATEGY;
+import static org.hibernate.cfg.AvailableSettings.SHOW_SQL;
 import static org.hibernate.cfg.AvailableSettings.USER;
 import static org.hibernate.cfg.AvailableSettings.URL;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
@@ -70,7 +73,13 @@ import org.scannotation.AnnotationDB;
  */
 public abstract class AbstractSchemaMojo extends AbstractMojo
 {
-  public final static String EXPORT_SKIPPED_PROPERTY = "hibernate.export.skipped";
+  public final static String EXPORT = "hibernate.schema.export";
+  public final static String DELIMITER = "hibernate.schema.delimiter";
+  public final static String OUTPUTDIRECTORY = "project.build.outputDirectory";
+  public final static String SCAN_DEPENDENCIES = "hibernate.schema.scan.dependencies";
+  public final static String SCAN_TESTCLASSES = "hibernate.schema.scan.test_classes";
+  public final static String TEST_OUTPUTDIRECTORY = "project.build.testOutputDirectory";
+  public final static String SKIPPED = "hibernate.schema.skipped";
 
   private final static Pattern SPLIT = Pattern.compile("[^,\\s]+");
 
@@ -97,60 +106,24 @@ public abstract class AbstractSchemaMojo extends AbstractMojo
    */
   String buildDirectory;
 
-  /**
-   * Classes-Directory to scan.
-   * <p>
-   * This parameter defaults to the maven build-output-directory for classes.
-   * Additionally, all dependencies are scanned for annotated classes.
-   *
-   * @parameter property="project.build.outputDirectory"
-   * @since 1.0
-   */
-  private String outputDirectory;
+
+  /** Parameters to configure the genaration of the SQL *********************/
 
   /**
-   * Whether to scan test-classes too, or not.
+   * Export the database-schma to the database.
+   * If set to <code>false</code>, only the SQL-script is created and the
+   * database is not touched.
    * <p>
-   * If this parameter is set to <code>true</code> the test-classes of the
-   * artifact will be scanned for hibernate-annotated classes additionally.
+   * <strong>Important:</strong>
+   * This configuration value can only be configured through the
+   * <code>pom.xml</code>, or by the definition of a system-property, because
+   * it is not known by Hibernate nor JPA and, hence, not picked up from
+   * their configuration!
    *
-   * @parameter property="hibernate.export.scan_testclasses" default-value="false"
-   * @since 1.0.1
+   * @parameter property="hibernate.schema.export" default-value="true"
+   * @since 2.0
    */
-  private boolean scanTestClasses;
-
-  /**
-   * Dependency-Scopes, that should be scanned for annotated classes.
-   * <p>
-   * By default, only dependencies in the scope <code>compile</code> are
-   * scanned for annotated classes. Multiple scopes can be seperated by
-   * white space or commas.
-   * <p>md5s
-   * If you do not want any dependencies to be scanned for annotated
-   * classes, set this parameter to <code>none</code>.
-   * <p>
-   * The plugin does not scan for annotated classes in transitive
-   * dependencies. If some of your annotated classes are hidden in a
-   * transitive dependency, you can simply add that dependency explicitly.
-   *
-   * @parameter property="hibernate.export.scan_dependencies" default-value="compile"
-   * @since 1.0.3
-   */
-  private String scanDependencies;
-
-  /**
-   * Test-Classes-Directory to scan.
-   * <p>
-   * This parameter defaults to the maven build-output-directory for
-   * test-classes.
-   * <p>
-   * This parameter is only used, when <code>scanTestClasses</code> is set
-   * to <code>true</code>!
-   *
-   * @parameter property="project.build.testOutputDirectory"
-   * @since 1.0.2
-   */
-  private String testOutputDirectory;
+  Boolean export;
 
   /**
    * Skip execution
@@ -162,8 +135,14 @@ public abstract class AbstractSchemaMojo extends AbstractMojo
    * <p>
    * The execution is skipped automatically, if no modified or newly added
    * annotated classes are found and the dialect was not changed.
+   * <p>
+   * <strong>Important:</strong>
+   * This configuration value can only be configured through the
+   * <code>pom.xml</code>, or by the definition of a system-property, because
+   * it is not known by Hibernate nor JPA and, hence, not picked up from
+   * their configuration!
    *
-   * @parameter property="hibernate.skip" default-value="${maven.test.skip}"
+   * @parameter property="hibernate.schema.skip" default-value="${maven.test.skip}"
    * @since 1.0
    */
   private boolean skip;
@@ -175,11 +154,155 @@ public abstract class AbstractSchemaMojo extends AbstractMojo
    * where found and the dialect was not changed.
    * <p>
    * <code>skip</code> takes precedence over <code>force</code>.
+   * <p>
+   * <strong>Important:</strong>
+   * This configuration value can only be configured through the
+   * <code>pom.xml</code>, or by the definition of a system-property, because
+   * it is not known by Hibernate nor JPA and, hence, not picked up from
+   * their configuration!
    *
-   * @parameter property="hibernate.export.force" default-value="false"
+   * @parameter property="hibernate.schema.force" default-value="false"
    * @since 1.0
    */
   private boolean force;
+
+  /**
+   * Hibernate dialect.
+   *
+   * @parameter property="hibernate.dialect"
+   * @since 1.0
+   */
+  private String dialect;
+
+  /**
+   * Delimiter in output-file.
+   * <p>
+   * <strong>Important:</strong>
+   * This configuration value can only be configured through the
+   * <code>pom.xml</code>, or by the definition of a system-property, because
+   * it is not known by Hibernate nor JPA and, hence, not picked up from
+   * their configuration!
+   *
+   * @parameter property="hibernate.schema.delimiter" default-value=";"
+   * @since 1.0
+   */
+  String delimiter;
+
+  /**
+   * Show the generated SQL in the command-line output.
+   *
+   * @parameter property="hibernate.show_sql"
+   * @since 1.0
+   */
+  Boolean show;
+
+  /**
+   * Format output-file.
+   *
+   * @parameter property="hibernate.format_sql"
+   * @since 1.0
+   */
+  Boolean format;
+
+  /**
+   * Specifies whether to automatically create also the database schema/catalog.
+   *
+   * @parameter property="hibernate.hbm2dll.create_namespaces" default-value="false"
+   * @since 2.0
+   */
+  Boolean createNamespaces;
+
+  /**
+   * Implicit naming strategy
+   *
+   * @parameter property="hibernate.implicit_naming_strategy"
+   * @since 2.0
+   */
+  private String implicitNamingStrategy;
+
+  /**
+   * Physical naming strategy
+   *
+   * @parameter property="hibernate.physical_naming_strategy"
+   * @since 2.0
+   */
+  private String physicalNamingStrategy;
+
+  /**
+   * Classes-Directory to scan.
+   * <p>
+   * This parameter defaults to the maven build-output-directory for classes.
+   * Additionally, all dependencies are scanned for annotated classes.
+   * <p>
+   * <strong>Important:</strong>
+   * This configuration value can only be configured through the
+   * <code>pom.xml</code>, or by the definition of a system-property, because
+   * it is not known by Hibernate nor JPA and, hence, not picked up from
+   * their configuration!
+   *
+   * @parameter property="project.build.outputDirectory"
+   * @since 1.0
+   */
+  private String outputDirectory;
+
+  /**
+   * Dependency-Scopes, that should be scanned for annotated classes.
+   * <p>
+   * By default, only dependencies in the scope <code>compile</code> are
+   * scanned for annotated classes. Multiple scopes can be seperated by
+   * white space or commas.
+   * <p>
+   * If you do not want any dependencies to be scanned for annotated
+   * classes, set this parameter to <code>none</code>.
+   * <p>
+   * The plugin does not scan for annotated classes in transitive
+   * dependencies. If some of your annotated classes are hidden in a
+   * transitive dependency, you can simply add that dependency explicitly.
+   *
+   * @parameter property="hibernate.schema.scan.dependencies" default-value="compile"
+   * @since 1.0.3
+   */
+  private String scanDependencies;
+
+  /**
+   * Whether to scan test-classes too, or not.
+   * <p>
+   * If this parameter is set to <code>true</code> the test-classes of the
+   * artifact will be scanned for hibernate-annotated classes additionally.
+   * <p>
+   * <strong>Important:</strong>
+   * This configuration value can only be configured through the
+   * <code>pom.xml</code>, or by the definition of a system-property, because
+   * it is not known by Hibernate nor JPA and, hence, not picked up from
+   * their configuration!
+   *
+   * @parameter property="hibernate.schema.scan.test_classes" default-value="false"
+   * @since 1.0.1
+   */
+  private Boolean scanTestClasses;
+
+  /**
+   * Test-Classes-Directory to scan.
+   * <p>
+   * This parameter defaults to the maven build-output-directory for
+   * test-classes.
+   * <p>
+   * This parameter is only used, when <code>scanTestClasses</code> is set
+   * to <code>true</code>!
+   * <p>
+   * <strong>Important:</strong>
+   * This configuration value can only be configured through the
+   * <code>pom.xml</code>, or by the definition of a system-property, because
+   * it is not known by Hibernate nor JPA and, hence, not picked up from
+   * their configuration!
+   *
+   * @parameter property="project.build.testOutputDirectory"
+   * @since 1.0.2
+   */
+  private String testOutputDirectory;
+
+
+  /** Conection parameters *************************************************/
 
   /**
    * SQL-Driver name.
@@ -213,29 +336,8 @@ public abstract class AbstractSchemaMojo extends AbstractMojo
    */
   private String password;
 
-  /**
-   * Hibernate dialect.
-   *
-   * @parameter property="hibernate.dialect"
-   * @since 1.0
-   */
-  private String dialect;
 
-  /**
-   * Implicit naming strategy
-   *
-   * @parameter property=IMPLICIT_NAMING_STRATEGY
-   * @since 2.0
-   */
-  private String implicitNamingStrategy;
-
-  /**
-   * Physical naming strategy
-   *
-   * @parameter property=PHYSICAL_NAMING_STRATEGY
-   * @since 2.0
-   */
-  private String physicalNamingStrategy;
+  /** Parameters to locate configuration sources ****************************/
 
   /**
    * Path to a file or name of a ressource with hibernate properties.
@@ -302,8 +404,8 @@ public abstract class AbstractSchemaMojo extends AbstractMojo
   private String mappings;
 
 
-  @Override
-  public final void execute()
+
+  public final void execute(String filename)
     throws
       MojoFailureException,
       MojoExecutionException
@@ -311,14 +413,14 @@ public abstract class AbstractSchemaMojo extends AbstractMojo
     if (skip)
     {
       getLog().info("Execution of hibernate-maven-plugin was skipped!");
-      project.getProperties().setProperty(EXPORT_SKIPPED_PROPERTY, "true");
+      project.getProperties().setProperty(SKIPPED, "true");
       return;
     }
 
     ModificationTracker tracker;
     try
     {
-      tracker = new ModificationTracker(buildDirectory, getLog());
+      tracker = new ModificationTracker(buildDirectory, filename, getLog());
     }
     catch (NoSuchAlgorithmException e)
     {
@@ -353,10 +455,10 @@ public abstract class AbstractSchemaMojo extends AbstractMojo
       properties.putAll(loadPersistenceUnit(classLoaderService, properties));
 
       /** Overwriting/Completing configuration */
-      configure(properties);
+      configure(properties, tracker);
 
       /** Check configuration for modifications */
-      if(tracker.check(properties))
+      if(tracker.track(properties))
         getLog().debug("Configuration has changed.");
       else
         getLog().debug("Configuration unchanged.");
@@ -384,7 +486,7 @@ public abstract class AbstractSchemaMojo extends AbstractMojo
         else
         {
           getLog().info("Skipping schema generation!");
-          project.getProperties().setProperty(EXPORT_SKIPPED_PROPERTY, "true");
+          project.getProperties().setProperty(SKIPPED, "true");
           return;
         }
       }
@@ -563,18 +665,50 @@ public abstract class AbstractSchemaMojo extends AbstractMojo
     }
   }
 
-  private void configure(Properties properties)
+  private void configure(Properties properties, ModificationTracker tracker)
       throws MojoFailureException
   {
-    /** Overwrite values from properties-file or set, if given */
+    /**
+     * Special treatment for the configuration-value "export": if it is
+     * switched to "true", the genearation fo the schema should be forced!
+     */
+    if (tracker.check(EXPORT, export.toString()) && export)
+      tracker.touch();
 
-    configure(properties, driver, DRIVER, JDBC_DRIVER);
-    configure(properties, url, URL, JDBC_URL);
-    configure(properties, username, USER, JDBC_USER);
-    configure(properties, password, PASS, JDBC_PASSWORD);
-    configure(properties, dialect, DIALECT);
-    configure(properties, implicitNamingStrategy, IMPLICIT_NAMING_STRATEGY);
-    configure(properties, physicalNamingStrategy, PHYSICAL_NAMING_STRATEGY);
+    /**
+     * Configure the generation of the SQL.
+     * Overwrite values from properties-file if the configuration parameter is
+     * known to Hibernate.
+     */
+    dialect = configure(properties, dialect, DIALECT);
+    tracker.track(DELIMITER, delimiter); // << not reflected in hibernate configuration!
+    format = configure(properties, format, FORMAT_SQL);
+    createNamespaces = configure(properties, createNamespaces, HBM2DLL_CREATE_NAMESPACES);
+    implicitNamingStrategy = configure(properties, implicitNamingStrategy, IMPLICIT_NAMING_STRATEGY);
+    physicalNamingStrategy = configure(properties, physicalNamingStrategy, PHYSICAL_NAMING_STRATEGY);
+    tracker.track(OUTPUTDIRECTORY, outputDirectory); // << not reflected in hibernate configuration!
+    tracker.track(SCAN_DEPENDENCIES, scanDependencies); // << not reflected in hibernate configuration!
+    tracker.track(SCAN_TESTCLASSES, scanTestClasses.toString()); // << not reflected in hibernate configuration!
+    tracker.track(TEST_OUTPUTDIRECTORY, testOutputDirectory); // << not reflected in hibernate configuration!
+
+    /**
+     * Special treatment for the configuration-value "show": a change of its
+     * configured value should not lead to a regeneration of the database
+     * schama!
+     */
+    if (show == null)
+      show = Boolean.valueOf(properties.getProperty(SHOW_SQL));
+    else
+      properties.setProperty(SHOW_SQL, show.toString());
+
+    /**
+     * Configure the connection parameters.
+     * Overwrite values from properties-file.
+     */
+    driver = configure(properties, driver, DRIVER, JDBC_DRIVER);
+    url = configure(properties, url, URL, JDBC_URL);
+    username = configure(properties, username, USER, JDBC_USER);
+    password = configure(properties, password, PASS, JDBC_PASSWORD);
 
     if (properties.isEmpty())
     {
@@ -587,26 +721,30 @@ public abstract class AbstractSchemaMojo extends AbstractMojo
       getLog().info("  " + entry.getKey() + " = " + entry.getValue());
   }
 
-  private void configure(
+  private String configure(
       Properties properties,
       String value,
       String key,
       String alternativeKey
       )
   {
-    configure(properties, value, key);
-    if (properties.containsKey(key) && properties.containsKey(alternativeKey))
+    value = configure(properties, value, key);
+    if (value == null)
+      return properties.getProperty(alternativeKey);
+
+    if (properties.containsKey(alternativeKey))
     {
       getLog().warn(
           "Ignoring property " + alternativeKey + "=" +
           properties.getProperty(alternativeKey) + " in favour for property " +
           key + "=" + properties.getProperty(key)
           );
-      properties.remove(JDBC_DRIVER);
+      properties.remove(alternativeKey);
     }
+    return properties.getProperty(alternativeKey);
   }
 
-  private void configure(Properties properties, String value, String key)
+  private String configure(Properties properties, String value, String key)
   {
     if (value != null)
     {
@@ -619,6 +757,23 @@ public abstract class AbstractSchemaMojo extends AbstractMojo
         getLog().debug("Using the value " + value + " for property " + key);
       properties.setProperty(key, value);
     }
+    return properties.getProperty(key);
+  }
+
+  private boolean configure(Properties properties, Boolean value, String key)
+  {
+    if (value != null)
+    {
+      if (properties.containsKey(key))
+        getLog().debug(
+            "Overwriting property " + key + "=" + properties.getProperty(key) +
+            " with the value " + value
+            );
+      else
+        getLog().debug("Using the value " + value + " for property " + key);
+      properties.setProperty(key, value.toString());
+    }
+    return Boolean.valueOf(properties.getProperty(key));
   }
 
   private void addMappings(MetadataSources sources, ModificationTracker tracker)
@@ -648,7 +803,7 @@ public abstract class AbstractSchemaMojo extends AbstractMojo
             if (file.isDirectory())
               // TODO: add support to read all mappings under a directory
               throw new MojoFailureException(file.getAbsolutePath() + " is a directory");
-            if (tracker.check(filename, new FileInputStream(file)))
+            if (tracker.track(filename, new FileInputStream(file)))
               getLog().debug("Found new or modified mapping-file: " + filename);
             else
               getLog().debug("mapping-file unchanged: " + filename);
@@ -746,7 +901,7 @@ public abstract class AbstractSchemaMojo extends AbstractMojo
           }
           else
           {
-            if (tracker.check(packageName, is))
+            if (tracker.track(packageName, is))
               getLog().debug("New or modified package: " + packageName);
             else
               getLog().debug("Unchanged package: " + packageName);
@@ -764,7 +919,7 @@ public abstract class AbstractSchemaMojo extends AbstractMojo
         InputStream is =
             annotatedClass
                 .getResourceAsStream(resourceName);
-        if (tracker.check(name, is))
+        if (tracker.track(name, is))
           getLog().debug("New or modified class: " + name);
         else
           getLog().debug("Unchanged class: " + name);

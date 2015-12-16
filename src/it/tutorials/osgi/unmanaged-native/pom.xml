@@ -86,6 +86,9 @@
 				<groupId>de.juplo</groupId>
 				<artifactId>hibernate-maven-plugin</artifactId>
 				<version>${h4mp.version}</version>
+				<configuration>
+					<format>true</format>
+				</configuration>
 				<executions>
 					<execution>
 						<goals>
