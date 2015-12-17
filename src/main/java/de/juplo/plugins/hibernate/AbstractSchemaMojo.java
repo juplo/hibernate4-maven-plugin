@@ -6,13 +6,13 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.MalformedURLException;
 import java.net.URL;
-import java.net.URLClassLoader;
 import java.security.NoSuchAlgorithmException;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.LinkedList;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -33,6 +33,8 @@ import org.apache.maven.project.MavenProject;
 import org.hibernate.boot.MetadataBuilder;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.cfgxml.internal.ConfigLoader;
+import org.hibernate.boot.cfgxml.spi.LoadedConfig;
+import org.hibernate.boot.cfgxml.spi.MappingReference;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
 import org.hibernate.boot.registry.BootstrapServiceRegistry;
@@ -40,6 +42,7 @@ import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.boot.spi.MetadataImplementor;
 import static org.hibernate.cfg.AvailableSettings.DIALECT;
@@ -76,6 +79,7 @@ public abstract class AbstractSchemaMojo extends AbstractMojo
   public final static String EXPORT = "hibernate.schema.export";
   public final static String DELIMITER = "hibernate.schema.delimiter";
   public final static String OUTPUTDIRECTORY = "project.build.outputDirectory";
+  public final static String SCAN_CLASSES = "hibernate.schema.scan.classes";
   public final static String SCAN_DEPENDENCIES = "hibernate.schema.scan.dependencies";
   public final static String SCAN_TESTCLASSES = "hibernate.schema.scan.test_classes";
   public final static String TEST_OUTPUTDIRECTORY = "project.build.testOutputDirectory";
@@ -83,6 +87,7 @@ public abstract class AbstractSchemaMojo extends AbstractMojo
 
   private final static Pattern SPLIT = Pattern.compile("[^,\\s]+");
 
+  private final Set<String> packages = new HashSet<String>();
 
   /**
    * The maven project.
@@ -229,6 +234,18 @@ public abstract class AbstractSchemaMojo extends AbstractMojo
   private String physicalNamingStrategy;
 
   /**
+   * Wether the project should be scanned for annotated-classes, or not
+   * <p>
+   * This parameter is intended to allow overwriting of the parameter
+   * <code>exclude-unlisted-classes</code> of a <code>persistence-unit</code>.
+   * If not specified, it defaults to <code>true</code>
+   *
+   * @parameter property="hibernate.schema.scan.classes"
+   * @since 2.0
+   */
+  private Boolean scanClasses;
+
+  /**
    * Classes-Directory to scan.
    * <p>
    * This parameter defaults to the maven build-output-directory for classes.
@@ -265,7 +282,8 @@ public abstract class AbstractSchemaMojo extends AbstractMojo
   private String scanDependencies;
 
   /**
-   * Whether to scan test-classes too, or not.
+   * Whether to scan the test-branch of the project for annotated classes, or
+   * not.
    * <p>
    * If this parameter is set to <code>true</code> the test-classes of the
    * artifact will be scanned for hibernate-annotated classes additionally.
@@ -439,7 +457,7 @@ public abstract class AbstractSchemaMojo extends AbstractMojo
       tracker.load();
 
       /** Create the ClassLoader */
-      URLClassLoader classLoader = createClassLoader();
+      MutableClassLoader classLoader = createClassLoader();
 
       /** Create a BootstrapServiceRegistry with the created ClassLoader */
       BootstrapServiceRegistry bootstrapServiceRegitry =
@@ -454,8 +472,13 @@ public abstract class AbstractSchemaMojo extends AbstractMojo
 
       /** Loading and merging configuration */
       properties.putAll(loadProperties(configLoader));
-      properties.putAll(loadConfig(configLoader));
-      properties.putAll(loadPersistenceUnit(classLoaderService, properties));
+      LoadedConfig config = loadConfig(configLoader);
+      if (config != null)
+        properties.putAll(config.getConfigurationValues());
+      ParsedPersistenceXmlDescriptor unit =
+          loadPersistenceUnit(classLoaderService, properties);
+      if (unit != null)
+        properties.putAll(unit.getProperties());
 
       /** Overwriting/Completing configuration */
       configure(properties, tracker);
@@ -472,10 +495,60 @@ public abstract class AbstractSchemaMojo extends AbstractMojo
               .applySettings(properties)
               .addService(ConnectionProvider.class, connectionProvider)
               .build();
-
-      /** Load Mappings */
       MetadataSources sources = new MetadataSources(serviceRegistry);
-      addAnnotatedClasses(sources, classLoaderService, tracker);
+
+      /** Add the remaining class-path-elements */
+      completeClassPath(classLoader);
+
+      /** Apply mappings from hibernate-configuration, if present */
+      if (config != null)
+      {
+        for (MappingReference mapping : config.getMappingReferences())
+          mapping.apply(sources);
+      }
+
+      Set<String> classes;
+      if (unit == null)
+      {
+        /** No persistent unit: default behaviour */
+        if (scanClasses == null)
+          scanClasses = true;
+        Set<URL> urls = new HashSet<URL>();
+        if (scanClasses)
+          addRoot(urls, outputDirectory);
+        if (scanTestClasses)
+          addRoot(urls, testOutputDirectory);
+        addDependencies(urls);
+        classes = scanUrls(urls);
+      }
+      else
+      {
+        /** Follow configuration in persisten unit */
+        if (scanClasses == null)
+          scanClasses = !unit.isExcludeUnlistedClasses();
+        Set<URL> urls = new HashSet<URL>();
+        if (scanClasses)
+        {
+          /**
+           * Scan the root of the persiten unit and configured jars for
+           * annotated classes
+           */
+          urls.add(unit.getPersistenceUnitRootUrl());
+          for (URL url : unit.getJarFileUrls())
+            urls.add(url);
+        }
+        if (scanTestClasses)
+          addRoot(urls, testOutputDirectory);
+        classes = scanUrls(urls);
+        for (String className : unit.getManagedClassNames())
+          classes.add(className);
+      }
+
+      /** Add the configured/collected annotated classes */
+      for (String className : classes)
+        addAnnotated(className, sources, classLoaderService, tracker);
+
+      /** Add explicitly configured classes */
       addMappings(sources, tracker);
 
       /** Skip execution, if mapping and configuration is unchanged */
@@ -560,40 +633,56 @@ public abstract class AbstractSchemaMojo extends AbstractMojo
       MojoExecutionException;
 
 
-  private URLClassLoader createClassLoader() throws MojoExecutionException
+  private MutableClassLoader createClassLoader() throws MojoExecutionException
   {
     try
     {
       getLog().debug("Creating ClassLoader for project-dependencies...");
-      List<String> classpathFiles = project.getCompileClasspathElements();
-      if (scanTestClasses)
-        classpathFiles.addAll(project.getTestClasspathElements());
-      List<URL> urls = new LinkedList<URL>();
+      LinkedHashSet<URL> urls = new LinkedHashSet<URL>();
       File file;
+
       file = new File(testOutputDirectory);
       if (!file.exists())
       {
-        getLog().info("creating test-output-directory: " + testOutputDirectory);
+        getLog().info("Creating test-output-directory: " + testOutputDirectory);
         file.mkdirs();
       }
       urls.add(file.toURI().toURL());
+
       file = new File(outputDirectory);
       if (!file.exists())
       {
-        getLog().info("creating output-directory: " + outputDirectory);
+        getLog().info("Creating output-directory: " + outputDirectory);
         file.mkdirs();
       }
       urls.add(file.toURI().toURL());
+
+      return new MutableClassLoader(urls, getLog());
+    }
+    catch (Exception e)
+    {
+      getLog().error("Error while creating ClassLoader!", e);
+      throw new MojoExecutionException(e.getMessage());
+    }
+  }
+
+  private void completeClassPath(MutableClassLoader classLoader)
+      throws
+        MojoExecutionException
+  {
+    try
+    {
+      getLog().debug("Completing class-paths of the ClassLoader for project-dependencies...");
+      List<String> classpathFiles = project.getCompileClasspathElements();
+      if (scanTestClasses)
+        classpathFiles.addAll(project.getTestClasspathElements());
+      LinkedHashSet<URL> urls = new LinkedHashSet<URL>();
       for (String pathElement : classpathFiles)
       {
         getLog().debug("Dependency: " + pathElement);
         urls.add(new File(pathElement).toURI().toURL());
       }
-      return
-          new URLClassLoader(
-              urls.toArray(new URL[urls.size()]),
-              getClass().getClassLoader()
-              );
+      classLoader.add(urls);
     }
     catch (Exception e)
     {
@@ -640,7 +729,7 @@ public abstract class AbstractSchemaMojo extends AbstractMojo
     }
   }
 
-  private Map loadConfig(ConfigLoader configLoader)
+  private LoadedConfig loadConfig(ConfigLoader configLoader)
       throws MojoExecutionException
   {
     /** Try to read configuration from configuration-file */
@@ -648,15 +737,12 @@ public abstract class AbstractSchemaMojo extends AbstractMojo
     {
       try
       {
-        return
-            configLoader
-                .loadConfigXmlResource("hibernate.cfg.xml")
-                .getConfigurationValues();
+        return configLoader.loadConfigXmlResource("hibernate.cfg.xml");
       }
       catch (ConfigurationException e)
       {
         getLog().debug(e.getMessage());
-        return Collections.EMPTY_MAP;
+        return null;
       }
     }
     else
@@ -667,13 +753,12 @@ public abstract class AbstractSchemaMojo extends AbstractMojo
         if (file.exists())
         {
           getLog().info("Reading configuration from file " + hibernateConfig + "...");
-          return configLoader.loadConfigXmlFile(file).getConfigurationValues();
+          return configLoader.loadConfigXmlFile(file);
         }
         else
-          return
-              configLoader
-                  .loadConfigXmlResource(hibernateConfig)
-                  .getConfigurationValues();
+        {
+          return configLoader.loadConfigXmlResource(hibernateConfig);
+        }
       }
       catch (ConfigurationException e)
       {
@@ -824,7 +909,7 @@ public abstract class AbstractSchemaMojo extends AbstractMojo
             if (tracker.track(filename, new FileInputStream(file)))
               getLog().debug("Found new or modified mapping-file: " + filename);
             else
-              getLog().debug("mapping-file unchanged: " + filename);
+              getLog().debug("Mapping-file unchanged: " + filename);
 
             sources.addFile(file);
           }
@@ -839,60 +924,65 @@ public abstract class AbstractSchemaMojo extends AbstractMojo
     }
   }
 
-  private void addAnnotatedClasses(
-      MetadataSources sources,
-      ClassLoaderService classLoaderService,
-      ModificationTracker tracker
-      )
-      throws
-        MojoFailureException,
-        MojoExecutionException
-
+  private void addRoot(Set<URL> urls, String path) throws MojoFailureException
   {
     try
     {
-      AnnotationDB db = new AnnotationDB();
-      File dir;
-
-      dir = new File(outputDirectory);
+      File dir = new File(outputDirectory);
       if (dir.exists())
       {
-        getLog().info("Scanning directory " + dir.getAbsolutePath() + " for annotated classes...");
-        URL dirUrl = dir.toURI().toURL();
-        db.scanArchives(dirUrl);
+        getLog().info("Adding " + dir.getAbsolutePath() + " to the list of roots to scan...");
+        urls.add(dir.toURI().toURL());
       }
+    }
+    catch (MalformedURLException e)
+    {
+      getLog().error("error while adding the project-root to the list of roots to scan!", e);
+      throw new MojoFailureException(e.getMessage());
+    }
+  }
 
-      if (scanTestClasses)
-      {
-        dir = new File(testOutputDirectory);
-        if (dir.exists())
-        {
-          getLog().info("Scanning directory " + dir.getAbsolutePath() + " for annotated classes...");
-          URL dirUrl = dir.toURI().toURL();
-          db.scanArchives(dirUrl);
-        }
-      }
-
+  private void addDependencies(Set<URL> urls) throws MojoFailureException
+  {
+    try
+    {
       if (scanDependencies != null)
       {
         Matcher matcher = SPLIT.matcher(scanDependencies);
         while (matcher.find())
         {
-          getLog().info("Scanning dependencies for scope " + matcher.group());
+          getLog().info("Adding dependencies from scope " + matcher.group() + " to the list of roots to scan");
           for (Artifact artifact : project.getDependencyArtifacts())
           {
             if (!artifact.getScope().equalsIgnoreCase(matcher.group()))
               continue;
             if (artifact.getFile() == null)
             {
-              getLog().warn("Cannot scan dependency " + artifact.getId() + ": no JAR-file available!");
+              getLog().warn("Cannot add dependency " + artifact.getId() + ": no JAR-file available!");
               continue;
             }
-            getLog().info("Scanning dependency " + artifact.getId() + " for annotated classes...");
-            db.scanArchives(artifact.getFile().toURI().toURL());
+            getLog().info("Adding dependencies from scope " + artifact.getId() + " to the list of roots to scan");
+            urls.add(artifact.getFile().toURI().toURL());
           }
         }
       }
+    }
+    catch (MalformedURLException e)
+    {
+      getLog().error("Error while adding dependencies to the list of roots to scan!", e);
+      throw new MojoFailureException(e.getMessage());
+    }
+  }
+
+  private Set<String> scanUrls(Set<URL> scanRoots)
+      throws
+        MojoFailureException
+  {
+    try
+    {
+      AnnotationDB db = new AnnotationDB();
+      for (URL root : scanRoots)
+        db.scanArchives(root);
 
       Set<String> classes = new HashSet<String>();
       if (db.getAnnotationIndex().containsKey(Entity.class.getName()))
@@ -902,48 +992,7 @@ public abstract class AbstractSchemaMojo extends AbstractMojo
       if (db.getAnnotationIndex().containsKey(Embeddable.class.getName()))
         classes.addAll(db.getAnnotationIndex().get(Embeddable.class.getName()));
 
-      Set<String> packages = new HashSet<String>();
-
-      for (String name : classes)
-      {
-        Class<?> annotatedClass = classLoaderService.classForName(name);
-        String packageName = annotatedClass.getPackage().getName();
-        if (!packages.contains(packageName))
-        {
-          InputStream is =
-              annotatedClass.getResourceAsStream("package-info.class");
-          if (is == null)
-          {
-            // No compiled package-info available: no package-level annotations!
-            getLog().debug("Package " + packageName + " is not annotated.");
-          }
-          else
-          {
-            if (tracker.track(packageName, is))
-              getLog().debug("New or modified package: " + packageName);
-            else
-              getLog().debug("Unchanged package: " + packageName);
-            getLog().info("Adding annotated package " + packageName);
-            sources.addPackage(packageName);
-          }
-          packages.add(packageName);
-        }
-        String resourceName = annotatedClass.getName();
-        resourceName =
-            resourceName.substring(
-                resourceName.lastIndexOf(".") + 1,
-                resourceName.length()
-                ) + ".class";
-        InputStream is =
-            annotatedClass
-                .getResourceAsStream(resourceName);
-        if (tracker.track(name, is))
-          getLog().debug("New or modified class: " + name);
-        else
-          getLog().debug("Unchanged class: " + name);
-        getLog().info("Adding annotated class " + annotatedClass);
-        sources.addAnnotatedClass(annotatedClass);
-      }
+      return classes;
     }
     catch (Exception e)
     {
@@ -952,7 +1001,72 @@ public abstract class AbstractSchemaMojo extends AbstractMojo
     }
   }
 
-  private Properties loadPersistenceUnit(
+  private void addAnnotated(
+      String name,
+      MetadataSources sources,
+      ClassLoaderService classLoaderService,
+      ModificationTracker tracker
+      )
+      throws
+        MojoFailureException,
+        MojoExecutionException
+  {
+    try
+    {
+      getLog().info("Adding annotated resource: " + name);
+      String packageName;
+
+      try
+      {
+        Class<?> annotatedClass = classLoaderService.classForName(name);
+        String resourceName = annotatedClass.getName();
+        resourceName =
+            resourceName.substring(
+                resourceName.lastIndexOf(".") + 1,
+                resourceName.length()
+                ) + ".class";
+        InputStream is = annotatedClass.getResourceAsStream(resourceName);
+        if (tracker.track(name, is))
+          getLog().debug("New or modified class: " + name);
+        else
+          getLog().debug("Unchanged class: " + name);
+        sources.addAnnotatedClass(annotatedClass);
+        packageName = annotatedClass.getPackage().getName();
+      }
+      catch(ClassLoadingException e)
+      {
+        packageName = name;
+      }
+
+      if (!packages.contains(packageName))
+      {
+        String resource = packageName.replace('.', '/') + "/package-info.class";
+        InputStream is = classLoaderService.locateResourceStream(resource);
+        if (is == null)
+        {
+          // No compiled package-info available: no package-level annotations!
+          getLog().debug("Package " + packageName + " is not annotated.");
+        }
+        else
+        {
+          if (tracker.track(packageName, is))
+            getLog().debug("New or modified package: " + packageName);
+          else
+           getLog().debug("Unchanged package: " + packageName);
+          getLog().info("Adding annotated package " + packageName);
+          sources.addPackage(packageName);
+        }
+        packages.add(packageName);
+      }
+    }
+    catch (Exception e)
+    {
+      getLog().error("Error while adding the annotated class " + name, e);
+      throw new MojoFailureException(e.getMessage());
+    }
+  }
+
+  private ParsedPersistenceXmlDescriptor loadPersistenceUnit(
       ClassLoaderService classLoaderService,
       Properties properties
       )
@@ -973,10 +1087,10 @@ public abstract class AbstractSchemaMojo extends AbstractMojo
       {
         case 0:
           getLog().info("Found no META-INF/persistence.xml.");
-          return new Properties();
+          return null;
         case 1:
           getLog().info("Using persistence-unit " + units.get(0).getName());
-          return units.get(0).getProperties();
+          return units.get(0);
         default:
           StringBuilder builder = new StringBuilder();
           builder.append("No name provided and multiple persistence units found: ");
@@ -1006,7 +1120,7 @@ public abstract class AbstractSchemaMojo extends AbstractMojo
       }
 
       getLog().info("Using persistence-unit " + unit.getName());
-      return unit.getProperties();
+      return unit;
     }
 
     throw new MojoFailureException("Could not find persistence-unit " + persistenceUnit);
