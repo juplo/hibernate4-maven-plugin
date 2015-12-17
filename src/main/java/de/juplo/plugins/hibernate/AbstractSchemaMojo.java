@@ -438,10 +438,13 @@ public abstract class AbstractSchemaMojo extends AbstractMojo
       /** Load checksums for old mapping and configuration */
       tracker.load();
 
-      /** Create a BootstrapServiceRegistry with special ClassLoader */
+      /** Create the ClassLoader */
+      URLClassLoader classLoader = createClassLoader();
+
+      /** Create a BootstrapServiceRegistry with the created ClassLoader */
       BootstrapServiceRegistry bootstrapServiceRegitry =
           new BootstrapServiceRegistryBuilder()
-              .applyClassLoader(createClassLoader())
+              .applyClassLoader(classLoader)
               .build();
       ClassLoaderService classLoaderService =
           bootstrapServiceRegitry.getService(ClassLoaderService.class);
@@ -520,7 +523,22 @@ public abstract class AbstractSchemaMojo extends AbstractMojo
             );
       }
 
-      build((MetadataImplementor)metadataBuilder.build());
+      /**
+       * Change class-loader of current thread.
+       * This is necessary, because still not all parts of Hibernate 5 use
+       * the newly introduced ClassLoaderService and will fail otherwise!
+       */
+      Thread thread = Thread.currentThread();
+      ClassLoader contextClassLoader = thread.getContextClassLoader();
+      try
+      {
+        thread.setContextClassLoader(classLoader);
+        build((MetadataImplementor)metadataBuilder.build());
+      }
+      finally
+      {
+        thread.setContextClassLoader(contextClassLoader);
+      }
     }
     finally
     {
