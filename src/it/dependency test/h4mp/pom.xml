@@ -71,11 +71,11 @@
 					</execution>
 				</executions>
 				<configuration>
+					<persistenceUnit>primary</persistenceUnit>
 					<export>false</export>
 					<envers>true</envers>
 					<format>true</format>
 					<delimiter>;</delimiter>
-					<force>true</force>
 					<drop>false</drop>
 					<dialect>org.hibernate.dialect.PostgreSQL9Dialect</dialect>
 				</configuration>

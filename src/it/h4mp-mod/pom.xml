@@ -70,8 +70,6 @@
 					<envers>true</envers>
 					<format>true</format>
 					<delimiter>;</delimiter>
-					<force>true</force>
-					<type>CREATE</type>
 					<dialect>org.hibernate.dialect.PostgreSQL9Dialect</dialect>
 				</configuration>
 			</plugin>
