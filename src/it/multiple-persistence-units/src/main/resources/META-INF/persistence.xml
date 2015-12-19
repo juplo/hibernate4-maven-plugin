@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<persistence
+    xmlns="http://java.sun.com/xml/ns/persistence"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    version="1.0">
+
+  <!-- taken from https://dzone.com/articles/persisting-entity-classes -->
+  <persistence-unit name="A">
+    <class>a.Employee</class>
+    <exclude-unlisted-classes>true</exclude-unlisted-classes>
+    <properties>
+      <property name="hibernate.dialect" value="org.hibernate.dialect.H2Dialect"/>
+    </properties>
+  </persistence-unit>
+
+  <!-- taken from http://webdev.jhuep.com/~jcs/legacy-ejava-javaee/coursedocs/605-784-site/docs/content/html/hibernate-migration-orm.html -->
+  <persistence-unit name="B">
+    <mapping-file>META-INF/sale.xml</mapping-file>
+    <mapping-file>META-INF/person.xml</mapping-file>
+    <mapping-file>META-INF/clerk.xml</mapping-file>
+    <mapping-file>META-INF/customer.xml</mapping-file>
+    <exclude-unlisted-classes>true</exclude-unlisted-classes>
+    <properties>
+      <property name="hibernate.dialect" value="org.hibernate.dialect.PostgreSQL9Dialect"/>
+    </properties>
+  </persistence-unit>
+
+</persistence>

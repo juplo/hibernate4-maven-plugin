@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<entity-mappings xmlns="http://java.sun.com/xml/ns/persistence/orm"
+
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+
+    xsi:schemaLocation="http://java.sun.com/xml/ns/persistence/orm 
+
+        http://java.sun.com/xml/ns/persistence/orm_1_0.xsd"
+
+    version="1.0">
+
+
+
+    <!-- id and name mapped in superclass ORM -->    
+
+    <entity class="b.Clerk"
+
+        access="FIELD">
+
+        <table name="HMIG_CLERK"/>
+
+        <attributes>
+
+            <basic name="hireDate" optional="false">
+
+                <column name="HIRE_DATE"/>
+
+                <temporal>DATE</temporal>
+
+            </basic>
+
+            <basic name="termDate">
+
+                <column name="TERM_DATE"/>
+
+                <temporal>DATE</temporal>
+
+            </basic>
+
+            <many-to-many name="sales" mapped-by="salesClerks"/>
+
+        </attributes>
+
+    </entity>
+
+</entity-mappings>

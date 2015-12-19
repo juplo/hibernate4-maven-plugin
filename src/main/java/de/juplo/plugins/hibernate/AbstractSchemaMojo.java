@@ -542,6 +542,34 @@ public abstract class AbstractSchemaMojo extends AbstractMojo
         classes = scanUrls(urls);
         for (String className : unit.getManagedClassNames())
           classes.add(className);
+        /**
+         * Add mappings from the default mapping-file
+         * <code>META-INF/orm.xml</code>, if present
+         */
+        try
+        {
+          InputStream is = classLoader.getResourceAsStream("META-INF/orm.xml");
+          if (is != null)
+          {
+            getLog().info("Adding default JPA-XML-mapping from META-INF/orm.xml");
+            tracker.track("META-INF/orm.xml", is);
+            sources.addResource("META-INF/orm.xml");
+          }
+          /**
+           * Add mappings from files, that are explicitly configured in the
+           * persistence unit
+           */
+          for (String mapping : unit.getMappingFileNames())
+          {
+            getLog().info("Adding explicitly configured mapping from " + mapping);
+            tracker.track(mapping, classLoader.getResourceAsStream(mapping));
+            sources.addResource(mapping);
+          }
+        }
+        catch (IOException e)
+        {
+          throw new MojoFailureException("Error reading XML-mappings", e);
+        }
       }
 
       /** Add the configured/collected annotated classes */
@@ -1053,7 +1081,7 @@ public abstract class AbstractSchemaMojo extends AbstractMojo
             getLog().debug("New or modified package: " + packageName);
           else
            getLog().debug("Unchanged package: " + packageName);
-          getLog().info("Adding annotated package " + packageName);
+          getLog().info("Adding annotations from package " + packageName);
           sources.addPackage(packageName);
         }
         packages.add(packageName);
