@@ -1081,8 +1081,10 @@ public abstract class AbstractSchemaMojo extends AbstractMojo
         packageName = name;
       }
 
-      if (!packages.contains(packageName))
+      while (packageName != null)
       {
+        if (packages.contains(packageName))
+          return;
         String resource = packageName.replace('.', '/') + "/package-info.class";
         InputStream is = classLoaderService.locateResourceStream(resource);
         if (is == null)
@@ -1100,6 +1102,11 @@ public abstract class AbstractSchemaMojo extends AbstractMojo
           sources.addPackage(packageName);
         }
         packages.add(packageName);
+        int i = packageName.lastIndexOf('.');
+        if (i < 0)
+          packageName = null;
+        else
+          packageName = packageName.substring(0,i);
       }
     }
     catch (Exception e)
