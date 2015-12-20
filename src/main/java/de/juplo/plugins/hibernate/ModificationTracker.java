@@ -33,6 +33,7 @@ public class ModificationTracker
   private final Set<String> classNames;
 
   private boolean modified = false;
+  private boolean failed = false;
 
   private final File saved;
   private final MessageDigest digest;
@@ -133,6 +134,12 @@ public class ModificationTracker
   }
 
 
+  void failed()
+  {
+    failed = true;
+  }
+
+
   void load()
   {
     if (saved.isFile() && saved.length() > 0)
@@ -169,6 +176,12 @@ public class ModificationTracker
 
   void save()
   {
+    if (failed)
+    {
+      saved.delete();
+      return;
+    }
+
     if (!modified)
       return;
 

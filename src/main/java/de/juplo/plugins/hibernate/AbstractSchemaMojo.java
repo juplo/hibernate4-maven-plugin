@@ -641,6 +641,21 @@ public abstract class AbstractSchemaMojo extends AbstractMojo
         thread.setContextClassLoader(contextClassLoader);
       }
     }
+    catch (MojoExecutionException e)
+    {
+      tracker.failed();
+      throw e;
+    }
+    catch (MojoFailureException e)
+    {
+      tracker.failed();
+      throw e;
+    }
+    catch (RuntimeException e)
+    {
+      tracker.failed();
+      throw e;
+    }
     finally
     {
       /** Remember mappings and configuration */
