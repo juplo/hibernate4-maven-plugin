@@ -126,10 +126,18 @@ public class ModificationTracker
 
   boolean modified()
   {
-    modified |= !propertyNames.containsAll(properties.keySet());
-    modified |= !properties.keySet().containsAll(propertyNames);
-    modified |= !classNames.containsAll(classes.keySet());
-    modified |= !classes.keySet().containsAll(classNames);
+    for (String property : properties.keySet())
+      if (!propertyNames.contains(property))
+      {
+        modified = true;
+        properties.remove(property);
+      }
+    for (String clazz : classes.keySet())
+      if (!classNames.contains(clazz))
+      {
+        modified = true;
+        classes.remove(clazz);
+      }
     return modified;
   }
 
