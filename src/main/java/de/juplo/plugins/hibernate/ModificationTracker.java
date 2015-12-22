@@ -126,13 +126,13 @@ public class ModificationTracker
 
   boolean modified()
   {
-    for (String property : properties.keySet())
+    for (String property : new HashSet<String>(properties.keySet()))
       if (!propertyNames.contains(property))
       {
         modified = true;
         properties.remove(property);
       }
-    for (String clazz : classes.keySet())
+     for (String clazz : new HashSet<String>(classes.keySet()))
       if (!classNames.contains(clazz))
       {
         modified = true;
