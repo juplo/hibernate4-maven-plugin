@@ -308,6 +308,7 @@
           <version>3.4</version>
           <configuration>
             <siteDirectory>${project.build.directory}/filtered-site</siteDirectory>
+            <templateFile>src/site/template.vm</templateFile>
           </configuration>
           <dependencies>
             <dependency><!-- add support for ssh/scp -->

@@ -11,10 +11,5 @@
     </menu>
     <menu ref="reports"/>
   </body>
-  <skin>
-    <groupId>de.juplo</groupId>
-    <artifactId>juplo-maven-skin</artifactId>
-    <version>1.0.8</version>
-  </skin>
 </project>
 
