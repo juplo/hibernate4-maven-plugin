@@ -13,13 +13,13 @@
   </p>
   <p>
   The plugin signals, that the execution was skipped by setting the maven
-  property <code>$\{hibernate.export.skipped\}</code> to <code>true</code>.
+  property <code>${hibernate.schema.skipped}</code> to <code>true</code>.
   This may be helpful, because other plugins like
   <a href="http://mojo.codehaus.org/dbunit-maven-plugin/">dbunit-plugin</a>
   <a href="./pitfalls.html#fails">may fail</a>, when the execution is skipped.
   </p>
   <p>
-  If you need the hibernate-maven-plugin to &lt;never skip execution automatically&gt;,
+  If you need the hibernate-maven-plugin to <em>never skip execution automatically</em>,
   you can force it to do so, if you set the parameter <code>force</code> to
   <code>true</code>:
   </p>
@@ -33,7 +33,7 @@
   &lt;/configuration&gt;
 &lt;/plugin&gt;</pre>
   <p>
-  Or you may specify <code>-Dhibernate.export.force=true</code> at the command line,
+  Or you may specify <code>-Dhibernate.schema.force=true</code> at the command line,
   if you want to force hibernate-maven-plugin only once.
   </p>
  </body>

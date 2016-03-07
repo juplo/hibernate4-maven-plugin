@@ -6,14 +6,14 @@
  <body>
   <p>
   If you are new to <code>hibernate-maven-plugin</code>, in many cases, the
-  {Configuration-Method-Precedence} may be the source of configuration
-  errors.
+  <a href="./configuration.html#precedence">Configuration-Method-Precedence</a>
+  may be the source of configuration errors.
   To solve this problem, you should run maven with the debugging output
   enabled.
   For example, by executing:
   </p>
   <pre class="prettyprint linenums lang-html">
-mvn -X compile hibernate:export</pre>
+mvn -X compile hibernate:create</pre>
   <p>
   (The <code>compile</code> might be necessary, because <code>hibernate-maven-plugin</code>
   has to scan the compiled classes for annotations!)

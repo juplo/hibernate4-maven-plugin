@@ -13,7 +13,7 @@
   the production-database, in order to run other tests, like starting a
   local webserver with the
   <a href="http://wiki.eclipse.org/Jetty/Feature/Jetty_Maven_Plugin">jetty-maven-plugin</a>.
-  If the export-goal would be executed in such a scenario, it might erase the
+  If the drop-goal would be executed in such a scenario, it might erase the
   hole production-database, which is not very desireable.
   </p>
   <p>
@@ -23,8 +23,8 @@
   skipped. Think of it as a build-in security-belt.
   </p>
   <p>
-  If you do not like that, because you need the plugin to always execute the
-  export-goal, even if the tests are skipped you can configure that explicitly,
+  If you do not like that, because you need the plugin to always,
+  even if the tests are skipped you can configure that explicitly,
   by setting the configuration-parameter <code>skip</code> to false:
   </p>
   <pre class="prettyprint linenums lang-html">
@@ -37,7 +37,7 @@
   &lt;/configuration&gt;
 &lt;/plugin&gt;</pre>
   <p>
-  Or, if you want the export-goal to be executed by default and to be skipped
+  Or, if you want the plugin to be executed by default and to be skipped
   if you say so, you can bind the value of the configuration-parameter
   <code>skip</code> to a custom property. For example:
   </p>
@@ -51,7 +51,7 @@
   &lt;/configuration&gt;
 &lt;/plugin&gt;</pre>
   <p>
-  This way, the export-goal would be skipped, if you set the property
+  This way, the plugin would be skipped, if you set the property
   <code>foo.bar</code> to <code>true</code>. For example, if you specify <code>-Dfoo.bar=true</code>
   on the command-line.
   </p>

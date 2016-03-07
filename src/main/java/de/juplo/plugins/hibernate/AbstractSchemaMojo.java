@@ -136,7 +136,7 @@ public abstract class AbstractSchemaMojo extends AbstractMojo
    * If set to <code>true</code>, the execution is skipped.
    * <p>
    * A skipped execution is signaled via the maven-property
-   * <code>${hibernate.export.skipped}</code>.
+   * <code>${hibernate.schema.skipped}</code>.
    * <p>
    * The execution is skipped automatically, if no modified or newly added
    * annotated classes are found and the dialect was not changed.

@@ -15,19 +15,25 @@
   </p>
   <h2>hibernate-maven-plugin always needs a database-connection</h2>
   <p>
-  The default-configuration uses the EXPORT-target of the SchemaExport-Tool.
-  If you do not need to create a database with the evaluated schema, you can
-  use the NONE- or the SCRIPT-target.
+  The default-configuration exports the created schema to the configured
+  database.
+  Therefore, it needs a valid database-connection and fails, if none is
+  available.
+  If you do not need to export the created schema to a database,
+  you can set the property <code>hibernate.schema.export</code> to
+  <code>false</code>.
   This can be achieved with the command-line parameter
-  <code>-Dhibernate.export.target=SCRIPT</code> or with the following configuration:
+  <code>-Dhibernate.schema.export=false</code> or with the following
+  configuration:
   </p>
   <pre class="prettyprint linenums lang-html">
 &lt;configuration&gt;
-  &lt;target&gt;SCRIPT&lt;/target&gt;
+  &lt;export&gt;false&lt;/export&gt;
 &lt;/configuration&gt;</pre>
   <p>
   But even when no database is to be created, hibernate always needs to know
-  the dialect. Hence, the plugin will fail if this parameter is missing!
+  the dialect. Hence, the plugin will still fail, if this parameter is also
+  missing!
   </p>
   <h2>Dependency for driver-class XYZ is missing</h2>
   <p>
@@ -44,21 +50,32 @@
 [INFO] Gathered hibernate-configuration (turn on debugging for details):
 [INFO]   hibernate.connection.username = sa
 [INFO]   hibernate.connection.password = 
-[INFO]   hibernate.dialect = org.hibernate.dialect.HSQLDialect
-[INFO]   hibernate.connection.url = jdbc:hsqldb:/home/kai/mmf/target/mmf;shutdown=true
-[INFO]   hibernate.connection.driver_class = org.hsqldb.jdbcDriver
-[ERROR] Dependency for driver-class org.hsqldb.jdbcDriver is missing!
+[INFO]   hibernate.dialect = org.hibernate.dialect.H2Dialect
+[INFO]   hibernate.connection.url = jdbc:h2:file:./db
+[INFO]   hibernate.hbm2dll.create_namespaces = false
+[INFO]   hibernate.connection.driver_class = org.h2.Driver
+[INFO]   hibernate.format_sql = true
+[INFO] HHH000412: Hibernate Core {5.0.2.Final}
+[INFO] HHH000206: hibernate.properties not found
+[INFO] HHH000021: Bytecode provider name : javassist
+[INFO] Adding /home/kai/project/target/classes to the list of roots to scan...
+[INFO] Adding dependencies from scope compile to the list of roots to scan
+[INFO] Adding dependencies from scope org.hibernate:hibernate-core:jar:4.3.0.Final to the list of roots to scan
+[INFO] Adding annotated resource: de.juplo.tests.SimplestMavenHib4Test
 [INFO] ------------------------------------------------------------------------
-[ERROR] BUILD ERROR
+[INFO] BUILD FAILURE
 [INFO] ------------------------------------------------------------------------
-[INFO] org.hsqldb.jdbcDriver
+[INFO] Total time: 1.760s
+[INFO] Finished at: Mon Mar 07 19:06:54 CET 2016
+[INFO] Final Memory: 11M/215M
 [INFO] ------------------------------------------------------------------------
-[INFO] For more information, run Maven with the -e switch
-[INFO] ------------------------------------------------------------------------
-[INFO] Total time: 2 seconds
-[INFO] Finished at: Thu Nov 29 11:31:14 CET 2012
-[INFO] Final Memory: 32M/342M
-[INFO] ------------------------------------------------------------------------</pre>
+[ERROR] Failed to execute goal de.juplo:hibernate-maven-plugin:${project.version}:drop (default) on project hibernate4-properties-test: Could not open the JDBC-connection: Unable to load class [org.h2.Driver]: Could not load requested class : org.h2.Driver -&gt; [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException</pre>
   <p>
   A quick workaround for this error would be, to delete the runtime-constraint
   for the jdbc-driver-dependency.
@@ -75,7 +92,8 @@
   &lt;executions&gt;
     &lt;execution&gt;
       &lt;goals&gt;
-        &lt;goal&gt;export&lt;/goal&gt;
+        &lt;goal&gt;drop&lt;/goal&gt;
+        &lt;goal&gt;create&lt;/goal&gt;
       &lt;/goals&gt;
     &lt;/execution&gt;
   &lt;/executions&gt;
@@ -111,7 +129,7 @@
   </p>
   <p>
   To circumvent this problem, hibernate-maven-plugin signals a skipped
-  excecution by setting the  maven property <code>$\{hibernate.export.skipped\}</code> to
+  excecution by setting the  maven property <code>${hibernate.schema.skipped}</code> to
   <code>true</code>.
   You can configure other plugins to react on this signal.
   For example, the dbunit-plugin can be configured to skip its excecution, if
@@ -122,7 +140,7 @@
   &lt;groupId&gt;org.codehaus.mojo&lt;/groupId&gt;
   &lt;artifactId&gt;dbunit-maven-plugin&lt;/artifactId&gt;
   &lt;configuration&gt;
-    &lt;skip&gt;${hibernate.export.skipped}&lt;/skip&gt;
+    &lt;skip&gt;${hibernate.schema.skipped}&lt;/skip&gt;
   &lt;/configuration&gt;
 &lt;/plugin&gt;</pre>
   <h2>The database will not be recreated after a manual drop/clean</h2>
@@ -143,8 +161,8 @@
   Otherwise the recreation must be <a href="./force.html">forced</a>:
   </p>
   <pre class="prettyprint">
-mvn hibernate:export -Dhibernate.export.force=true</pre>
-  <h2>The hibernate:export goal is not executed, when tests are skipped</h2>
+mvn hibernate:create -Dhibernate.schema.force=true</pre>
+  <h2>The hibernate:create goal is not executed, when tests are skipped</h2>
   <p>
   The hibernate-maven-plugin automatically skips its execution, when
   <code>maven.test.skip</code> is set to <code>true</code>. If you need it to be always
@@ -166,7 +184,7 @@ mvn hibernate:export -Dhibernate.export.force=true</pre>
   <h2>I do not want my dependencies to be scanned for hibernate annotations</h2>
   <p>
     If you do not want your dependencies to be scanned for hibernate annotations,
-    you can pass <code>-Dhibernate.export.scan_dependencies=none</code> to maven
+    you can pass <code>-Dhibernate.schema.scan.dependencies=none</code> to maven
     or set <code>scanDependencies</code> to <code>none</code> in the configuration
     of the plugin like this:
   </p>
@@ -189,7 +207,7 @@ mvn hibernate:export -Dhibernate.export.force=true</pre>
   </p>
   <p>
     <strong>
-      You should consider to upgrade to that version of the plugin.
+      You should consider to upgrade to the latest version of the plugin.
     </strong>
   </p>
  </body>
