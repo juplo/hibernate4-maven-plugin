@@ -546,30 +546,60 @@ public abstract class AbstractSchemaMojo extends AbstractMojo
          * Add mappings from the default mapping-file
          * <code>META-INF/orm.xml</code>, if present
          */
-        try
+        boolean error = false;
+        InputStream is;
+        is = classLoader.getResourceAsStream("META-INF/orm.xml");
+        if (is != null)
         {
-          InputStream is = classLoader.getResourceAsStream("META-INF/orm.xml");
-          if (is != null)
+          getLog().info("Adding default JPA-XML-mapping from META-INF/orm.xml");
+          try
           {
-            getLog().info("Adding default JPA-XML-mapping from META-INF/orm.xml");
             tracker.track("META-INF/orm.xml", is);
             sources.addResource("META-INF/orm.xml");
           }
-          /**
-           * Add mappings from files, that are explicitly configured in the
-           * persistence unit
-           */
-          for (String mapping : unit.getMappingFileNames())
+          catch (IOException e)
           {
-            getLog().info("Adding explicitly configured mapping from " + mapping);
-            tracker.track(mapping, classLoader.getResourceAsStream(mapping));
-            sources.addResource(mapping);
+            getLog().error("cannot read META-INF/orm.xml: " + e);
+            error = true;
           }
         }
-        catch (IOException e)
+        else
         {
-          throw new MojoFailureException("Error reading XML-mappings", e);
+          getLog().debug("no META-INF/orm.xml found");
         }
+        /**
+         * Add mappings from files, that are explicitly configured in the
+         * persistence unit
+         */
+        for (String mapping : unit.getMappingFileNames())
+        {
+          getLog().info("Adding explicitly configured mapping from " + mapping);
+          is = classLoader.getResourceAsStream(mapping);
+          if (is != null)
+          {
+            try
+            {
+              tracker.track(mapping, is);
+              sources.addResource(mapping);
+            }
+            catch (IOException e)
+            {
+              getLog().info("cannot read mapping-file " + mapping + ": " + e);
+              error = true;
+            }
+          }
+          else
+          {
+            getLog().error("cannot find mapping-file " + mapping);
+            error = true;
+          }
+        }
+        if (error)
+          throw new MojoFailureException(
+              "error, while reading mappings configured in persistence-unit \"" +
+              unit.getName() +
+              "\""
+              );
       }
 
       /** Add the configured/collected annotated classes */
@@ -1057,8 +1087,9 @@ public abstract class AbstractSchemaMojo extends AbstractMojo
     try
     {
       getLog().info("Adding annotated resource: " + name);
-      String packageName;
+      String packageName = null;
 
+      boolean error = false;
       try
       {
         Class<?> annotatedClass = classLoaderService.classForName(name);
@@ -1069,16 +1100,28 @@ public abstract class AbstractSchemaMojo extends AbstractMojo
                 resourceName.length()
                 ) + ".class";
         InputStream is = annotatedClass.getResourceAsStream(resourceName);
-        if (tracker.track(name, is))
-          getLog().debug("New or modified class: " + name);
+        if (is != null)
+        {
+          if (tracker.track(name, is))
+            getLog().debug("New or modified class: " + name);
+          else
+            getLog().debug("Unchanged class: " + name);
+          sources.addAnnotatedClass(annotatedClass);
+          packageName = annotatedClass.getPackage().getName();
+        }
         else
-          getLog().debug("Unchanged class: " + name);
-        sources.addAnnotatedClass(annotatedClass);
-        packageName = annotatedClass.getPackage().getName();
+        {
+          getLog().error("cannot find ressource " + resourceName + " for class " + name);
+          error = true;
+        }
       }
       catch(ClassLoadingException e)
       {
         packageName = name;
+      }
+      if (error)
+      {
+        throw new MojoExecutionException("error while inspecting annotated class " + name);
       }
 
       while (packageName != null)
