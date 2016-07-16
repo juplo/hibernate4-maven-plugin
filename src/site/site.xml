@@ -1,16 +1,29 @@
 <project>
-  <googleAnalyticsAccountId>UA-571104-3</googleAnalyticsAccountId>
   <body>
     <menu>
+      <item name="Overview" href="index.html"/>
       <item name="Configuration Examples" href="configuration.html"/>
       <item name="Goal: CREATE" href="create-mojo.html"/>
       <item name="Goal: DROP" href="drop-mojo.html"/>
-      <item name="Enable Debug-Output" href="debugging.html"/>
+      <item name="Enable Debugging-Output" href="debugging.html"/>
       <item name="Skipping Execution" href="skip.html"/>
       <item name="Force Exceution" href="force.html"/>
       <item name="Known Pitfalls (FAQ)" href="pitfalls.html"/>
+      <item name="Project Information" href="project-info.html"/>
+      <item name="Project Reports" href="project-reports.html"/>
     </menu>
     <menu ref="reports"/>
   </body>
+  <skin>
+    <groupId>de.juplo.maven</groupId>
+    <artifactId>maven-thymeleaf-skin</artifactId>
+    <version>1.0.0</version>
+  </skin>
+  <custom>
+    <thymeproxy>
+      <path>/hibernate-maven-plugin/</path>
+      <crumbs><![CDATA[{&quot;uri&quot;:&quot;/projects.html&quot;,&quot;name&quot;:&quot;Projects&quot;}]]></crumbs>
+    </thymeproxy>
+  </custom>
 </project>
 

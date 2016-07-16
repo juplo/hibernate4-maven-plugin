@@ -12,10 +12,10 @@
   <groupId>de.juplo</groupId>
   <artifactId>hibernate-maven-plugin</artifactId>
   <name>Hibernate Maven Plugin</name>
-  <description>Plugin for generating a database-schema from Hibernate-Mapping-Annotations</description>
+  <description>A simple plugin for generating a database-schema from Hibernate-Mappings</description>
   <version>2.1-SNAPSHOT</version>
   <packaging>maven-plugin</packaging>
-  <url>http://juplo.de/hibernate-maven-plugin</url>
+  <url>http://juplo.de/hibernate-maven-plugin/index.html</url>
 
   <prerequisites>
     <maven>2.0.6</maven>
@@ -326,10 +326,9 @@
       <plugins>
         <plugin>
           <artifactId>maven-site-plugin</artifactId>
-          <version>3.4</version>
+          <version>3.5.1</version>
           <configuration>
             <siteDirectory>${project.build.directory}/filtered-site</siteDirectory>
-            <templateFile>src/site/template.vm</templateFile>
           </configuration>
           <dependencies>
             <dependency><!-- add support for ssh/scp -->
