@@ -43,22 +43,10 @@ public class QueriesMojo extends AbstractSchemaMojo
    * relative to the project build directory
    * (<code>project.build.directory</code>).
    *
-   * @parameter property="hibernate.schema.export.queries" default-value="extract-queries.sql"
+   * @parameter property="hibernate.schema.export.queries" default-value="queries.sql"
    * @since 1.0
    */
   private String outputFile;
-
-  /**
-   * Output file.
-   * <p>
-   * If the specified filename is not absolut, the file will be created
-   * relative to the project build directory
-   * (<code>project.build.directory</code>).
-   *
-   * @parameter property="hibernate.schema.export.queries" default-value="extract-queries.sql"
-   * @since 1.0
-   */
-  private String format;
 
   @Override
   public final void execute()
@@ -106,7 +94,7 @@ public class QueriesMojo extends AbstractSchemaMojo
     }
 
     queriesExport.setOutputFile(output.getPath());
-    queriesExport.execute(false, false, true);
+    queriesExport.execute(false);
 
     for (Object exception : queriesExport.getExceptions())
       getLog().error(exception.toString());

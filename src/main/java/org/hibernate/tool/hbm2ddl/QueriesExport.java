@@ -6,31 +6,16 @@
  */
 package org.hibernate.tool.hbm2ddl;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.Reader;
-import java.sql.Connection;
-import java.util.*;
-
 import com.google.common.collect.Lists;
 import org.hibernate.HibernateException;
-import org.hibernate.Query;
-import org.hibernate.Session;
-import org.hibernate.SessionFactory;
 import org.hibernate.boot.MetadataBuilder;
 import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
-import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
 import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.registry.classloading.internal.ClassLoaderServiceImpl;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
-import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
@@ -42,11 +27,9 @@ import org.hibernate.engine.jdbc.internal.Formatter;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
-import org.hibernate.engine.query.spi.HQLQueryPlan;
 import org.hibernate.engine.spi.NamedQueryDefinition;
 import org.hibernate.engine.spi.NamedSQLQueryDefinition;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.envers.internal.tools.query.QueryBuilder;
 import org.hibernate.hql.internal.ast.ASTQueryTranslatorFactory;
 import org.hibernate.hql.spi.QueryTranslator;
 import org.hibernate.internal.CoreLogging;
@@ -56,6 +39,13 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.service.ServiceRegistry;
 
+import java.io.*;
+import java.sql.Connection;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+
 /**
  * Commandline tool to export named queries into a sql file. This class may also be called from inside an application.
  *
@@ -64,26 +54,9 @@ import org.hibernate.service.ServiceRegistry;
 public class QueriesExport {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( QueriesExport.class );
 
-	private static final String DEFAULT_IMPORT_FILE = "/extract-queries.sql";
+	private static final String DEFAULT_IMPORT_FILE = "/queries.sql";
 
-	public static enum Type {
-		SQL,
-		HQL,
-		BOTH,
-		NONE;
-
-		public boolean doSql() {
-			return this == SQL || this == BOTH;
-		}
-
-		public boolean doHql() {
-			return this == HQL || this == BOTH;
-		}
-	}
-
-	private final ConnectionHelper connectionHelper;
 	private final SqlStatementLogger sqlStatementLogger;
-	private final SqlExceptionHelper sqlExceptionHelper;
 	private final ClassLoaderService classLoaderService;
 	private final String[] queriesSQL;
 	private final String importFiles;
@@ -112,24 +85,11 @@ public class QueriesExport {
 	 * the JdbcServices service.
 	 * @param metadata The metadata object holding the mapping info to be exported
 	 */
-	public QueriesExport(ServiceRegistry serviceRegistry, MetadataImplementor metadata) {
-		this(
-				new SuppliedConnectionProviderConnectionHelper(
-						serviceRegistry.getService( ConnectionProvider.class )
-				),
-				serviceRegistry,
-				metadata
-		);
-	}
-
-	private QueriesExport(
-			ConnectionHelper connectionHelper,
+	public QueriesExport(
 			ServiceRegistry serviceRegistry,
 			MetadataImplementor metadata) {
-		this.connectionHelper = connectionHelper;
 		this.sqlStatementLogger = serviceRegistry.getService( JdbcServices.class ).getSqlStatementLogger();
 		this.formatter = ( sqlStatementLogger.isFormat() ? FormatStyle.BASIC : FormatStyle.NONE ).getFormatter();
-		this.sqlExceptionHelper = serviceRegistry.getService( JdbcEnvironment.class ).getSqlExceptionHelper();
 		this.classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
 
 		this.importFiles = ConfigurationHelper.getString(
@@ -137,8 +97,6 @@ public class QueriesExport {
 				serviceRegistry.getService( ConfigurationService.class ).getSettings(),
 				DEFAULT_IMPORT_FILE
 		);
-
-		//final JdbcServices jdbcServices = serviceRegistry.getService( JdbcServices.class );
 
 		SessionFactoryImplementor sessionFactory = (SessionFactoryImplementor)metadata.buildSessionFactory();
 		ASTQueryTranslatorFactory queryTranslatorFactory = new ASTQueryTranslatorFactory();
@@ -186,78 +144,11 @@ public class QueriesExport {
 		this.queriesSQL = lines.toArray( new String[lines.size()] );
 	}
 
-	/**
-	 * Intended for testing use
-	 *
-	 * @param connectionHelper Access to the JDBC Connection
-	 * @param metadata The metadata object holding the mapping info to be exported
-	 */
 	public QueriesExport(
-			ConnectionHelper connectionHelper,
-			MetadataImplementor metadata) {
-		this(
-				connectionHelper,
-				metadata.getMetadataBuildingOptions().getServiceRegistry(),
-				metadata
-		);
-	}
-
-	/**
-	 * Create a QueriesExport for the given Metadata, using the supplied connection for connectivity.
-	 *
-	 * @param metadata The metadata object holding the mapping info to be exported
-	 * @param connection The JDBC connection to use.
-	 *
-	 * @throws HibernateException Indicates problem preparing for schema export.
-	 */
-	public QueriesExport(MetadataImplementor metadata, Connection connection) throws HibernateException {
-		this( new SuppliedConnectionHelper( connection ), metadata );
-	}
-
-	/**
-	 * @deprecated Use one of the forms accepting {@link MetadataImplementor}, rather
-	 * than {@link Configuration}, instead.
-	 */
-	@Deprecated
-	public QueriesExport(ServiceRegistry serviceRegistry, Configuration configuration) {
-		throw new UnsupportedOperationException(
-				"Attempt to use unsupported QueriesExport constructor accepting org.hibernate.cfg.Configuration; " +
-						"one of the forms accepting org.hibernate.boot.spi.MetadataImplementor should be used instead"
-		);
-	}
-
-	/**
-	 * @deprecated Use one of the forms accepting {@link MetadataImplementor}, rather
-	 * than {@link Configuration}, instead.
-	 */
-	@Deprecated
-	public QueriesExport(Configuration configuration) {
-		throw new UnsupportedOperationException(
-				"Attempt to use unsupported QueriesExport constructor accepting org.hibernate.cfg.Configuration; " +
-						"one of the forms accepting org.hibernate.boot.spi.MetadataImplementor should be used instead"
-		);
-	}
-
-	/**
-	 * @deprecated Use one of the forms accepting {@link MetadataImplementor}, rather
-	 * than {@link Configuration}, instead.
-	 */
-	@Deprecated
-	public QueriesExport(Configuration configuration, Connection connection) throws HibernateException {
-		throw new UnsupportedOperationException(
-				"Attempt to use unsupported QueriesExport constructor accepting org.hibernate.cfg.Configuration; " +
-						"one of the forms accepting org.hibernate.boot.spi.MetadataImplementor should be used instead"
-		);
-	}
-
-	public QueriesExport(
-			ConnectionHelper connectionHelper,
-			String[] createSql) {
-		this.connectionHelper = connectionHelper;
-		this.queriesSQL = createSql;
+			String[] queriesSQL) {
+		this.queriesSQL = queriesSQL;
 		this.importFiles = "";
 		this.sqlStatementLogger = new SqlStatementLogger( false, true );
-		this.sqlExceptionHelper = new SqlExceptionHelper();
 		this.classLoaderService = new ClassLoaderServiceImpl();
 		this.formatter = FormatStyle.BASIC.getFormatter();
 	}
@@ -311,45 +202,11 @@ public class QueriesExport {
 	}
 
 	/**
-	 * Run the schema creation script; drop script is automatically
-	 * executed before running the creation script.
+	 * Run the queries extraction
 	 *
-	 * @param script print quaries to the console
-	 * @param export export the script to the database
 	 */
-	public void create(boolean script, boolean export) {
-		create( Target.interpret( script, export ) );
-	}
-
-	/**
-	 * Run the schema creation script; hql script is automatically
-	 * written before writing the SQL script.
-	 *
-	 * @param output the target of the script.
-	 */
-	public void create(Target output) {
-		// need to drop tables before creating so need to specify Type.BOTH
-		execute( output, Type.BOTH );
-	}
-
-	public void execute(boolean script, boolean justHql, boolean justSql) {
-		execute( Target.interpret( script, false/*export*/), interpretType( justHql, justSql ) );
-	}
-
-	private Type interpretType(boolean justHql, boolean justSql) {
-		if ( justHql ) {
-			return Type.HQL;
-		}
-		else if ( justSql ) {
-			return Type.SQL;
-		}
-		else {
-			return Type.BOTH;
-		}
-	}
-
-	public void execute(Target output, Type type) {
-		if ( ( outputFile == null && output == Target.NONE ) || type == QueriesExport.Type.NONE ) {
+	public void execute(boolean script) {
+		if (outputFile == null ) {
 			return;
 		}
 		exceptions.clear();
@@ -372,7 +229,7 @@ public class QueriesExport {
 		final List<Exporter> exporters = new ArrayList<Exporter>();
 		try {
 			// prepare exporters ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-			if ( output.doScript() ) {
+			if ( script ) {
 				exporters.add( new ScriptExporter() );
 			}
 			if ( outputFile != null ) {
@@ -380,12 +237,10 @@ public class QueriesExport {
 			}
 
 			// perform exporters ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-			if ( type.doSql() ) {
-				perform(queriesSQL, exporters );
-				if ( !importFileReaders.isEmpty() ) {
-					for ( NamedReader namedReader : importFileReaders ) {
-						importScript( namedReader, exporters );
-					}
+			perform(queriesSQL, exporters );
+			if ( !importFileReaders.isEmpty() ) {
+				for ( NamedReader namedReader : importFileReaders ) {
+					importScript( namedReader, exporters );
 				}
 			}
 		}
@@ -556,11 +411,7 @@ public class QueriesExport {
 						.setDelimiter( commandLineArgs.delimiter )
 						.setImportSqlCommandExtractor( serviceRegistry.getService( ImportSqlCommandExtractor.class ) )
 						.setFormat( commandLineArgs.format );
-				queriesExport.execute(
-						commandLineArgs.script,
-						commandLineArgs.hql,
-						commandLineArgs.sql
-				);
+				queriesExport.execute(commandLineArgs.script);
 			}
 			finally {
 				StandardServiceRegistryBuilder.destroy( serviceRegistry );
@@ -624,8 +475,6 @@ public class QueriesExport {
 
 	private static class CommandLineArgs {
 		boolean script = true;
-		boolean hql = false;
-		boolean sql = false;
 		boolean format = false;
 
 		String delimiter = null;
@@ -646,12 +495,6 @@ public class QueriesExport {
 				if ( arg.startsWith( "--" ) ) {
 					if ( arg.equals( "--quiet" ) ) {
 						parsedArgs.script = false;
-					}
-					else if ( arg.equals( "--hql" ) ) {
-						parsedArgs.hql = true;
-					}
-					else if ( arg.equals( "--sql" ) ) {
-						parsedArgs.sql = true;
 					}
 					else if ( arg.startsWith( "--output=" ) ) {
 						parsedArgs.outputFile = arg.substring( 9 );
