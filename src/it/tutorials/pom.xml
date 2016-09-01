@@ -47,6 +47,7 @@
         <module>osgi/unmanaged-native</module>
         <module>osgi/unmanaged-jpa</module>
         <module>osgi/managed-jpa</module>
+        <module>queries</module>
     </modules>
 
     <dependencies>

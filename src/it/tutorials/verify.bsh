@@ -17,3 +17,5 @@ if (!comparator.isEqual("schema-osgi-unmanaged-jpa.sql","osgi/unmanaged-jpa/targ
   return false;
 if (!comparator.isEqual("schema-osgi-unmanaged-native.sql","osgi/unmanaged-native/target/create.sql"))
   return false;
+if (!comparator.isEqual("extract-queries.sql","queries/target/queries.sql"))
+  return false;

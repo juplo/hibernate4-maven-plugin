@@ -64,7 +64,7 @@ import org.hibernate.service.ServiceRegistry;
 public class QueriesExport {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( QueriesExport.class );
 
-	private static final String DEFAULT_IMPORT_FILE = "/queries.sql";
+	private static final String DEFAULT_IMPORT_FILE = "/extract-queries.sql";
 
 	public static enum Type {
 		SQL,
