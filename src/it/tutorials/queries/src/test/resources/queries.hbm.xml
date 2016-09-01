@@ -1,0 +1,56 @@
+<?xml version="1.0"?>
+<!--
+  #%L
+  SIH-Adagio Core for Allegro
+  $Id: queries.hbm.xml 13334 2016-08-26 20:38:09Z bl05b3e $
+  $HeadURL: https://forge.ifremer.fr/svn/sih-adagio/trunk/adagio/core-allegro/src/main/resources/queries.hbm.xml $
+  %%
+  Copyright (C) 2012 - 2013 Ifremer
+  %%
+  This program is free software: you can redistribute it and/or modify
+  it under the terms of the GNU Affero General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU Affero General Public License
+  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  #L%
+  -->
+
+<hibernate-mapping xmlns="http://www.hibernate.org/xsd/hibernate-mapping"
+                   xsi:schemaLocation="http://www.hibernate.org/xsd/hibernate-mapping classpath://org/hibernate/hibernate-mapping-4.0.xsd"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+
+    <query cacheable="true" name="eventById" comment="Get event by id.&#10;Useful when loading event details">
+        <![CDATA[SELECT
+		  e.id
+		FROM
+		  org.hibernate.tutorial.hbm.Event e
+		WHERE e.id = :eventId]]>
+        <query-param name="eventId" type="java.lang.Integer" ></query-param>
+    </query>
+
+    <query cacheable="true" name="deleteEvent" comment="Delete an event">
+        <![CDATA[DELETE FROM
+		  org.hibernate.tutorial.hbm.Event e
+		WHERE e.id = :eventId]]>
+        <query-param name="eventId" type="java.lang.Integer" ></query-param>
+    </query>
+
+    <sql-query name="nativeEventById" comment="A native query to get event by id">
+        <![CDATA[
+            select
+                EVENT_ID
+            from
+                EVENTS
+            where
+                EVENT_ID=:eventId
+        ]]>
+        <query-param name="eventId" type="java.lang.Integer"></query-param>
+    </sql-query>
+</hibernate-mapping>
