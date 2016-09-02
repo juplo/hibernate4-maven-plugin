@@ -1,0 +1,97 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html>
+<head>
+    <title>Hibernate Mappings - Queries Info</title>
+    <link rel="stylesheet" type="text/css" href="assets/doc-style.css" title="Style"/>
+</head>
+<body>
+
+<div id="header">
+
+    <div id="logo">
+        <a href="http://www.hibernate.org/" target="_blank">
+            <img src="assets/hibernate_logo.gif" alt="Hibernate"/>
+        </a>
+    </div>
+
+    <ul>
+        <li><a href="../tables/index.html" target="_top">Tables</a></li>
+        <li><a href="../entities/index.html" target="_top">Entities</a></li>
+        <li class="selected">Queries</li>
+    </ul>
+    <hr/>
+
+</div>
+
+<h4>All queries</h4>
+
+
+<#list queries as q>
+
+    <br/><br/>
+    <hr></hr>
+
+    <a name="${q.name}"></a>
+    <h2 id="column_detail_CODE">Query ${q.name}</h2>
+
+    <#if q.comment??>
+        <p>${q.comment}</p>
+    </#if>
+
+    <table>
+        <thead>
+            <tr>
+                <th class="MainTableHeading">
+                    SQL query
+                </th>
+                <th class="MainTableHeading">
+                    HQL query
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td class="QuerySql"><#if q.sql??><#list q.sql as value>${value};</#list></#if></td>
+                <td class="QuerySql"><#if q.hql??>${q.hql}</#if></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <#if q.params??>
+        <table>
+            <thead>
+                <tr>
+                    <th class="MainTableHeading" colspan="4">
+                        Parameters
+                    </th>
+                </tr>
+                <tr>
+                    <th style="width: 14%">
+                        Name
+                    </th>
+                    <th style="width: 14%">
+                        Type
+                    </th>
+                    <th style="width: 72%">
+                        Description
+                    </th>
+                </tr>
+            </thead>
+
+            <tbody>
+                <#list q.params?keys as name>
+                    <tr>
+                        <td>${name}</td>
+                        <td>${q.params[name]}</td>
+                        <td>&nbsp;</td>
+                    </tr>
+                </#list>
+            </tbody>
+        </table>
+    </#if>
+</#list>
+
+</body>
+</html>

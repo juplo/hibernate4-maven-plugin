@@ -51,9 +51,17 @@
                 <version>${h4mp.version}</version>
                 <executions>
                     <execution>
+                        <id>extract-queries</id>
                         <phase>process-test-classes</phase>
                         <goals>
                             <goal>queries</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>queries2doc</id>
+                        <phase>pre-site</phase>
+                        <goals>
+                            <goal>queries2doc</goal>
                         </goals>
                     </execution>
                 </executions>

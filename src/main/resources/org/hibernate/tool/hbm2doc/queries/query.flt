@@ -1,0 +1,361 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html>
+<head>
+    <title>Hibernate Mappings - Entity Info</title>
+    <link rel="stylesheet" type="text/css" href="assets/doc-style.css" title="Style"/>
+</head>
+<body>
+
+<div id="header">
+
+    <div id="logo">
+        <a href="http://www.hibernate.org/" target="_blank">
+            <img src="assets/hibernate_logo.gif" alt="Hibernate"/>
+        </a>
+    </div>
+
+    <ul>
+        <li><a href="../tables/index.html" target="_top">Tables</a></li>
+        <li><a href="../entities/index.html" target="_top">Entities</a></li>
+    </ul>
+    <hr/>
+
+</div>
+
+<h2>Query ${query.name}</h2>
+
+<hr/>
+
+<table id="identifier_summary">
+    <thead>
+    <tr>
+        <th class="MainTableHeading" colspan="4">
+            Identifier Summary
+        </th>
+    </tr>
+    <tr>
+        <th style="width: 14%">
+            Name
+        </th>
+        <th style="width: 14%">
+            Column
+        </th>
+        <th style="width: 14%">
+            Type
+        </th>
+        <th style="width: 58%">
+            Description
+        </th>
+    </tr>
+    </thead>
+
+    <tbody>
+    <tr>
+        <td>
+            <a href="#identifier_detail_id">
+                id
+            </a>
+        </td>
+        <td>
+            Column
+        </td>
+        <td>
+            Integer
+        </td>
+        <td>
+            &nbsp;
+        </td>
+    </tr>
+    </tbody>
+</table>
+
+
+<table id="property_summary">
+    <thead>
+    <tr>
+        <th class="MainTableHeading" colspan="5">
+            Property Summary
+        </th>
+    </tr>
+    <tr>
+        <th style="width: 14%">
+            Name
+        </th>
+        <th style="width: 14%">
+            Column
+        </th>
+        <th style="width: 14%">
+            Access
+        </th>
+        <th style="width: 14%">
+            Type
+        </th>
+        <th style="width: 44%">
+            Description
+        </th>
+    </tr>
+    </thead>
+    <tbody>
+
+    <tr>
+        <td rowspan="1">
+            <a href="#property_detail_denormalizedBatch">
+                denormalizedBatch
+            </a>
+        </td>
+
+        <td>
+            <a href="#property_summary">
+                BATCH_FK
+            </a>
+        </td>
+
+        <td rowspan="1">
+            property (<a href="#property_summary">get</a> / <a href="#property_summary">set</a>)
+        </td>
+
+        <td rowspan="1">
+            DenormalizedBatchImpl
+        </td>
+
+        <td rowspan="1">
+            &nbsp;
+        </td>
+    </tr>
+    <tr>
+        <td rowspan="1">
+            <a href="#property_detail_isInherited">
+                isInherited
+            </a>
+        </td>
+
+        <td>
+            <a href="#property_summary">
+                IS_INHERITED
+            </a>
+        </td>
+
+        <td rowspan="1">
+            property (<a href="#property_summary">get</a> / <a href="#property_summary">set</a>)
+        </td>
+
+        <td rowspan="1">
+            Boolean
+        </td>
+
+        <td rowspan="1">
+            &nbsp;
+        </td>
+    </tr>
+    <tr>
+        <td rowspan="1">
+            <a href="#property_detail_numericalValue">
+                numericalValue
+            </a>
+        </td>
+
+        <td>
+            <a href="#property_summary">
+                NUMERICAL_VALUE
+            </a>
+        </td>
+
+        <td rowspan="1">
+            property (<a href="#property_summary">get</a> / <a href="#property_summary">set</a>)
+        </td>
+
+        <td rowspan="1">
+            Float
+        </td>
+
+        <td rowspan="1">
+            &nbsp;
+        </td>
+    </tr>
+    <tr>
+        <td rowspan="1">
+            <a href="#property_detail_parameter">
+                parameter
+            </a>
+        </td>
+
+        <td>
+            <a href="#property_summary">
+                PARAMETER_FK
+            </a>
+        </td>
+
+        <td rowspan="1">
+            property (<a href="#property_summary">get</a> / <a href="#property_summary">set</a>)
+        </td>
+
+        <td rowspan="1">
+            ParameterImpl
+        </td>
+
+        <td rowspan="1">
+            &nbsp;
+        </td>
+    </tr>
+    <tr>
+        <td rowspan="1">
+            <a href="#property_detail_pmfm">
+                pmfm
+            </a>
+        </td>
+
+        <td>
+            <a href="#property_summary">
+                PMFM_FK
+            </a>
+        </td>
+
+        <td rowspan="1">
+            property (<a href="#property_summary">get</a> / <a href="#property_summary">set</a>)
+        </td>
+
+        <td rowspan="1">
+            PmfmImpl
+        </td>
+
+        <td rowspan="1">
+            &nbsp;
+        </td>
+    </tr>
+    <tr>
+        <td rowspan="1">
+            <a href="#property_detail_qualitativeValue">
+                qualitativeValue
+            </a>
+        </td>
+
+        <td>
+            <a href="#property_summary">
+                QUALITATIVE_VALUE_FK
+            </a>
+        </td>
+
+        <td rowspan="1">
+            property (<a href="#property_summary">get</a> / <a href="#property_summary">set</a>)
+        </td>
+
+        <td rowspan="1">
+            QualitativeValueImpl
+        </td>
+
+        <td rowspan="1">
+            &nbsp;
+        </td>
+    </tr>
+    <tr>
+        <td rowspan="1">
+            <a href="#property_detail_rankOrder">
+                rankOrder
+            </a>
+        </td>
+
+        <td>
+            <a href="#property_summary">
+                RANK_ORDER
+            </a>
+        </td>
+
+        <td rowspan="1">
+            property (<a href="#property_summary">get</a> / <a href="#property_summary">set</a>)
+        </td>
+
+        <td rowspan="1">
+            Integer
+        </td>
+
+        <td rowspan="1">
+            &nbsp;
+        </td>
+    </tr>
+    <tr>
+        <td rowspan="1">
+            <a href="#property_detail_remoteId">
+                remoteId
+            </a>
+        </td>
+
+        <td>
+            <a href="#property_summary">
+                REMOTE_ID
+            </a>
+        </td>
+
+        <td rowspan="1">
+            property (<a href="#property_summary">get</a> / <a href="#property_summary">set</a>)
+        </td>
+
+        <td rowspan="1">
+            Integer
+        </td>
+
+        <td rowspan="1">
+            &nbsp;
+        </td>
+    </tr>
+    <tr>
+        <td rowspan="1">
+            <a href="#property_detail_unit">
+                unit
+            </a>
+        </td>
+
+        <td>
+            <a href="#property_summary">
+                UNIT_FK
+            </a>
+        </td>
+
+        <td rowspan="1">
+            property (<a href="#property_summary">get</a> / <a href="#property_summary">set</a>)
+        </td>
+
+        <td rowspan="1">
+            UnitImpl
+        </td>
+
+        <td rowspan="1">
+            &nbsp;
+        </td>
+    </tr>
+
+    </tbody>
+</table>
+
+
+<p id="identifier_detail" class="MainTableHeading">
+    Identifier Detail
+</p>
+<h3 id="identifier_detail_id">id</h3>
+
+
+<p id="property_detail" class="MainTableHeading">
+    Property Detail
+</p>
+<h3 id="property_detail_rankOrder">rankOrder</h3>
+<hr/>
+<h3 id="property_detail_isInherited">isInherited</h3>
+<hr/>
+<h3 id="property_detail_numericalValue">numericalValue</h3>
+<hr/>
+<h3 id="property_detail_remoteId">remoteId</h3>
+<hr/>
+<h3 id="property_detail_pmfm">pmfm</h3>
+<hr/>
+<h3 id="property_detail_unit">unit</h3>
+<hr/>
+<h3 id="property_detail_denormalizedBatch">denormalizedBatch</h3>
+<hr/>
+<h3 id="property_detail_qualitativeValue">qualitativeValue</h3>
+<hr/>
+<h3 id="property_detail_parameter">parameter</h3>
+<hr/>
+
+</body>
+</html>

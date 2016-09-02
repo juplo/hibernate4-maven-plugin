@@ -422,6 +422,9 @@ public abstract class AbstractSchemaMojo extends AbstractMojo
   private String mappings;
 
 
+  protected void setSkip(boolean skip) {
+    this.skip = skip;
+  }
 
   public final void execute(String filename)
     throws
