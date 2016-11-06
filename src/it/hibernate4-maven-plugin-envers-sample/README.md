@@ -30,7 +30,7 @@ Usage
 
 __Rebuild the SQL-script using the Hibernate4-maven-plugin to create the database__
 
-    mvn -PcreateHsqlDbScript clean compile hibernate:export
+    mvn -PcreateHsqlDbScript clean compile hibernate:create
 
 __Build and run the integration tests__
 

@@ -88,7 +88,7 @@ import org.scannotation.AnnotationDB;
  */
 public abstract class AbstractSchemaMojo extends AbstractMojo
 {
-  public final static String EXPORT = "hibernate.schema.export";
+  public final static String EXECUTE = "hibernate.schema.execute";
   public final static String OUTPUTDIRECTORY = "project.build.outputDirectory";
   public final static String SCAN_CLASSES = "hibernate.schema.scan.classes";
   public final static String SCAN_DEPENDENCIES = "hibernate.schema.scan.dependencies";
@@ -127,7 +127,7 @@ public abstract class AbstractSchemaMojo extends AbstractMojo
   /** Parameters to configure the genaration of the SQL *********************/
 
   /**
-   * Export the database-schma to the database.
+   * Excecute the generated SQL.
    * If set to <code>false</code>, only the SQL-script is created and the
    * database is not touched.
    * <p>
@@ -137,10 +137,10 @@ public abstract class AbstractSchemaMojo extends AbstractMojo
    * it is not known by Hibernate nor JPA and, hence, not picked up from
    * their configuration!
    *
-   * @parameter property="hibernate.schema.export" default-value="true"
+   * @parameter property="hibernate.schema.execute" default-value="true"
    * @since 2.0
    */
-  private Boolean export;
+  private Boolean execute;
 
   /**
    * Skip execution
@@ -165,10 +165,11 @@ public abstract class AbstractSchemaMojo extends AbstractMojo
   private boolean skip;
 
   /**
-   * Force execution
+   * Force generation/execution
    * <p>
-   * Force execution, even if no modified or newly added annotated classes
-   * where found and the dialect was not changed.
+   * Force the generation and (if configured) the execution of the SQL, even if
+   * no modified or newly added annotated classes where found and the
+   * configuration was not changed.
    * <p>
    * <code>skip</code> takes precedence over <code>force</code>.
    * <p>
@@ -627,11 +628,9 @@ public abstract class AbstractSchemaMojo extends AbstractMojo
       /** Skip execution, if mapping and configuration is unchanged */
       if (!tracker.modified())
       {
-        getLog().info(
-            "Mapping and configuration unchanged."
-            );
+        getLog().info("Mapping and configuration unchanged.");
         if (force)
-          getLog().info("Schema generation is forced!");
+          getLog().info("Generation/execution is forced!");
         else
         {
           getLog().info("Skipping schema generation!");
@@ -696,7 +695,7 @@ public abstract class AbstractSchemaMojo extends AbstractMojo
           SchemaManagementToolCoordinator
               .buildExecutionOptions(settings, handler);
       final EnumSet<TargetType> targetTypes = EnumSet.of(TargetType.SCRIPT);
-      if (export)
+      if (execute)
         targetTypes.add(TargetType.DATABASE);
       TargetDescriptor target = new TargetDescriptor()
       {
@@ -916,10 +915,10 @@ public abstract class AbstractSchemaMojo extends AbstractMojo
       throws MojoFailureException
   {
     /**
-     * Special treatment for the configuration-value "export": if it is
+     * Special treatment for the configuration-value "execute": if it is
      * switched to "true", the genearation fo the schema should be forced!
      */
-    if (tracker.check(EXPORT, export.toString()) && export)
+    if (tracker.check(EXECUTE, execute.toString()) && execute)
       tracker.touch();
 
     /**

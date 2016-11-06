@@ -120,7 +120,7 @@
                     <physicalNamingStrategy>ch.dvbern.demo.persistence.DemoPhysicalNamingStrategyImpl
                     </physicalNamingStrategy>
                     <!--verhindert, dass das Plugin versucht das schema physisch in eine DB zu schreiben-->
-                    <export>false</export>
+                    <execute>false</execute>
                     <format>true</format>
                     <force>true</force>
                     <!--File in welches das Schema exportiert wird (defaultist create.sql)-->

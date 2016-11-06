@@ -68,7 +68,7 @@
           </execution>
         </executions>
         <configuration>
-          <export>false</export>
+          <execute>false</execute>
           <format>true</format>
         </configuration>
       </plugin>

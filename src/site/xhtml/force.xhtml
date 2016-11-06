@@ -9,8 +9,9 @@
   The hibernate-maven-plugin computes MD5-sums for all found annotated
   classes and stores them together with the generated schema.
   If no classes were changed or added and the dialect wasn't changed too, it
-  automatically skips the configured schema-export, to speed up the development
-  cycle.
+  automatically skips the configured SQL-generation &mdash; and more
+  important in this respect &mdash; the execution of the generated SQL,
+  to speed up the development cycle.
   </p>
   <p>
   The plugin signals, that the execution was skipped by setting the maven

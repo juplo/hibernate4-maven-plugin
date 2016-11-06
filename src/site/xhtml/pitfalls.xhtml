@@ -16,20 +16,19 @@
   </p>
   <h2>hibernate-maven-plugin always needs a database-connection</h2>
   <p>
-  The default-configuration exports the created schema to the configured
-  database.
+  The default-configuration executes the created SQL.
   Therefore, it needs a valid database-connection and fails, if none is
   available.
-  If you do not need to export the created schema to a database,
-  you can set the property <code>hibernate.schema.export</code> to
+  If you do not need the generated SQL to be executed automatically,
+  you can set the property <code>hibernate.schema.execute</code> to
   <code>false</code>.
   This can be achieved with the command-line parameter
-  <code>-Dhibernate.schema.export=false</code> or with the following
+  <code>-Dhibernate.schema.execute=false</code> or with the following
   configuration:
   </p>
   <pre class="prettyprint linenums lang-html">
 &lt;configuration&gt;
-  &lt;export&gt;false&lt;/export&gt;
+  &lt;execute&gt;false&lt;/execute&gt;
 &lt;/configuration&gt;</pre>
   <p>
   But even when no database is to be created, hibernate always needs to know
@@ -124,7 +123,7 @@
   </p>
   <p>
   A quick fix to this problem is, to <a href="./force.html">force</a>
-  hibernate-maven-plugin to export the schema every time it is running.
+  hibernate-maven-plugin to generate and execute the SQL every time it is running.
   But to recreate the database on every testrun may noticeable slow down your
   development cycle, if you have to wait for slow IO.
   </p>

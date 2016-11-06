@@ -72,7 +72,7 @@
 				</executions>
 				<configuration>
 					<persistenceUnit>primary</persistenceUnit>
-					<export>false</export>
+					<execute>false</execute>
 					<envers>true</envers>
 					<format>true</format>
 					<delimiter>;</delimiter>

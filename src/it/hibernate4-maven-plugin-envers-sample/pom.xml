@@ -203,7 +203,7 @@
                     </execution>
                 </executions>
                 <configuration>
-                    <export>false</export>
+                    <execute>false</execute>
                     <driver>org.hsqldb.jdbc.JDBCDriver</driver>
                     <dialect>org.hibernate.dialect.HSQLDialect</dialect>
                     <envers>true</envers>

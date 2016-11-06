@@ -46,7 +46,7 @@
         <version>@project.version@</version>
         <configuration>
           <!-- Generat schema only, no DB connection needed -->
-          <export>false</export>
+          <execute>false</execute>
           <format>true</format>
         </configuration>
         <executions>
