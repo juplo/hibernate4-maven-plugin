@@ -8,6 +8,6 @@
 
     drop table TTL_EVENT_AUD if exists;
 
-    drop sequence TTL_AUDIT_REVISION_SEQ;
+    drop sequence TTL_AUDIT_REVISION_SEQ if exists;
 
-    drop sequence TTL_EVENT_SEQ;
+    drop sequence TTL_EVENT_SEQ if exists;

@@ -7,5 +7,4 @@
         sources varchar(255),
         primary key (uuid)
     );
-
-    create index idx_test_simple_tuple on test_simple (sources, uuid);
+create index idx_test_simple_tuple on test_simple (sources, uuid);

@@ -82,6 +82,7 @@
 				<configuration>
 					<url>jdbc:h2:mem:db1;MVCC=TRUE</url>
 					<format>true</format>
+					<export>false</export>
 				</configuration>
 			</plugin>
 		</plugins>

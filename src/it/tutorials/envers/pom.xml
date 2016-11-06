@@ -74,6 +74,8 @@
                     <scanTestClasses>true</scanTestClasses>
                     <dialect>org.hibernate.dialect.H2Dialect</dialect>
                     <format>true</format>
+                    <username>sa</username>
+                    <password></password>
                 </configuration>
             </plugin>
         </plugins>

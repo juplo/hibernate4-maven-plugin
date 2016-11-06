@@ -16,11 +16,17 @@ package de.juplo.plugins.hibernate;
  * limitations under the License.
  */
 
-import java.io.File;
+import java.util.Map;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.hibernate.boot.spi.MetadataImplementor;
-import org.hibernate.tool.hbm2ddl.SchemaExport;
+import org.hibernate.service.ServiceRegistry;
+import org.hibernate.tool.schema.SourceType;
+import org.hibernate.tool.schema.spi.ExecutionOptions;
+import org.hibernate.tool.schema.spi.SchemaManagementTool;
+import org.hibernate.tool.schema.spi.ScriptSourceInput;
+import org.hibernate.tool.schema.spi.SourceDescriptor;
+import org.hibernate.tool.schema.spi.TargetDescriptor;
 
 
 /**
@@ -41,7 +47,7 @@ public class CreateMojo extends AbstractSchemaMojo
    * relative to the project build directory
    * (<code>project.build.directory</code>).
    *
-   * @parameter property="hibernate.schema.export.create" default-value="create.sql"
+   * @parameter property="hibernate.schema.create" default-value="create.sql"
    * @since 1.0
    */
   private String outputFile;
@@ -58,43 +64,35 @@ public class CreateMojo extends AbstractSchemaMojo
 
 
   @Override
-  void build(MetadataImplementor metadata)
+  void build(
+      MetadataImplementor metadata,
+      ExecutionOptions options,
+      TargetDescriptor target
+      )
       throws
         MojoExecutionException,
         MojoFailureException
   {
-    SchemaExport schemaExport = new SchemaExport(metadata, createNamespaces);
-    schemaExport.setDelimiter(delimiter);
-    schemaExport.setFormat(format);
+    ServiceRegistry service =
+        metadata.getMetadataBuildingOptions().getServiceRegistry();
+    SchemaManagementTool tool = service.getService(SchemaManagementTool.class);
 
-    File output = new File(outputFile);
-
-    if (!output.isAbsolute())
+    Map config = options.getConfigurationValues();
+    SourceDescriptor source = new SourceDescriptor()
     {
-      // Interpret relative file path relative to build directory
-      output = new File(buildDirectory, outputFile);
-      getLog().debug("Adjusted relative path, resulting path is " + output.getPath());
-    }
-
-    // Ensure that directory path for specified file exists
-    File outFileParentDir = output.getParentFile();
-    if (null != outFileParentDir && !outFileParentDir.exists())
-    {
-      try
+	  @Override
+      public SourceType getSourceType()
       {
-        getLog().info("Creating directory path for output file:" + outFileParentDir.getPath());
-        outFileParentDir.mkdirs();
+        return SourceType.METADATA;
       }
-      catch (Exception e)
+
+      @Override
+      public ScriptSourceInput getScriptSourceInput()
       {
-        getLog().error("Error creating directory path for output file: " + e.getLocalizedMessage());
+        return null;
       }
-    }
+    };
 
-    schemaExport.setOutputFile(output.getPath());
-    schemaExport.execute(false, this.export, false, true);
-
-    for (Object exception : schemaExport.getExceptions())
-      getLog().error(exception.toString());
+    tool.getSchemaCreator(config).doCreation(metadata, options, source, target);
   }
 }

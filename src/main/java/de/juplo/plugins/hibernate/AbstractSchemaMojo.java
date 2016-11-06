@@ -10,6 +10,8 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.NoSuchAlgorithmException;
 import java.util.Collections;
+import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
@@ -45,25 +47,34 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.cfg.AvailableSettings;
 import static org.hibernate.cfg.AvailableSettings.DIALECT;
 import static org.hibernate.cfg.AvailableSettings.DRIVER;
 import static org.hibernate.cfg.AvailableSettings.FORMAT_SQL;
+import static org.hibernate.cfg.AvailableSettings.HBM2DDL_DELIMITER;
 import static org.hibernate.cfg.AvailableSettings.HBM2DLL_CREATE_NAMESPACES;
 import static org.hibernate.cfg.AvailableSettings.IMPLICIT_NAMING_STRATEGY;
+import static org.hibernate.cfg.AvailableSettings.JPA_JDBC_DRIVER;
+import static org.hibernate.cfg.AvailableSettings.JPA_JDBC_PASSWORD;
+import static org.hibernate.cfg.AvailableSettings.JPA_JDBC_URL;
+import static org.hibernate.cfg.AvailableSettings.JPA_JDBC_USER;
 import static org.hibernate.cfg.AvailableSettings.PASS;
 import static org.hibernate.cfg.AvailableSettings.PHYSICAL_NAMING_STRATEGY;
 import static org.hibernate.cfg.AvailableSettings.SHOW_SQL;
 import static org.hibernate.cfg.AvailableSettings.USER;
 import static org.hibernate.cfg.AvailableSettings.URL;
+import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.internal.util.config.ConfigurationException;
-import static org.hibernate.jpa.AvailableSettings.JDBC_DRIVER;
-import static org.hibernate.jpa.AvailableSettings.JDBC_PASSWORD;
-import static org.hibernate.jpa.AvailableSettings.JDBC_URL;
-import static org.hibernate.jpa.AvailableSettings.JDBC_USER;
 import org.hibernate.jpa.boot.internal.ParsedPersistenceXmlDescriptor;
 import org.hibernate.jpa.boot.internal.PersistenceXmlParser;
-import org.hibernate.jpa.boot.spi.ProviderChecker;
+import org.hibernate.tool.schema.TargetType;
+import org.hibernate.tool.schema.internal.ExceptionHandlerCollectingImpl;
+import org.hibernate.tool.schema.internal.exec.ScriptTargetOutputToFile;
+import org.hibernate.tool.schema.spi.ExecutionOptions;
+import org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator;
+import org.hibernate.tool.schema.spi.ScriptTargetOutput;
+import org.hibernate.tool.schema.spi.TargetDescriptor;
 import org.scannotation.AnnotationDB;
 
 
@@ -77,7 +88,6 @@ import org.scannotation.AnnotationDB;
 public abstract class AbstractSchemaMojo extends AbstractMojo
 {
   public final static String EXPORT = "hibernate.schema.export";
-  public final static String DELIMITER = "hibernate.schema.delimiter";
   public final static String OUTPUTDIRECTORY = "project.build.outputDirectory";
   public final static String SCAN_CLASSES = "hibernate.schema.scan.classes";
   public final static String SCAN_DEPENDENCIES = "hibernate.schema.scan.dependencies";
@@ -88,6 +98,7 @@ public abstract class AbstractSchemaMojo extends AbstractMojo
   private final static Pattern SPLIT = Pattern.compile("[^,\\s]+");
 
   private final Set<String> packages = new HashSet<String>();
+
 
   /**
    * The maven project.
@@ -109,7 +120,7 @@ public abstract class AbstractSchemaMojo extends AbstractMojo
    * @required
    * @readonly
    */
-  String buildDirectory;
+  private String buildDirectory;
 
 
   /** Parameters to configure the genaration of the SQL *********************/
@@ -128,7 +139,7 @@ public abstract class AbstractSchemaMojo extends AbstractMojo
    * @parameter property="hibernate.schema.export" default-value="true"
    * @since 2.0
    */
-  Boolean export;
+  private Boolean export;
 
   /**
    * Skip execution
@@ -188,10 +199,10 @@ public abstract class AbstractSchemaMojo extends AbstractMojo
    * it is not known by Hibernate nor JPA and, hence, not picked up from
    * their configuration!
    *
-   * @parameter property="hibernate.schema.delimiter" default-value=";"
+   * @parameter property="hibernate.hbm2ddl.delimiter" default-value=";"
    * @since 1.0
    */
-  String delimiter;
+  private String delimiter;
 
   /**
    * Show the generated SQL in the command-line output.
@@ -199,7 +210,7 @@ public abstract class AbstractSchemaMojo extends AbstractMojo
    * @parameter property="hibernate.show_sql"
    * @since 1.0
    */
-  Boolean show;
+  private Boolean show;
 
   /**
    * Format output-file.
@@ -207,7 +218,7 @@ public abstract class AbstractSchemaMojo extends AbstractMojo
    * @parameter property="hibernate.format_sql"
    * @since 1.0
    */
-  Boolean format;
+  private Boolean format;
 
   /**
    * Specifies whether to automatically create also the database schema/catalog.
@@ -215,7 +226,7 @@ public abstract class AbstractSchemaMojo extends AbstractMojo
    * @parameter property="hibernate.hbm2dll.create_namespaces" default-value="false"
    * @since 2.0
    */
-  Boolean createNamespaces;
+  private Boolean createNamespaces;
 
   /**
    * Implicit naming strategy
@@ -445,7 +456,7 @@ public abstract class AbstractSchemaMojo extends AbstractMojo
       throw new MojoFailureException("Digest-Algorithm MD5 is missing!", e);
     }
 
-    SimpleConnectionProvider connectionProvider =
+    final SimpleConnectionProvider connectionProvider =
         new SimpleConnectionProvider(getLog());
 
     try
@@ -489,13 +500,16 @@ public abstract class AbstractSchemaMojo extends AbstractMojo
       else
         getLog().debug("Configuration unchanged.");
 
+      /** Check, that the outputfile is writable */
+      final File output = getOutputFile(filename);
+
       /** Configure Hibernate */
-      StandardServiceRegistry serviceRegistry =
+      final StandardServiceRegistry serviceRegistry =
           new StandardServiceRegistryBuilder(bootstrapServiceRegitry)
               .applySettings(properties)
               .addService(ConnectionProvider.class, connectionProvider)
               .build();
-      MetadataSources sources = new MetadataSources(serviceRegistry);
+      final MetadataSources sources = new MetadataSources(serviceRegistry);
 
       /** Add the remaining class-path-elements */
       completeClassPath(classLoader);
@@ -654,6 +668,42 @@ public abstract class AbstractSchemaMojo extends AbstractMojo
             );
       }
 
+      /** Prepare the generation of the SQL */
+      Map settings = new HashMap();
+      settings.putAll(
+          serviceRegistry
+              .getService(ConfigurationService.class)
+              .getSettings()
+              );
+      ExceptionHandlerCollectingImpl handler =
+          new ExceptionHandlerCollectingImpl();
+      ExecutionOptions options =
+          SchemaManagementToolCoordinator
+              .buildExecutionOptions(settings, handler);
+      final EnumSet<TargetType> targetTypes = EnumSet.of(TargetType.SCRIPT);
+      if (export)
+        targetTypes.add(TargetType.DATABASE);
+      TargetDescriptor target = new TargetDescriptor()
+      {
+        @Override
+        public EnumSet<TargetType> getTargetTypes()
+        {
+          return targetTypes;
+        }
+
+        @Override
+        public ScriptTargetOutput getScriptTargetOutput()
+        {
+          String charset =
+              (String)
+              serviceRegistry
+                  .getService(ConfigurationService.class)
+                  .getSettings()
+                  .get(AvailableSettings.HBM2DDL_CHARSET_NAME);
+          return new ScriptTargetOutputToFile(output, charset);
+        }
+      };
+
       /**
        * Change class-loader of current thread.
        * This is necessary, because still not all parts of Hibernate 5 use
@@ -664,11 +714,13 @@ public abstract class AbstractSchemaMojo extends AbstractMojo
       try
       {
         thread.setContextClassLoader(classLoader);
-        build((MetadataImplementor)metadataBuilder.build());
+        build((MetadataImplementor)metadataBuilder.build(), options, target);
       }
       finally
       {
         thread.setContextClassLoader(contextClassLoader);
+        for (Exception e : handler.getExceptions())
+          getLog().error(e.getMessage());
       }
     }
     catch (MojoExecutionException e)
@@ -700,7 +752,11 @@ public abstract class AbstractSchemaMojo extends AbstractMojo
   }
 
 
-  abstract void build(MetadataImplementor metadata)
+  abstract void build(
+      MetadataImplementor metadata,
+      ExecutionOptions options,
+      TargetDescriptor target
+      )
     throws
       MojoFailureException,
       MojoExecutionException;
@@ -856,12 +912,12 @@ public abstract class AbstractSchemaMojo extends AbstractMojo
      * Overwrite values from properties-file if the configuration parameter is
      * known to Hibernate.
      */
-    dialect = configure(properties, dialect, DIALECT);
-    tracker.track(DELIMITER, delimiter); // << not reflected in hibernate configuration!
-    format = configure(properties, format, FORMAT_SQL);
-    createNamespaces = configure(properties, createNamespaces, HBM2DLL_CREATE_NAMESPACES);
-    implicitNamingStrategy = configure(properties, implicitNamingStrategy, IMPLICIT_NAMING_STRATEGY);
-    physicalNamingStrategy = configure(properties, physicalNamingStrategy, PHYSICAL_NAMING_STRATEGY);
+    configure(properties, dialect, DIALECT);
+    configure(properties, delimiter, HBM2DDL_DELIMITER);
+    configure(properties, format, FORMAT_SQL);
+    configure(properties, createNamespaces, HBM2DLL_CREATE_NAMESPACES);
+    configure(properties, implicitNamingStrategy, IMPLICIT_NAMING_STRATEGY);
+    configure(properties, physicalNamingStrategy, PHYSICAL_NAMING_STRATEGY);
     tracker.track(OUTPUTDIRECTORY, outputDirectory); // << not reflected in hibernate configuration!
     tracker.track(SCAN_DEPENDENCIES, scanDependencies); // << not reflected in hibernate configuration!
     tracker.track(SCAN_TESTCLASSES, scanTestClasses.toString()); // << not reflected in hibernate configuration!
@@ -881,10 +937,10 @@ public abstract class AbstractSchemaMojo extends AbstractMojo
      * Configure the connection parameters.
      * Overwrite values from properties-file.
      */
-    driver = configure(properties, driver, DRIVER, JDBC_DRIVER);
-    url = configure(properties, url, URL, JDBC_URL);
-    username = configure(properties, username, USER, JDBC_USER);
-    password = configure(properties, password, PASS, JDBC_PASSWORD);
+    configure(properties, driver, DRIVER, JPA_JDBC_DRIVER);
+    configure(properties, url, URL, JPA_JDBC_URL);
+    configure(properties, username, USER, JPA_JDBC_USER);
+    configure(properties, password, PASS, JPA_JDBC_PASSWORD);
 
     if (properties.isEmpty())
     {
@@ -897,7 +953,7 @@ public abstract class AbstractSchemaMojo extends AbstractMojo
       getLog().info("  " + entry.getKey() + " = " + entry.getValue());
   }
 
-  private String configure(
+  private void configure(
       Properties properties,
       String value,
       String key,
@@ -906,7 +962,7 @@ public abstract class AbstractSchemaMojo extends AbstractMojo
   {
     value = configure(properties, value, key);
     if (value == null)
-      return properties.getProperty(alternativeKey);
+      return;
 
     if (properties.containsKey(alternativeKey))
     {
@@ -917,7 +973,6 @@ public abstract class AbstractSchemaMojo extends AbstractMojo
           );
       properties.remove(alternativeKey);
     }
-    return properties.getProperty(alternativeKey);
   }
 
   private String configure(Properties properties, String value, String key)
@@ -936,7 +991,7 @@ public abstract class AbstractSchemaMojo extends AbstractMojo
     return properties.getProperty(key);
   }
 
-  private boolean configure(Properties properties, Boolean value, String key)
+  private void configure(Properties properties, Boolean value, String key)
   {
     if (value != null)
     {
@@ -949,7 +1004,62 @@ public abstract class AbstractSchemaMojo extends AbstractMojo
         getLog().debug("Using the value " + value + " for property " + key);
       properties.setProperty(key, value.toString());
     }
-    return Boolean.valueOf(properties.getProperty(key));
+  }
+
+  private File getOutputFile(String filename)
+      throws
+        MojoExecutionException
+  {
+    File output = new File(filename);
+
+    if (!output.isAbsolute())
+    {
+      // Interpret relative file path relative to build directory
+      output = new File(buildDirectory, filename);
+    }
+    getLog().debug("Output file: " + output.getPath());
+
+    // Ensure that directory path for specified file exists
+    File outFileParentDir = output.getParentFile();
+    if (null != outFileParentDir && !outFileParentDir.exists())
+    {
+      try
+      {
+        getLog().info(
+            "Creating directory path for output file:" +
+            outFileParentDir.getPath()
+            );
+        outFileParentDir.mkdirs();
+      }
+      catch (Exception e)
+      {
+        String error =
+            "Error creating directory path for output file: " + e.getMessage();
+        getLog().error(error);
+        throw new MojoExecutionException(error);
+      }
+    }
+
+    try
+    {
+      output.createNewFile();
+    }
+    catch (IOException e)
+    {
+      String error = "Error creating output file: " + e.getMessage();
+      getLog().error(error);
+      throw new MojoExecutionException(error);
+    }
+
+    if (!output.canWrite())
+    {
+      String error =
+          "Output file " + output.getAbsolutePath() + " is not writable!";
+      getLog().error(error);
+      throw new MojoExecutionException(error);
+    }
+
+    return output;
   }
 
   private void addMappings(MetadataSources sources, ModificationTracker tracker)
@@ -1172,48 +1282,41 @@ public abstract class AbstractSchemaMojo extends AbstractMojo
             PersistenceUnitTransactionType.RESOURCE_LOCAL
              );
 
-    List<ParsedPersistenceXmlDescriptor> units = parser.doResolve(properties);
+    Map<String, ParsedPersistenceXmlDescriptor> units =
+        parser.doResolve(properties);
 
     if (persistenceUnit == null)
     {
-      switch (units.size())
+      Iterator<String> names = units.keySet().iterator();
+      if (!names.hasNext())
       {
-        case 0:
-          getLog().info("Found no META-INF/persistence.xml.");
-          return null;
-        case 1:
-          getLog().info("Using persistence-unit " + units.get(0).getName());
-          return units.get(0);
-        default:
-          StringBuilder builder = new StringBuilder();
-          builder.append("No name provided and multiple persistence units found: ");
-          Iterator<ParsedPersistenceXmlDescriptor> it = units.iterator();
-          builder.append(it.next().getName());
-          while (it.hasNext())
-          {
-            builder.append(", ");
-            builder.append(it.next().getName());
-          }
-          builder.append('.');
-          throw new MojoFailureException(builder.toString());
+        getLog().info("Found no META-INF/persistence.xml.");
+        return null;
       }
+
+      String name = names.next();
+      if (!names.hasNext())
+      {
+          getLog().info("Using persistence-unit " + name);
+          return units.get(name);
+      }
+
+      StringBuilder builder = new StringBuilder();
+      builder.append("No name provided and multiple persistence units found: ");
+      builder.append(name);
+      while(names.hasNext())
+      {
+        builder.append(", ");
+        builder.append(names.next());
+      }
+      builder.append('.');
+      throw new MojoFailureException(builder.toString());
     }
 
-    for (ParsedPersistenceXmlDescriptor unit : units)
+    if (units.containsKey(persistenceUnit))
     {
-      getLog().debug("Found persistence-unit " + unit.getName());
-      if (!unit.getName().equals(persistenceUnit))
-        continue;
-
-      // See if we (Hibernate) are the persistence provider
-      if (!ProviderChecker.isProvider(unit, properties))
-      {
-        getLog().debug("Wrong provider: " + unit.getProviderClassName());
-        continue;
-      }
-
-      getLog().info("Using persistence-unit " + unit.getName());
-      return unit;
+      getLog().info("Using configured persistence-unit " + persistenceUnit);
+      return units.get(persistenceUnit);
     }
 
     throw new MojoFailureException("Could not find persistence-unit " + persistenceUnit);

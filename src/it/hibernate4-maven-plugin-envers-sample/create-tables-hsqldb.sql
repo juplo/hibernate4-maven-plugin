@@ -1,7 +1,5 @@
-
-    create sequence TTL_AUDIT_REVISION_SEQ start with 1 increment by 10;
-
-    create sequence TTL_EVENT_SEQ start with 1 increment by 10;
+create sequence TTL_AUDIT_REVISION_SEQ start with 1 increment by 10;
+create sequence TTL_EVENT_SEQ start with 1 increment by 10;
 
     create table TTL_AUDIT_REVISION (
         ID bigint not null,
