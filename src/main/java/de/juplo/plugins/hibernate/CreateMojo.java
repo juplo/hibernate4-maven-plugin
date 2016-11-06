@@ -30,8 +30,8 @@ import org.hibernate.tool.schema.spi.TargetDescriptor;
 
 
 /**
- * Goal which extracts the hibernate-mapping-configuration and
- * exports an according SQL-database-schema.
+ * Generate/Execute SQL to create a database-schema that represents the
+ * configured mappings.
  *
  * @goal create
  * @phase process-classes
