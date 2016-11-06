@@ -1,0 +1,7 @@
+import de.juplo.test.FileComparator;
+
+
+FileComparator comparator = new FileComparator(basedir);
+
+if (!comparator.isEqual("update.sql","target/update.sql"))
+  return false;
