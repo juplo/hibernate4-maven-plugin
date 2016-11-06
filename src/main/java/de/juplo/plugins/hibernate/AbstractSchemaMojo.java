@@ -4,6 +4,7 @@ package de.juplo.plugins.hibernate;
 import com.pyx4j.log4j.MavenLogAppender;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
@@ -639,6 +640,20 @@ public abstract class AbstractSchemaMojo extends AbstractMojo
         }
       }
 
+
+      /** Truncate output file */
+      try
+      {
+        new FileOutputStream(output).getChannel().truncate(0).close();
+      }
+      catch (IOException e)
+      {
+        String error =
+            "Error while truncating " + output.getAbsolutePath() + ": "
+            + e.getMessage();
+        getLog().warn(error);
+        throw new MojoExecutionException(error);
+      }
 
       /** Create a connection, if sufficient configuration infromation is available */
       connectionProvider.open(classLoaderService, properties);
