@@ -733,12 +733,23 @@ public abstract class AbstractSchemaMojo extends AbstractMojo
       {
         thread.setContextClassLoader(classLoader);
         build((MetadataImplementor)metadataBuilder.build(), options, target);
+        if (handler.getExceptions().size() > 0)
+        {
+          StringBuilder builder = new StringBuilder();
+          builder.append("Hibernate failed:");
+          for (Exception e : handler.getExceptions())
+          {
+            builder.append("\n * ");
+            builder.append(e.getMessage());
+          }
+          String error = builder.toString();
+          getLog().error(error);
+          throw new MojoFailureException(error);
+        }
       }
       finally
       {
         thread.setContextClassLoader(contextClassLoader);
-        for (Exception e : handler.getExceptions())
-          getLog().error(e.getMessage());
         /** Track, the content of the generated script */
         checkOutputFile(output, tracker);
       }

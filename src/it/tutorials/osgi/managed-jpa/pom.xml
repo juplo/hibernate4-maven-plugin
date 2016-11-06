@@ -80,7 +80,7 @@
 					</execution>
 				</executions>
 				<configuration>
-					<url>jdbc:h2:mem:db1;MVCC=TRUE</url>
+					<url>jdbc:h2:mem:db_managed_jpa;MVCC=TRUE</url>
 					<format>true</format>
 					<execute>false</execute>
 				</configuration>
