@@ -925,7 +925,14 @@ public abstract class AbstractSchemaMojo extends AbstractMojo
      * switched to "true", the genearation fo the schema should be forced!
      */
     if (tracker.check(EXECUTE, execute.toString()) && execute)
+    {
+      getLog().info(
+          "hibernate.schema.execute was switched on: " +
+          "forcing generation/execution of SQL"
+          );
       tracker.touch();
+    }
+    configure(properties, execute, EXECUTE);
 
     /**
      * Configure the generation of the SQL.
@@ -938,10 +945,10 @@ public abstract class AbstractSchemaMojo extends AbstractMojo
     configure(properties, createNamespaces, HBM2DLL_CREATE_NAMESPACES);
     configure(properties, implicitNamingStrategy, IMPLICIT_NAMING_STRATEGY);
     configure(properties, physicalNamingStrategy, PHYSICAL_NAMING_STRATEGY);
-    tracker.track(OUTPUTDIRECTORY, outputDirectory); // << not reflected in hibernate configuration!
-    tracker.track(SCAN_DEPENDENCIES, scanDependencies); // << not reflected in hibernate configuration!
-    tracker.track(SCAN_TESTCLASSES, scanTestClasses.toString()); // << not reflected in hibernate configuration!
-    tracker.track(TEST_OUTPUTDIRECTORY, testOutputDirectory); // << not reflected in hibernate configuration!
+    configure(properties, outputDirectory, OUTPUTDIRECTORY);
+    configure(properties, scanDependencies, SCAN_DEPENDENCIES);
+    configure(properties, scanTestClasses, SCAN_TESTCLASSES);
+    configure(properties, testOutputDirectory, TEST_OUTPUTDIRECTORY);
 
     /**
      * Special treatment for the configuration-value "show": a change of its
@@ -968,7 +975,7 @@ public abstract class AbstractSchemaMojo extends AbstractMojo
       throw new MojoFailureException("Hibernate configuration is missing!");
     }
 
-    getLog().info("Gathered hibernate-configuration (turn on debugging for details):");
+    getLog().info("Gathered configuration:");
     for (Entry<Object,Object> entry : properties.entrySet())
       getLog().info("  " + entry.getKey() + " = " + entry.getValue());
   }
