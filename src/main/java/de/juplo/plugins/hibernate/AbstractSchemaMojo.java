@@ -1012,14 +1012,22 @@ public abstract class AbstractSchemaMojo extends AbstractMojo
     if (value != null)
     {
       if (properties.containsKey(key))
-        getLog().info(
-            "Overwriting property " + key + "=\"" +
-            properties.getProperty(key) +
-            "\" with value \"" + value + "\""
-            );
+      {
+        if (!properties.getProperty(key).equals(value))
+        {
+          getLog().info(
+              "Overwriting property " + key + "=\"" +
+              properties.getProperty(key) +
+              "\" with value \"" + value + "\""
+              );
+          properties.setProperty(key, value);
+        }
+      }
       else
+      {
         getLog().debug("Using value \"" + value + "\" for property " + key);
-      properties.setProperty(key, value);
+        properties.setProperty(key, value);
+      }
     }
   }
 
