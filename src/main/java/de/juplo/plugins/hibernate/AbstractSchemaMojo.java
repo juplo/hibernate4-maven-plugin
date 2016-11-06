@@ -960,50 +960,52 @@ public abstract class AbstractSchemaMojo extends AbstractMojo
       String alternativeKey
       )
   {
-    value = configure(properties, value, key);
-    if (value == null)
-      return;
+    configure(properties, value, key);
 
     if (properties.containsKey(alternativeKey))
     {
-      getLog().warn(
-          "Ignoring property " + alternativeKey + "=" +
-          properties.getProperty(alternativeKey) + " in favour for property " +
-          key + "=" + properties.getProperty(key)
-          );
-      properties.remove(alternativeKey);
+      if (properties.containsKey(key))
+      {
+        getLog().warn(
+            "Ignoring property " + alternativeKey + "=\"" +
+            properties.getProperty(alternativeKey) +
+            "\" in favour for property " + key + "=\"" +
+            properties.getProperty(key) + "\""
+            );
+        properties.remove(alternativeKey);
+      }
+      else
+      {
+        value = properties.getProperty(alternativeKey);
+        properties.remove(alternativeKey);
+        getLog().info(
+            "Using value \"" + value + "\" from property " + alternativeKey +
+            " for property " + key
+            );
+        properties.setProperty(key, value);
+      }
     }
   }
 
-  private String configure(Properties properties, String value, String key)
+  private void configure(Properties properties, String value, String key)
   {
     if (value != null)
     {
       if (properties.containsKey(key))
-        getLog().debug(
-            "Overwriting property " + key + "=" + properties.getProperty(key) +
-            " with the value " + value
+        getLog().info(
+            "Overwriting property " + key + "=\"" +
+            properties.getProperty(key) +
+            "\" with value \"" + value + "\""
             );
       else
-        getLog().debug("Using the value " + value + " for property " + key);
+        getLog().debug("Using value \"" + value + "\" for property " + key);
       properties.setProperty(key, value);
     }
-    return properties.getProperty(key);
   }
 
   private void configure(Properties properties, Boolean value, String key)
   {
-    if (value != null)
-    {
-      if (properties.containsKey(key))
-        getLog().debug(
-            "Overwriting property " + key + "=" + properties.getProperty(key) +
-            " with the value " + value
-            );
-      else
-        getLog().debug("Using the value " + value + " for property " + key);
-      properties.setProperty(key, value.toString());
-    }
+    configure(properties, value == null ? null : value.toString(), key);
   }
 
   private File getOutputFile(String filename)
