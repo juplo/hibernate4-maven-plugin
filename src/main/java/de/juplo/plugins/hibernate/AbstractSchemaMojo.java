@@ -10,6 +10,7 @@ import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.NoSuchAlgorithmException;
+import java.time.ZonedDateTime;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -95,6 +96,7 @@ public abstract class AbstractSchemaMojo extends AbstractMojo
   public final static String SCAN_TESTCLASSES = "hibernate.schema.scan.test_classes";
   public final static String TEST_OUTPUTDIRECTORY = "project.build.testOutputDirectory";
   public final static String SKIPPED = "hibernate.schema.skipped";
+  public final static String SCRIPT = "hibernate.schema.script";
 
   private final static Pattern SPLIT = Pattern.compile("[^,\\s]+");
 
@@ -504,6 +506,8 @@ public abstract class AbstractSchemaMojo extends AbstractMojo
 
       /** Check, that the outputfile is writable */
       final File output = getOutputFile(filename);
+      /** Check, if the outputfile is missing or was changed */
+      checkOutputFile(output, tracker);
 
       /** Configure Hibernate */
       final StandardServiceRegistry serviceRegistry =
@@ -735,6 +739,8 @@ public abstract class AbstractSchemaMojo extends AbstractMojo
         thread.setContextClassLoader(contextClassLoader);
         for (Exception e : handler.getExceptions())
           getLog().error(e.getMessage());
+        /** Track, the content of the generated script */
+        checkOutputFile(output, tracker);
       }
     }
     catch (MojoExecutionException e)
@@ -1076,6 +1082,26 @@ public abstract class AbstractSchemaMojo extends AbstractMojo
     }
 
     return output;
+  }
+
+  private void checkOutputFile(File output, ModificationTracker tracker)
+      throws
+        MojoExecutionException
+  {
+    try
+    {
+      if (output.exists())
+        tracker.track(SCRIPT, new FileInputStream(output));
+      else
+        tracker.track(SCRIPT, ZonedDateTime.now().toString());
+    }
+    catch (IOException e)
+    {
+      String error =
+          "Error while checking the generated script: " + e.getMessage();
+      getLog().error(error);
+      throw new MojoExecutionException(error);
+    }
   }
 
   private void addMappings(MetadataSources sources, ModificationTracker tracker)
