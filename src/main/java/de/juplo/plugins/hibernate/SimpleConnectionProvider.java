@@ -45,33 +45,16 @@ class SimpleConnectionProvider implements ConnectionProvider
         MojoFailureException
   {
 
-    String driver = (String)
-        (properties.containsKey(DRIVER)
-            ? properties.getProperty(DRIVER)
-            : properties.getProperty(JDBC_DRIVER)
-            );
-    String url = (String)
-        (properties.containsKey(URL)
-            ? properties.getProperty(URL)
-            : properties.getProperty(JDBC_URL)
-            );
-    String user = (String)
-        (properties.containsKey(USER)
-            ? properties.getProperty(USER)
-            : properties.getProperty(JDBC_USER)
-            );
-    String password = (String)
-        (properties.containsKey(PASS)
-            ? properties.getProperty(PASS)
-            : properties.getProperty(JDBC_PASSWORD)
-            );
+    String driver = (String)properties.getProperty(DRIVER);
+    String url = (String)properties.getProperty(URL);
+    String user = (String)properties.getProperty(USER);
+    String password = (String)properties.getProperty(PASS);
 
-    if (driver == null || url == null || user == null)
+    if (driver == null || url == null)
     {
       log.info("No connection opened, because connection information is incomplete");
       log.info("Driver-Class: " + driver);
       log.info("URL: " + url);
-      log.info("User: " + user);
       return;
     }
 
@@ -84,16 +67,16 @@ class SimpleConnectionProvider implements ConnectionProvider
           .registerDriver(new DriverProxy((Driver) driverClass.newInstance()));
 
       log.debug(
-          "Opening JDBC-connection to " + properties.getProperty(URL) +
-          " as " + properties.getProperty(USERNAME) +
-          " with password " + properties.getProperty(PASSWORD)
+          "Opening JDBC-connection to " + url +
+          " as " + user +
+          " with password " + password
           );
     
       connection = DriverManager.getConnection(url, user, password);
     }
     catch (Exception e)
     {
-      throw new MojoFailureException("Could not open the JDBC-connection", e);
+      log.info("Could not open the JDBC-connection: " + e.getMessage());
     }
   }
 
