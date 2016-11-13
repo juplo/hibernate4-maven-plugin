@@ -20,7 +20,7 @@ public class MyEntity {
 
         @Override
         public Integer convertToDatabaseColumn(String attribute) {
-            return attribute.length();
+            return attribute == null ? 0 : attribute.length();
         }
 
         @Override
