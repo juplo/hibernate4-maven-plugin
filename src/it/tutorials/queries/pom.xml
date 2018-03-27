@@ -59,7 +59,7 @@
                     </execution>
                     <execution>
                         <id>queries2doc</id>
-                        <phase>pre-site</phase>
+                        <phase>package</phase>
                         <goals>
                             <goal>queries2doc</goal>
                         </goals>

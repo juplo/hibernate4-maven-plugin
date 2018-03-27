@@ -210,8 +210,7 @@ public class Queries2DocExport {
 		Configuration cfg = new Configuration(Configuration.VERSION_2_3_23);
 
 		String packagePath = "org/hibernate/tool/hbm2doc/queries";
-		//cfg.setClassLoaderForTemplateLoading(getClass().getClassLoader(), "/org/hibernate/tool/hbm2doc/queries");
-		cfg.setDirectoryForTemplateLoading(new File("/home/blavenie/git/blavenie/hibernate4-maven-plugin/src/main/resources/org/hibernate/tool/hbm2doc/queries"));
+		cfg.setClassLoaderForTemplateLoading(getClass().getClassLoader(), "/org/hibernate/tool/hbm2doc/queries");
 
 		cfg.setDefaultEncoding("UTF-8");
 		// During web page *development* TemplateExceptionHandler.HTML_DEBUG_HANDLER is better.
