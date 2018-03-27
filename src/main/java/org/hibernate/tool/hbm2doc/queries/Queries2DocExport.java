@@ -6,10 +6,6 @@
  */
 package org.hibernate.tool.hbm2doc.queries;
 
-import freemarker.cache.ClassTemplateLoader;
-import freemarker.cache.FileTemplateLoader;
-import freemarker.cache.MultiTemplateLoader;
-import freemarker.cache.TemplateLoader;
 import freemarker.template.*;
 import org.hibernate.boot.MetadataBuilder;
 import org.hibernate.boot.MetadataSources;
@@ -34,10 +30,9 @@ import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tool.hbm2ddl.*;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
+import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Commandline tool to export named queries into a sql file. This class may also be called from inside an application.
@@ -82,6 +77,8 @@ public class Queries2DocExport {
 		SessionFactoryImplementor sessionFactory = (SessionFactoryImplementor)metadata.buildSessionFactory();
 		ASTQueryTranslatorFactory queryTranslatorFactory = new ASTQueryTranslatorFactory();
 
+		List<DocQuery> queries = new ArrayList<DocQuery>();
+
 		// named queries
 		for (NamedQueryDefinition queryDef: metadata.getNamedQueryDefinitions()) {
 			String name = queryDef.getName();
@@ -105,7 +102,13 @@ public class Queries2DocExport {
 					}
 					sql.add(formatted.trim());
 				}
-				docQuery = new DocQuery(name, comment, params, hql.trim(), sql);
+				if (sql.size() == 1) {
+					String firstSql = replaceQuestionMarkWithNamedParameters(sql.get(0), hql);
+					docQuery = new DocQuery(name, comment, params, hql.trim(), firstSql.trim());
+				}
+				else {
+					docQuery = new DocQuery(name, comment, params, hql.trim(), sql);
+				}
 			}
 			else {
 				String sql = queryTranslator.getSQLString();
@@ -115,6 +118,7 @@ public class Queries2DocExport {
 						sql += delimiter;
 					}
 				}
+				sql = sql != null ? replaceQuestionMarkWithNamedParameters(sql, hql) : null;
 				docQuery = new DocQuery(name, comment, params, hql.trim(), sql != null ? sql.trim() : null);
 			}
 			queries.add(docQuery);
@@ -131,6 +135,15 @@ public class Queries2DocExport {
 			DocQuery docQuery = new DocQuery(name, comment, params, null, sql != null ? sql.trim() : null);
 			queries.add(docQuery);
 		}
+
+		// Sort queries by name
+		java.util.Collections.sort(queries, new Comparator<DocQuery>() {
+			@Override
+			public int compare(DocQuery q1, DocQuery q2) {
+				return q1.getName().compareTo(q2.getName());
+			}
+		});
+		this.queries.addAll(queries);
 	}
 
 	/**
@@ -441,5 +454,42 @@ public class Queries2DocExport {
 
 			return parsedArgs;
 		}
+	}
+
+	protected String replaceQuestionMarkWithNamedParameters(String sql, String hql) {
+
+		// Get named parameters from HQL
+		List<String> hqlNamedParameters = new ArrayList<String>();
+		{
+			Matcher hqlNamedParamMatcher = Pattern.compile(":[a-zA-Z_0-9]+").matcher(hql);
+			while (hqlNamedParamMatcher.find()) {
+				String bindingName = hql.substring(hqlNamedParamMatcher.start(),
+						hqlNamedParamMatcher.end());
+				hqlNamedParameters.add(bindingName);
+			}
+		}
+
+		if (hqlNamedParameters.isEmpty()) {
+			return sql; // nothing to replace
+		}
+
+		// Replace each '?' with the corresponding named parameter
+		StringBuilder sb = new StringBuilder();
+		{
+			Matcher sqlParamMatcher = Pattern.compile("[?]").matcher(sql);
+			int offset = 0;
+			int paramCounter = 0;
+			while (sqlParamMatcher.find()) {
+				sb.append(sql.substring(offset, sqlParamMatcher.start())).append(hqlNamedParameters.get(paramCounter++));
+				offset = sqlParamMatcher.end();
+			}
+			if (offset > 0) {
+				if (offset < sql.length()) {
+					sb.append(sql.substring(offset));
+				}
+			}
+		}
+
+		return sb.toString();
 	}
 }

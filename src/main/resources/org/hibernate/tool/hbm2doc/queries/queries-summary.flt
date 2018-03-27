@@ -37,7 +37,7 @@
     <h2 id="column_detail_CODE">Query ${q.name}</h2>
 
     <#if q.comment??>
-        <p>${q.comment}</p>
+        <p class="QueryComment">${q.comment}</p>
     </#if>
 
     <table>

@@ -160,3 +160,9 @@ td.QuerySql
     white-space: pre;
 }
 
+
+p.QueryComment
+{
+    white-space: pre-line;
+}
+
