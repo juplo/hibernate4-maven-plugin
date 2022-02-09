@@ -22,7 +22,7 @@
         <de.juplo-hibernate-plugin-version>@project.version@</de.juplo-hibernate-plugin-version>
 
         <maven.deploy.skip>true</maven.deploy.skip>
-        <org.hibernate.version>4.2.5.Final</org.hibernate.version>
+        <org.hibernate.version>5.4.24.Final</org.hibernate.version>
         <org.hibernate.javax.persistence_hibernate-jpa-2.0-api.version>1.0.1.Final
         </org.hibernate.javax.persistence_hibernate-jpa-2.0-api.version>
         <org.hibernate_hibernate-validator.version>4.3.1.Final</org.hibernate_hibernate-validator.version>
