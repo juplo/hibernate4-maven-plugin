@@ -19,7 +19,7 @@
         <database.jdbc.pwd>test</database.jdbc.pwd>
 
         <version.mysqldriver>1.3.7</version.mysqldriver>
-        <version.hibernate>5.1.0.Final</version.hibernate>
+        <version.hibernate>5.3.20.Final</version.hibernate>
 
         <version.slf4j>1.7.10</version.slf4j>
     </properties>
